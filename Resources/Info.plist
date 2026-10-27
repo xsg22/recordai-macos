@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>CFBundleExecutable</key><string>RecordAIApp</string>
+    <key>CFBundleIdentifier</key><string>com.byering.recordai</string>
+    <key>CFBundleName</key><string>RecordAI</string>
+    <key>CFBundleDisplayName</key><string>RecordAI</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>0.15.1</string>
+    <key>CFBundleVersion</key><string>33</string>
+    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSMicrophoneUsageDescription</key><string>录制你的声音并在本机转为文字，音频不会上传。</string>
+    <key>NSAudioCaptureUsageDescription</key><string>采集线上会议的系统声音，与麦克风一起在本地保存和转录。</string>
+    <key>NSScreenCaptureUsageDescription</key><string>通过系统屏幕录制权限采集会议声音，不保存屏幕画面。</string>
+    <key>CFBundleURLTypes</key><array><dict>
+        <key>CFBundleURLName</key><string>com.byering.recordai.oauth</string>
+        <key>CFBundleURLSchemes</key><array><string>recordai</string></array>
+    </dict></array>
+    <key>NSPrincipalClass</key><string>NSApplication</string>
+</dict></plist>

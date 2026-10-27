@@ -1,0 +1,56 @@
+{
+  "sherpa": {
+    "url": "https://files.pythonhosted.org/packages/8c/2a/2a47b423fe009bbbcb6d7eed7bcba755d6f9ae923b5664c7208128c32d06/sherpa_onnx_core-1.13.8-py3-none-macosx_11_0_arm64.whl",
+    "bytes": 9552498,
+    "sha256": "9312bbd46c93e31cecd3abda9cc8e71881d86cc3da3c35c7445ab04025b9fc3e",
+    "filename": "sherpa_onnx_core-1.13.8-py3-none-macosx_11_0_arm64.whl"
+  },
+  "mlx": {
+    "comment_text": null,
+    "core-metadata": {
+      "sha256": "6dc55fc01204e315150f5153b414a8d299708511895069686d0d62ae15694f13"
+    },
+    "digests": {
+      "blake2b_256": "69b0e726ce51e1b445e4ed08c2d0e036a01c7532f4d1a856328da546a6f883bd",
+      "md5": "4ea9dd30abf9fbdff9408f83d1efea98",
+      "sha256": "ff1d7be54758ea3a875b8fe54eff13bed17ad9566505e301f5d7851bf869680f"
+    },
+    "downloads": -1,
+    "filename": "mlx-0.32.4-cp312-cp312-macosx_14_0_arm64.whl",
+    "has_sig": false,
+    "md5_digest": "4ea9dd30abf9fbdff9408f83d1efea98",
+    "packagetype": "bdist_wheel",
+    "python_version": "cp312",
+    "requires_python": ">=3.10",
+    "size": 667597,
+    "upload_time": "2026-10-14T21:16:00",
+    "upload_time_iso_8601": "2026-10-14T21:16:00.688605Z",
+    "url": "https://files.pythonhosted.org/packages/69/b0/e726ce51e1b445e4ed08c2d0e036a01c7532f4d1a856328da546a6f883bd/mlx-0.32.4-cp312-cp312-macosx_14_0_arm64.whl",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "mlxMetal": {
+    "comment_text": null,
+    "core-metadata": {
+      "sha256": "7f9177a2aa757749046d35ce83833d5e28dce7834c987b75ef753e5b69a68f1a"
+    },
+    "digests": {
+      "blake2b_256": "77247e5b7ed5d28abacab4577c7a8dd1fca6e9058504f5f95ae4333c09420e2e",
+      "md5": "158bfb16225f1487cb17616fe0135f11",
+      "sha256": "8019b2db622599267d66cc168b2f0dbf5af929790a6c3b3913e00eabc42a7947"
+    },
+    "downloads": -1,
+    "filename": "mlx_metal-0.32.4-py3-none-macosx_14_0_arm64.whl",
+    "has_sig": false,
+    "md5_digest": "158bfb16225f1487cb17616fe0135f11",
+    "packagetype": "bdist_wheel",
+    "python_version": "py3",
+    "requires_python": ">=3.10",
+    "size": 44958619,
+    "upload_time": "2026-10-14T21:14:45",
+    "upload_time_iso_8601": "2026-10-14T21:14:45.727471Z",
+    "url": "https://files.pythonhosted.org/packages/77/24/7e5b7ed5d28abacab4577c7a8dd1fca6e9058504f5f95ae4333c09420e2e/mlx_metal-0.32.4-py3-none-macosx_14_0_arm64.whl",
+    "yanked": false,
+    "yanked_reason": null
+  }
+}
