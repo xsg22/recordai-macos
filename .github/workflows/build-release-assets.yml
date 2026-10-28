@@ -28,7 +28,9 @@ jobs:
       - name: Prepare fixed account components
         run: zsh Scripts/prepare-account-components.zsh
       - name: Run local regression
-        run: python3 Scripts/test-recording-entry.py
+        run: |
+          mkdir -p .build
+          python3 Scripts/test-recording-entry.py
       - name: Build and sign application packages
         run: |
           COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" \
