@@ -1,0 +1,54 @@
+name: Build macOS release assets
+
+'on':
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: arm64
+      - name: Check build host
+        run: |
+          test "$(uname -m)" = arm64
+          sw_vers
+          xcodebuild -version
+          python3 --version
+          if ! command -v cmake >/dev/null; then brew install cmake; fi
+          cmake --version
+          df -h .
+      - name: Prepare fixed account components
+        run: zsh Scripts/prepare-account-components.zsh
+      - name: Run local regression
+        run: python3 Scripts/test-recording-entry.py
+      - name: Build and sign application packages
+        run: |
+          COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" \
+            zsh Scripts/build.zsh
+      - name: Verify release assets
+        run: |
+          codesign --verify --deep --strict .build/local/RecordAI.app
+          hdiutil verify dist/RecordAI-0.15.1-arm64.dmg
+          shasum -c dist/RecordAI-0.15.1-arm64.dmg.sha256
+          shasum -c dist/RecordAI-0.15.1-arm64.pkg.sha256
+          pkgutil --expand dist/RecordAI-0.15.1-arm64.pkg .build/pkg-expanded
+          file .build/local/RecordAI.app/Contents/MacOS/RecordAIApp
+          file .build/local/RecordAI.app/Contents/MacOS/recordai
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RecordAI-0.15.1-arm64
+          path: |
+            dist/RecordAI-0.15.1-arm64.dmg
+            dist/RecordAI-0.15.1-arm64.dmg.sha256
+            dist/RecordAI-0.15.1-arm64.pkg
+            dist/RecordAI-0.15.1-arm64.pkg.sha256
+          if-no-files-found: error
+          retention-days: 7
