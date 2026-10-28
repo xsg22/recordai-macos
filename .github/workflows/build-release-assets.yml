@@ -44,8 +44,8 @@ jobs:
         run: |
           codesign --verify --deep --strict .build/local/RecordAI.app
           hdiutil verify dist/RecordAI-0.15.1-arm64.dmg
-          shasum -c dist/RecordAI-0.15.1-arm64.dmg.sha256
-          shasum -c dist/RecordAI-0.15.1-arm64.pkg.sha256
+          (cd dist && shasum -c RecordAI-0.15.1-arm64.dmg.sha256)
+          (cd dist && shasum -c RecordAI-0.15.1-arm64.pkg.sha256)
           pkgutil --expand dist/RecordAI-0.15.1-arm64.pkg .build/pkg-expanded
           file .build/local/RecordAI.app/Contents/MacOS/RecordAIApp
           file .build/local/RecordAI.app/Contents/MacOS/recordai
@@ -73,8 +73,8 @@ jobs:
           path: dist
       - name: Verify downloaded packages
         run: |
-          sha256sum -c dist/RecordAI-0.15.1-arm64.dmg.sha256
-          sha256sum -c dist/RecordAI-0.15.1-arm64.pkg.sha256
+          (cd dist && sha256sum -c RecordAI-0.15.1-arm64.dmg.sha256)
+          (cd dist && sha256sum -c RecordAI-0.15.1-arm64.pkg.sha256)
       - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}

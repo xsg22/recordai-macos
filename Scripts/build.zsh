@@ -61,10 +61,12 @@ cp Resources/安装说明.txt "$stage/安装说明.txt"
 image="$root/dist/RecordAI-0.15.1-arm64.dmg"
 [[ ! -f "$image" ]] || mv "$image" "$root/.build/previous.dmg"
 hdiutil create -volname '倾听转录' -srcfolder "$stage" -ov -format UDZO "$image"
-shasum -a 256 "$image" > "$image.sha256"
+image_name="${image:t}"
+(cd "$root/dist" && shasum -a 256 "$image_name" > "$image_name.sha256")
 pkg="$root/dist/RecordAI-0.15.1-arm64.pkg"
 pkgbuild --component "$app" --install-location /Applications \
     --identifier com.byering.recordai --version 0.15.1 "$pkg"
-shasum -a 256 "$pkg" > "$pkg.sha256"
+pkg_name="${pkg:t}"
+(cd "$root/dist" && shasum -a 256 "$pkg_name" > "$pkg_name.sha256")
 print "安装包：$image"
 print "安装向导：$pkg"
