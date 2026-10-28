@@ -278,6 +278,8 @@ struct MeetingCaptureTimeline {
     private var pauses: [Range<TimeInterval>] = []
     private var pauseStart: TimeInterval?
 
+    init(started: TimeInterval) { self.started = started }
+
     mutating func setPaused(_ value: Bool, at timestamp: TimeInterval) {
         if value, pauseStart == nil { pauseStart = timestamp }
         if !value, let start = pauseStart {
