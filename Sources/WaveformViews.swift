@@ -6,10 +6,10 @@ struct LiveWaveformView: View {
     var body: some View {
         Canvas { context, size in
             let count = max(1, samples.count)
-            let step = size.width / Double(count)
+            let step = size.width / CGFloat(count)
             for (index, sample) in samples.enumerated() {
-                let height = max(2, size.height * Double(sqrt(max(0, min(1, sample)))))
-                let rect = CGRect(x: Double(index) * step, y: (size.height - height) / 2,
+                let height: CGFloat = max(2, size.height * CGFloat(sqrt(max(0, min(1, sample)))))
+                let rect = CGRect(x: CGFloat(index) * step, y: (size.height - height) / 2,
                                   width: max(1, min(4, step - 1)), height: height)
                 context.fill(Path(roundedRect: rect, cornerRadius: 2), with: .color(tint))
             }
@@ -32,13 +32,13 @@ struct PlaybackWaveformView: View {
                 ZStack(alignment: .leading) {
                     Canvas { context, size in
                         let count = max(1, Int(size.width / 5))
-                        let step = size.width / Double(count)
+                        let step = size.width / CGFloat(count)
                         for index in 0..<count {
                             let peaks = waveform?.peaks ?? []
                             let start = index * peaks.count / count, end = (index + 1) * peaks.count / count
                             let value = start < end ? peaks[start..<end].max() ?? 0 : peaks.isEmpty ? 0 : peaks[min(start, peaks.count - 1)]
-                            let height = max(2, size.height * Double(sqrt(value)))
-                            let rect = CGRect(x: Double(index) * step, y: (size.height - height) / 2,
+                            let height: CGFloat = max(2, size.height * CGFloat(sqrt(value)))
+                            let rect = CGRect(x: CGFloat(index) * step, y: (size.height - height) / 2,
                                               width: max(1, step - 2), height: height)
                             context.fill(Path(roundedRect: rect, cornerRadius: 2),
                                 with: .color(Double(index) / Double(count) < state.playbackTime / duration ? accent : accent.opacity(0.25)))
