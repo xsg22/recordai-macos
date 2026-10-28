@@ -2,6 +2,11 @@ name: Build macOS release assets
 
 'on':
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: Publish the verified packages as a prerelease
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -54,3 +59,42 @@ jobs:
             dist/RecordAI-0.15.1-arm64.pkg.sha256
           if-no-files-found: error
           retention-days: 7
+
+  publish:
+    if: ${{ inputs.publish_release }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: RecordAI-0.15.1-arm64
+          path: dist
+      - name: Verify downloaded packages
+        run: |
+          sha256sum -c dist/RecordAI-0.15.1-arm64.dmg.sha256
+          sha256sum -c dist/RecordAI-0.15.1-arm64.pkg.sha256
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          RecordAI 0.15.1 for Apple Silicon and macOS 14 or later.
+
+          The app downloads and verifies its speech models on first use; model weights are not included in these packages.
+
+          The app uses ad-hoc signing and is not Apple notarized. macOS may require manual approval before opening it.
+
+          Both packages passed the repository's regression and build checks. SHA-256 files are attached for download verification.
+          EOF
+          gh release create v0.15.1 \
+            dist/RecordAI-0.15.1-arm64.dmg \
+            dist/RecordAI-0.15.1-arm64.dmg.sha256 \
+            dist/RecordAI-0.15.1-arm64.pkg \
+            dist/RecordAI-0.15.1-arm64.pkg.sha256 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title 'RecordAI 0.15.1' \
+            --notes-file release-notes.md \
+            --prerelease
