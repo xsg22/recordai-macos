@@ -15,12 +15,17 @@ jobs:
   build:
     runs-on: macos-15
     timeout-minutes: 120
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
           architecture: arm64
+      - name: Read release version
+        id: version
+        run: echo "version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)" >> "$GITHUB_OUTPUT"
       - name: Check build host
         run: |
           test "$(uname -m)" = arm64
@@ -43,20 +48,20 @@ jobs:
       - name: Verify release assets
         run: |
           codesign --verify --deep --strict .build/local/RecordAI.app
-          hdiutil verify dist/RecordAI-0.15.1-arm64.dmg
-          (cd dist && shasum -c RecordAI-0.15.1-arm64.dmg.sha256)
-          (cd dist && shasum -c RecordAI-0.15.1-arm64.pkg.sha256)
-          pkgutil --expand dist/RecordAI-0.15.1-arm64.pkg .build/pkg-expanded
+          hdiutil verify dist/RecordAI-${{ steps.version.outputs.version }}-arm64.dmg
+          (cd dist && shasum -c RecordAI-${{ steps.version.outputs.version }}-arm64.dmg.sha256)
+          (cd dist && shasum -c RecordAI-${{ steps.version.outputs.version }}-arm64.pkg.sha256)
+          pkgutil --expand dist/RecordAI-${{ steps.version.outputs.version }}-arm64.pkg .build/pkg-expanded
           file .build/local/RecordAI.app/Contents/MacOS/RecordAIApp
           file .build/local/RecordAI.app/Contents/MacOS/recordai
       - uses: actions/upload-artifact@v4
         with:
-          name: RecordAI-0.15.1-arm64
+          name: RecordAI-${{ steps.version.outputs.version }}-arm64
           path: |
-            dist/RecordAI-0.15.1-arm64.dmg
-            dist/RecordAI-0.15.1-arm64.dmg.sha256
-            dist/RecordAI-0.15.1-arm64.pkg
-            dist/RecordAI-0.15.1-arm64.pkg.sha256
+            dist/RecordAI-${{ steps.version.outputs.version }}-arm64.dmg
+            dist/RecordAI-${{ steps.version.outputs.version }}-arm64.dmg.sha256
+            dist/RecordAI-${{ steps.version.outputs.version }}-arm64.pkg
+            dist/RecordAI-${{ steps.version.outputs.version }}-arm64.pkg.sha256
           if-no-files-found: error
           retention-days: 7
 
@@ -69,18 +74,18 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: RecordAI-0.15.1-arm64
+          name: RecordAI-${{ needs.build.outputs.version }}-arm64
           path: dist
       - name: Verify downloaded packages
         run: |
-          (cd dist && sha256sum -c RecordAI-0.15.1-arm64.dmg.sha256)
-          (cd dist && sha256sum -c RecordAI-0.15.1-arm64.pkg.sha256)
+          (cd dist && sha256sum -c RecordAI-${{ needs.build.outputs.version }}-arm64.dmg.sha256)
+          (cd dist && sha256sum -c RecordAI-${{ needs.build.outputs.version }}-arm64.pkg.sha256)
       - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > release-notes.md <<'EOF'
-          RecordAI 0.15.1 for Apple Silicon and macOS 14 or later.
+          RecordAI ${{ needs.build.outputs.version }} for Apple Silicon and macOS 14 or later.
 
           The app downloads and verifies its speech models on first use; model weights are not included in these packages.
 
@@ -88,13 +93,13 @@ jobs:
 
           Both packages passed the repository's regression and build checks. SHA-256 files are attached for download verification.
           EOF
-          gh release create v0.15.1 \
-            dist/RecordAI-0.15.1-arm64.dmg \
-            dist/RecordAI-0.15.1-arm64.dmg.sha256 \
-            dist/RecordAI-0.15.1-arm64.pkg \
-            dist/RecordAI-0.15.1-arm64.pkg.sha256 \
+          gh release create v${{ needs.build.outputs.version }} \
+            dist/RecordAI-${{ needs.build.outputs.version }}-arm64.dmg \
+            dist/RecordAI-${{ needs.build.outputs.version }}-arm64.dmg.sha256 \
+            dist/RecordAI-${{ needs.build.outputs.version }}-arm64.pkg \
+            dist/RecordAI-${{ needs.build.outputs.version }}-arm64.pkg.sha256 \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title 'RecordAI 0.15.1' \
+            --title 'RecordAI ${{ needs.build.outputs.version }}' \
             --notes-file release-notes.md \
             --prerelease

@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "${0:A:h:h}"
 root="$PWD"
+version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
 mkdir -p .vendor .models .build dist
 [[ -x .vendor/dws/dws && -x .vendor/lark-cli/lark-cli ]] || { print -u2 '缺少固定版本的官方账号组件：.vendor/dws/dws 或 .vendor/lark-cli/lark-cli'; exit 1; }
 [[ "$(shasum -a 256 .vendor/dws/dws | cut -d ' ' -f 1)" == '41eef2e626b4fe95104ad6a638536b45b51052b9754696904c6a5e159deb5ad4' ]] || { print -u2 'DWS组件校验失败'; exit 1; }
@@ -53,19 +54,19 @@ if [[ "${COHEAR_STAGE_ONLY:-0}" != "1" ]]; then
     mv "$root/dist/RecordAI.app.new" "$root/dist/RecordAI.app"
     app="$root/dist/RecordAI.app"
 fi
-stage="$root/.build/dmg-0151"
+stage="$root/.build/dmg-${version}"
 mkdir -p "$stage"
 ditto "$app" "$stage/RecordAI.app"
 ln -sfn /Applications "$stage/Applications"
 cp Resources/安装说明.txt "$stage/安装说明.txt"
-image="$root/dist/RecordAI-0.15.1-arm64.dmg"
+image="$root/dist/RecordAI-${version}-arm64.dmg"
 [[ ! -f "$image" ]] || mv "$image" "$root/.build/previous.dmg"
 hdiutil create -volname '倾听转录' -srcfolder "$stage" -ov -format UDZO "$image"
 image_name="${image:t}"
 (cd "$root/dist" && shasum -a 256 "$image_name" > "$image_name.sha256")
-pkg="$root/dist/RecordAI-0.15.1-arm64.pkg"
+pkg="$root/dist/RecordAI-${version}-arm64.pkg"
 pkgbuild --component "$app" --install-location /Applications \
-    --identifier com.byering.recordai --version 0.15.1 "$pkg"
+    --identifier com.byering.recordai --version "$version" "$pkg"
 pkg_name="${pkg:t}"
 (cd "$root/dist" && shasum -a 256 "$pkg_name" > "$pkg_name.sha256")
 print "安装包：$image"

@@ -1,4 +1,4 @@
-RecordAI 0.15.1 · Apple Silicon / macOS 14+
+RecordAI 0.15.2 · Apple Silicon / macOS 14+
 
 安装：双击 PKG 按向导安装，或打开 DMG 将 App 拖入 Applications。
 本地测试签名，尚未进行 Apple 公证。
