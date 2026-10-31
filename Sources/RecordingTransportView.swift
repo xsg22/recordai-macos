@@ -62,7 +62,7 @@ struct NativePlaybackBar: View {
                 Text(clock(state.playbackTime) + " / " + clock(state.playbackDuration)).font(AppTypography.secondary)
                     .monospacedDigit().foregroundStyle(.secondary).fixedSize()
             }
-        }.padding(12).background(Color(red: 0.14, green: 0.39, blue: 0.34).opacity(0.045), in: RoundedRectangle(cornerRadius: 10))
+        }.padding(12).background(Color(red: 0.08, green: 0.35, blue: 0.95).opacity(0.045), in: RoundedRectangle(cornerRadius: 10))
     }
     private func clock(_ value: Double) -> String {
         let seconds = Int(max(0, value))

@@ -10,7 +10,7 @@ struct TranscriptTimelineView: View {
     @State private var editing: TranscriptParagraph?
     @State private var renaming: String?
     @State private var name = ""
-    private let accent = Color(red: 0.14, green: 0.39, blue: 0.34)
+    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
     private var showingLive: Bool { state.recording || state.preparing || (state.busy && state.transcriptPhase == .recognizing) }
 
     var body: some View {

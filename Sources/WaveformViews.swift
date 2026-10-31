@@ -24,7 +24,7 @@ struct PlaybackWaveformView: View {
     @State private var issue: String?
     @State private var loading = true
     @FocusState private var seeking: Bool
-    private let accent = Color(red: 0.14, green: 0.39, blue: 0.34)
+    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
     private var duration: Double { max(0.001, state.playbackDuration > 0 ? state.playbackDuration : waveform?.duration ?? 0.001) }
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {

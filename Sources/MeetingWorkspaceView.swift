@@ -10,7 +10,7 @@ struct MeetingWorkspaceView: View {
     @State private var transcriptNotesRatio: CGFloat = 0.32
     @State private var notesRatio: CGFloat = 0.65
     @State private var dividerDragStart: CGFloat?
-    private let accent = Color(red: 0.14, green: 0.39, blue: 0.34)
+    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 12) {

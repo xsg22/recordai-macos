@@ -76,15 +76,16 @@ struct MainView: View {
     @FocusState private var editingTitle: Bool
     @State private var filter = "全部"
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
-    private let accent = Color(red: 0.14, green: 0.39, blue: 0.34)
+    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 10) {
-                    Image(systemName: "waveform.circle.fill").font(.system(size: 32)).foregroundStyle(accent)
+                    Image(systemName: "waveform").font(.system(size: 23, weight: .bold)).foregroundStyle(.white)
+                        .frame(width: 42, height: 42).background(Color(red: 0.03, green: 0.08, blue: 0.23), in: RoundedRectangle(cornerRadius: 11))
                     VStack(alignment: .leading, spacing: 3) {
                         Text("RecordAI").font(.system(size: 20, weight: .semibold))
-                        Text("持续采集，交给 Agent").font(AppTypography.secondary).foregroundStyle(.secondary)
+                        Text("本地录音 · AI 转写").font(AppTypography.secondary).foregroundStyle(.secondary)
                     }
                 }.padding(.top, 12)
                 if state.current != nil {
@@ -146,8 +147,8 @@ struct MainView: View {
                 } else {
                     HStack {
                         VStack(alignment: .leading, spacing: 7) {
-                            Text("RecordAI").font(.system(size: 28, weight: .semibold, design: .rounded))
-                            Text("本地持续采集与异步转录，作为其他 Agent 的声音来源。").foregroundStyle(.secondary)
+                            Text("开始你的下一段录音").font(.system(size: 28, weight: .semibold, design: .rounded))
+                            Text("会议、访谈或灵感，录下来再慢慢整理。").foregroundStyle(.secondary)
                         }
                         Spacer()
                     }
@@ -163,16 +164,21 @@ struct MainView: View {
                         .background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
                 }
                 if state.current == nil {
-                    VStack(spacing: 15) {
-                        Image(systemName: "waveform.path").font(.system(size: 46)).foregroundStyle(accent.opacity(0.5))
-                        Text("下一场会议，从这里开始").font(.system(size: 20, weight: .medium))
-                        Text("线下会议用麦克风；线上会议可同时录下自己与对方。\n也可以导入已有音频，离线转录后导出或同步。")
-                            .font(AppTypography.body).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    VStack(spacing: 12) {
+                        Image(systemName: "lock.shield").foregroundStyle(accent)
+                        Text("录音和语音识别在本机进行").font(AppTypography.secondary).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    RecordingCanvasView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)
                     if state.recording { RecordingTransportView(state: state) }
                     else if state.audio != nil { NativePlaybackBar(state: state).controlSize(.regular) }
+                    GeometryReader { geometry in
+                        HStack(alignment: .top, spacing: 16) {
+                            RecordingCanvasView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)
+                            if geometry.size.width >= 760 {
+                                meetingInspector.frame(width: 250).frame(maxHeight: .infinity, alignment: .top)
+                            }
+                        }
+                    }
                 }
                 HStack(spacing: 8) {
                     Circle().fill(state.locked ? Color.orange : accent).frame(width: 6, height: 6)
@@ -194,8 +200,28 @@ struct MainView: View {
         .sheet(isPresented: $delivering) { RecordingDeliveryView(state: state) }
         .sheet(isPresented: $state.showSettings) { ConnectionsView(state: state) }
         .alert("需要处理", isPresented: Binding(get: { state.error != nil }, set: { if !$0 { state.error = nil } })) {
+            if state.error?.contains("没有可用的麦克风输入设备") == true {
+                Button("选择系统声音") { state.recordingMode = .systemAudio; state.error = nil }
+            }
             Button("好的") { state.error = nil }
         } message: { Text(state.error ?? "") }
+    }
+
+    private var meetingInspector: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("本机录音", systemImage: "lock.shield").font(AppTypography.secondary.weight(.semibold)).foregroundStyle(accent)
+            Divider()
+            Label("会议摘要", systemImage: "text.alignleft").font(AppTypography.heading)
+            if state.summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text("尚无摘要。录音与转写内容会保留在本机。")
+                    .foregroundStyle(.secondary)
+            } else {
+                ScrollView { Text(state.summary).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+            }
+            Spacer(minLength: 0)
+        }.font(AppTypography.secondary).padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
     }
 
     /// 会议详情只保留一条工具栏，把可编辑内容作为窗口主体。
@@ -291,7 +317,7 @@ struct MainView: View {
             HStack(spacing: 16) {
                 Image(systemName: "waveform").font(.system(size: 30)).foregroundStyle(accent)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("新的会议录音").font(AppTypography.heading)
+                    Text("准备录音").font(AppTypography.heading)
                     Text(recordingConfigurationSummary).font(AppTypography.secondary).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 12)
@@ -328,7 +354,7 @@ struct MainView: View {
                 } label: { Label("录音设置", systemImage: "slider.horizontal.3") }
                     .disabled(state.locked).help("修改音源、转写语言和录音模式")
             }
-        }.padding(20).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 16))
+        }.padding(24).background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(targeted ? accent : .gray.opacity(0.15), lineWidth: targeted ? 2 : 1))
             .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
                 guard !state.locked, let provider = providers.first else { return false }
