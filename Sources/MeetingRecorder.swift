@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreAudio
 import CoreMedia
 import Darwin
 import ScreenCaptureKit
@@ -40,6 +41,15 @@ enum MeetingRecorderError: LocalizedError {
 
 @MainActor
 final class MeetingRecorder {
+    static func requireMicrophone() throws {
+        var address = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var device = AudioDeviceID(kAudioObjectUnknown)
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &device) == noErr,
+              device != kAudioObjectUnknown else {
+            throw MeetingRecorderError.message("没有可用的麦克风输入设备。请连接麦克风并在系统设置中选择输入设备，或选择系统声音录音。")
+        }
+    }
     enum State { case idle, preparing, recording, paused, finishing }
     private(set) var state: State = .idle
     var onUpdate: ((TimeInterval, Float) -> Void)?
@@ -71,6 +81,7 @@ final class MeetingRecorder {
         state = .preparing
         do {
             if mode.needsMicrophone {
+                try Self.requireMicrophone()
                 guard await AVCaptureDevice.requestAccess(for: .audio) else {
                     throw MeetingRecorderError.message("请在系统设置 → 隐私与安全性 → 麦克风中允许录音。")
                 }
@@ -196,6 +207,7 @@ final class MeetingRecorder {
     }
 
     private func startMicrophoneCapture(sink: MeetingAudioSink) throws {
+        try Self.requireMicrophone()
         let engine = AVAudioEngine()
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)

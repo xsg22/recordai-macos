@@ -4,7 +4,7 @@ import Foundation
 /// 完全使用合成音频，不请求权限、不访问麦克风或系统音频。
 @main
 struct RecorderSmoke {
-    static func main() async throws {
+    @MainActor static func main() async throws {
         // 时间对齐使用音频时间戳，即便回调延迟抵达也不能改变 offset。
         var timeline = MeetingCaptureTimeline(started: 100)
         timeline.setPaused(true, at: 101)
@@ -19,6 +19,17 @@ struct RecorderSmoke {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("recorder-smoke-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
+        // 在没有默认输入设备的机器上验证真实启动与重试均安全失败。
+        if (try? MeetingRecorder.requireMicrophone()) == nil {
+            let recorder = MeetingRecorder()
+            do {
+                try await recorder.start(mode: .microphone, directory: root)
+                preconditionFailure("没有输入设备时不能开始录音")
+            } catch {
+                precondition(error.localizedDescription.contains("输入设备"))
+                precondition(recorder.state == .idle && !recorder.resume())
+            }
+        }
         let microphone = root.appendingPathComponent("microphone.caf")
         let system = root.appendingPathComponent("system.caf")
         try tone(url: microphone, frequency: 440)

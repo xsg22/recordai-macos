@@ -484,6 +484,10 @@ final class AppState: ObservableObject {
         if continuing, let current, current.pendingAudioFiles.isEmpty, !current.audioFiles.isEmpty, current.text.isEmpty {
             error = "已有录音尚未完成转录，请先转录已有录音。"; return
         }
+        if recordingMode.needsMicrophone {
+            do { try MeetingRecorder.requireMicrophone() }
+            catch { self.error = error.localizedDescription; return }
+        }
         prepareRecordingProfile()
         error = nil
         if activeRecordingProfile != .realtime || activeRecordingSessionMode == .continuous { showMiniRecorder() }

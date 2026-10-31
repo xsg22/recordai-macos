@@ -37,7 +37,7 @@ final class MiniRecordingController: NSObject, NSWindowDelegate {
         }.store(in: &subscriptions)
         for name in [NSApplication.didChangeScreenParametersNotification, NSWindow.didChangeOcclusionStateNotification, NSApplication.didHideNotification, NSApplication.didUnhideNotification] {
             observers.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.refresh() }
+                Task { @MainActor [weak self] in self?.refresh() }
             })
         }
     }

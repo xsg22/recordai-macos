@@ -18,11 +18,12 @@ struct RecordingWindowObserver: NSViewRepresentable {
             state?.mainWindow = window
             for name in [NSWindow.didBecomeKeyNotification, NSWindow.didChangeOcclusionStateNotification, NSWindow.didMiniaturizeNotification, NSWindow.didDeminiaturizeNotification, NSWindow.willCloseNotification, NSApplication.didHideNotification, NSApplication.didUnhideNotification] {
                 let isApplication = name == NSApplication.didHideNotification || name == NSApplication.didUnhideNotification
-                observations.append(NotificationCenter.default.addObserver(forName: name, object: isApplication ? nil : window, queue: .main) { [weak self] notification in
-                    MainActor.assumeIsolated {
-                        guard let self else { return }
-                        if notification.name == NSWindow.didBecomeKeyNotification { self.state?.restoreMainPresentation() }
-                        if notification.name == NSWindow.willCloseNotification { self.state?.mainWindowVisible = false; self.state?.mainWindow = nil }
+                observations.append(NotificationCenter.default.addObserver(forName: name, object: isApplication ? nil : window, queue: .main) { [weak self, weak window] notification in
+                    let name = notification.name
+                    Task { @MainActor [weak self, weak window] in
+                        guard let self, let window, self.state?.mainWindow === window else { return }
+                        if name == NSWindow.didBecomeKeyNotification { self.state?.restoreMainPresentation() }
+                        if name == NSWindow.willCloseNotification { self.state?.mainWindowVisible = false; self.state?.mainWindow = nil }
                         else { self.refresh() }
                     }
                 })
