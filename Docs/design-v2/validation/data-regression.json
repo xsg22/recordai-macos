@@ -1,6 +1,6 @@
 {
-  "recorded_at": "2026-11-01T17:23:23.248035+08:00",
-  "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+  "recorded_at": "2026-11-01T18:03:20.248492+08:00",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
   "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23",
   "command": "PATH=/opt/homebrew/opt/python@3.12/libexec/bin:$PATH zsh Scripts/release.zsh --candidate",
   "exit_code": 0,
@@ -8,7 +8,7 @@
   "ui_contract_groups": 8,
   "scope": "临时资料、合成音频、假账号服务及协议夹具；没有麦克风采集、真实登录或远端文档写入。",
   "source_sha256": {
-    "Sources/ASRModelStore.swift": "89095db435de8a47e5f2a862eb14d8b311b0e625b52d42124134ef838ce0aa67",
+    "Sources/ASRModelStore.swift": "6177895f81b80c53832074b61c014b8488abcecb325b304752d6e124b7f25f0e",
     "Sources/ASRResources.swift": "bb75b01aa112f6e72c4263b17158c1dc7d9fc77e2f24003eb85c73a3a8a93afa",
     "Sources/AccountCommandRunner.swift": "dd596022317fad1c505ce1b0c667b67b85f243329424f9b81c6b8d8d427de283",
     "Sources/AccountConnectionPanel.swift": "b1364d356ebd528f384f13f5faeb5ef220e82b494c2692c7a63b8ac728e8f2a0",
@@ -20,7 +20,7 @@
     "Sources/BrowserAuthorizationCoordinator.swift": "6b87d839c967abf9781d476fb7d71fb82fc85feca11adac1b49f1a4ab0c4c35d",
     "Sources/CaptureRecovery.swift": "148c25070ab3e05b9c004aa06190c9cf651fa973f14c1dbb626ddc6d82d80b42",
     "Sources/CaptureRecoveryView.swift": "56a5b4bb50004992af2fd785fe40e5de100b0484d31caadedc5c9ee3144f9791",
-    "Sources/CoHearTranscribeApp.swift": "17de2218b7d22ae2b4531e5f4c34602a54285ef1942571f88e76677aaa8667f4",
+    "Sources/CoHearTranscribeApp.swift": "7528f08f736e1d6e744147c3ab6c3e06190e7de72115e0e2c844ea6c8e6461fd",
     "Sources/ContinuousRecording.swift": "4be758f656199a54a6801658a6b1c34a1605b374ceb155eb06f8bfc34de1885b",
     "Sources/DesignSystem.swift": "8e457aa63afd60092c79276316996daecccf1c4b5936473e45448af59e984d0e",
     "Sources/DingTalkAccountConnection.swift": "9a8f2836e0da432e248dc9a20c92ac568b34021dec68409f3dc11fc459815488",
@@ -51,9 +51,9 @@
     "Sources/QuitConfirmationView.swift": "4ba305ef41ef66c15a5634da706beda74fbaa81bfffb4e240b566f8c5ab51427",
     "Sources/RecordAIControl.swift": "6fff89faa23dc828fcd977bfc336416c4d99a9d21a53e205af3903bd6ce0ad47",
     "Sources/RecordAIErrorView.swift": "9207846cd40130198895287b0522544d6d7cd0880767927f04618471de5193cc",
-    "Sources/RecordAIExecutionView.swift": "88f4ba94b9216b5fbe2c6091c1a5156a853211f8df6f002cdf8b1a2e672a74b7",
+    "Sources/RecordAIExecutionView.swift": "37f76f615d5cb4f12894039bb2dac8ae1c92144dd3a8807de927b95e4bdb28f7",
     "Sources/RecordingAppConfigurationView.swift": "e42ab238ad519940c48f661bc2b5d9c78144ee7916f1aee2b76033264895e3d5",
-    "Sources/RecordingDeliveryView.swift": "c1fe6ebe77988480de249bef44a6d4bfc629ae8250bbce00e5c293e689d8da65",
+    "Sources/RecordingDeliveryView.swift": "f9ff067975848241a8f8bfe4f054f75773a358c949a33ca704db87e5ccd8470f",
     "Sources/RecordingLibraryRow.swift": "8448251179aeb7c751f1e94ea926091bf7177b1add20d1e133da6be2446b7d22",
     "Sources/RecordingProfile.swift": "271d32a71107f1225d8f5a7a37115350c351a586bd9506b274c9674d0a2b785d",
     "Sources/RecordingTransportView.swift": "b3b1f06bdad314aa1969d76f9d522d30dc8ece8730187c49f7a14f77940714b0",
@@ -109,7 +109,7 @@
     "Tests/SpeakerStateFlowSmoke.swift": "61293f840a2998adbd18ffbb32b9a59c9b1c2ddc4a9adc5375db1a343ef44f70",
     "Tests/SyncMCPSmoke.swift": "cc87feb54a9c92ad29f4ff7dab764fe6187c391dbfc71ed6294c284d5753a041",
     "Tests/TranscriptReplayDriver.swift": "ddf0a5b926343f8a4426373dea7b15824d554223cd0f00179b5873bf51d3a0da",
-    "Tests/UIPreview.swift": "ad0c26e174bb4a453029084f18c479c814dfd9dcd2a0522ae30f6271aca5545e",
+    "Tests/UIPreview.swift": "278f7d4bbef1c93a5e448e34a0719aed5e78537c4439671df920cd4dcfc248fb",
     "Tests/WaveformBenchmark.swift": "18b3328949f9a7e68985d8d0459a1752d6cbfe588d3e294242d70981ccfa8909"
   }
 }

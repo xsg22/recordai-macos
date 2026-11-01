@@ -3,16 +3,19 @@
   "title": "后台录音 · 精简视图",
   "status": "pending",
   "observed": true,
-  "observation": "精简正文说明、展开入口和底部录音条存在；后台 ASR 保持由状态回归验证。",
+  "observation": "卡片顶部已由约 517 调整至约 539，标题及展开按钮间距已再次截图对照。",
   "checks": [
     "后台 ASR 保持",
     "展开正文",
     "菜单栏控制"
   ],
   "outstanding_visual_differences": [
-    "精简说明卡片顶部约比设计稿高 23 个逻辑像素，待最终对齐。"
+    "右侧摘要和行动项的文字换行、原生控件与图标细节尚待最终视觉签核。"
   ],
-  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
   "actual_screenshot": "Docs/design-v2/validation/final/08-background.jpg",
-  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+  "captureEvidence": "Docs/design-v2/validation/final/08-background.capture.json",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+  "capturedAt": "2026-11-01T09:56:30.133Z"
 }

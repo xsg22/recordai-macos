@@ -3,14 +3,17 @@
   "title": "导入音频 · 系统文件选择器",
   "status": "pending",
   "observed": true,
-  "observation": "真实 NSOpenPanel，仅音频可选；已导入 2 秒隔离 WAV 并保留源文件，最终版本亦验证取消。",
+  "observation": "隔离系统选择器及真实候选客户端均已导入；31 秒合成双人样本经内置本地引擎完成，原文件与副本哈希一致，新主入口已复验。",
   "checks": [
     "音频格式过滤",
     "取消",
     "复制源音频"
   ],
   "outstanding_visual_differences": [],
-  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
   "actual_screenshot": "Docs/design-v2/validation/final/41-import.jpg",
-  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+  "captureEvidence": "Docs/design-v2/validation/final/41-import.capture.json",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+  "capturedAt": "2026-11-01T09:59:59.901Z"
 }

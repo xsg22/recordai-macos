@@ -1,12 +1,12 @@
 {
-  "recorded_at": "2026-11-01T17:23:23.248035+08:00",
+  "recorded_at": "2026-11-01T18:03:20.248492+08:00",
   "version": "0.16.0",
   "status": "candidate-not-published",
   "ui_acceptance": "pending",
-  "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
   "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23",
   "script_exit_code": 0,
-  "main_binary_sha256": "a5aa41e3d162022cf41d2697da3e05971bb12bbe974952651cd63430f3e8d174",
+  "main_binary_sha256": "3a9c64ae6b9efc24008d8c0abddc4beb6323a91fb5413382753a3154fd1cdab4",
   "embedded_asr_sha256": "86c513d8f3fede8fd5f118be9c7cc6d1ecf9565094ee033ae9379a2d9e01c15c",
   "checks": [
     "22 isolated regression/contract groups",
@@ -17,7 +17,7 @@
     "PKG payload content and executable match"
   ],
   "artifacts": {
-    "RecordAI-0.16.0-arm64.dmg": "8f40c3fc988b0554d7cebfb1113b9fd9fd6c7c0d2b1fd179e8cc458528932df2",
-    "RecordAI-0.16.0-arm64.pkg": "81bea7a5658cb4123ffe4e91b597f26f9a4a3a2da4b81a7dd095b5e01545f5af"
+    "RecordAI-0.16.0-arm64.dmg": "f4f060cd9ceeddd987eb6d95e1d95f6d48d3b60b410e7763fdc861ba0b5dbd44",
+    "RecordAI-0.16.0-arm64.pkg": "5dd4063b4cbe9b3ccecd88e1d808eff12961b0771330b0d3db21ad5e89169fc7"
   }
 }

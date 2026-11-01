@@ -40,6 +40,8 @@ import CryptoKit
             record.audioFiles = [file]; record.audioDurations = [file: 1234]
             record.transcriptParagraphs = [TranscriptParagraph(text: paragraphs[0], start: 0, end: 28, audioFile: file, speakerIDs: ["1"], localStart: 0), TranscriptParagraph(text: paragraphs[1], separator: "\n", start: 28, end: 54, audioFile: file, speakerIDs: ["2"], localStart: 28), TranscriptParagraph(text: paragraphs[2], separator: "\n", start: 72, end: 104, audioFile: file, speakerIDs: ["3"], localStart: 72)]
             record.speakerNames = ["1": "发言人 1", "2": "发言人 2", "3": "发言人 3"]; _ = try? library.save(record)
+            record.liveUtterances = [LiveUtterance(text: "隔离演示：大家好，我们开始今天的产品周会。", start: 0, end: 5)]
+            _ = try? library.save(record)
             let attachment = root.appendingPathComponent("产品需求.txt")
             try? Data("产品周会 · 隔离演示附件".utf8).write(to: attachment)
             _ = try? library.importAttachment(attachment, into: &record)
@@ -211,6 +213,10 @@ import CryptoKit
             if number == 27 { state.syncing = true; state.syncStatus = "正在保存文档 · 请勿重复提交。" }
             if number == 28 { state.syncStatus = "演示：同步完成"; state.remoteURL = URL(string: "https://example.invalid/recordai-demo"); state.syncReceipt = "这是隔离预览回执，没有发送外部文档。" }
             if number == 29 { state.select(recoveryID) }
+            if number == 31 {
+                state.busy = true; state.transcriptPhase = .recognizing
+                state.status = "正在生成最终转录"; state.elapsed = 1234
+            }
             presented = number
         case 35: state.deleteCurrent()
         case 36:

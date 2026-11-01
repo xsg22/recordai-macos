@@ -2,9 +2,9 @@
 
 设计源：[完整界面设计册](design-v2/index.html)。页面编号与 [manifest.json](design-v2/manifest.json) 一一对应；验收记录位于 [acceptance.json](design-v2/acceptance.json)。
 
-当前结论：未完成，未宣称 100% 还原。44 项均有独立记录；43 页已实际截图对照，第 43 项真实系统菜单尚缺证据。最终源码补拍到第 04 页时 Mac 再次锁屏；解锁后继续，其余页不会省略。下载弹窗间距、后台说明卡片与执行阶段夹具仍有待收紧项，详见 [review-progress.json](design-v2/validation/review-progress.json)。
+当前结论：未完成，未宣称 100% 还原。44 项均有独立记录；43 页已补拍并绑定当前源码，第 43 项真实系统菜单尚缺证据。Mac 当前可操作，已请求展开真实菜单。模型弹窗尺寸、后台说明卡片位置和执行阶段夹具已修正；剩余视觉与交互签核见 [review-progress.json](design-v2/validation/review-progress.json)。
 
-22 组隔离回归/契约测试及本地候选包内容校验已通过，证据见 [data-regression.json](design-v2/validation/data-regression.json)、[ui-contracts.json](design-v2/validation/ui-contracts.json) 和 [candidate-package.json](design-v2/validation/candidate-package.json)。这些结果不替代最终视觉签核，也不表示真实 OAuth、远端发文或麦克风采集已经验收。
+22 组隔离回归/契约测试及本地候选包内容校验已通过，证据见 [data-regression.json](design-v2/validation/data-regression.json)、[ui-contracts.json](design-v2/validation/ui-contracts.json) 和 [candidate-package.json](design-v2/validation/candidate-package.json)。另有真实候选客户端的[音频导入端到端实测](design-v2/validation/import-e2e/README.md)，涵盖内置引擎、分人、回放、校正和导出。这些结果不替代最终视觉签核，也不表示真实 OAuth、远端发文或麦克风采集已经验收。
 
 | 编号 | 页面 / 状态 | 最终验收 |
 | --- | --- | --- |

@@ -11,7 +11,10 @@
     "段落归属"
   ],
   "outstanding_visual_differences": [],
-  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
   "actual_screenshot": "Docs/design-v2/validation/final/33-speaker.jpg",
-  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+  "captureEvidence": "Docs/design-v2/validation/final/33-speaker.capture.json",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+  "capturedAt": "2026-11-01T09:58:47.569Z"
 }

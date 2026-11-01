@@ -1,9 +1,9 @@
 {
-  "recorded_at": "2026-11-01T17:24:21.320480+08:00",
+  "recorded_at": "2026-11-01T18:06:53.780658+08:00",
   "overall": "pending",
   "observed_page_count": 43,
   "accepted_page_count": 0,
-  "current_blocker": "最终版本补拍至 04 时 Mac 再次锁屏；等待手动解锁。第 43 页还需要用户展开真实状态栏菜单。",
+  "current_blocker": "Mac 已可操作，43 页已补拍当前源码。第 43 页真实系统状态栏图标仍无法由界面工具定位；已请用户展开，等待实际菜单截图与操作。",
   "pages": [
     {
       "id": "01-home",
@@ -18,9 +18,12 @@
         "模型未就绪提示"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/01-home.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/01-home.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:58.613Z"
     },
     {
       "id": "02-library",
@@ -36,9 +39,12 @@
         "本地附件"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/02-library.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/02-library.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:59.868Z"
     },
     {
       "id": "03-starred",
@@ -52,9 +58,12 @@
         "取消星标"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/03-starred.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/03-starred.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:00.976Z"
     },
     {
       "id": "04-search",
@@ -68,9 +77,12 @@
         "保留选择"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/04-search.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/04-search.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:01.945Z"
     },
     {
       "id": "05-trash",
@@ -84,9 +96,12 @@
         "原音频随记录恢复"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/05-trash.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/05-trash.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:02.884Z"
     },
     {
       "id": "06-recording",
@@ -102,9 +117,12 @@
         "切换 mini"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/06-recording.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/06-recording.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:03.981Z"
     },
     {
       "id": "07-paused",
@@ -118,27 +136,33 @@
         "停止保存"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/07-paused.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/07-paused.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:05.132Z"
     },
     {
       "id": "08-background",
       "title": "后台录音 · 精简视图",
       "status": "pending",
       "observed": true,
-      "observation": "精简正文说明、展开入口和底部录音条存在；后台 ASR 保持由状态回归验证。",
+      "observation": "卡片顶部已由约 517 调整至约 539，标题及展开按钮间距已再次截图对照。",
       "checks": [
         "后台 ASR 保持",
         "展开正文",
         "菜单栏控制"
       ],
       "outstanding_visual_differences": [
-        "精简说明卡片顶部约比设计稿高 23 个逻辑像素，待最终对齐。"
+        "右侧摘要和行动项的文字换行、原生控件与图标细节尚待最终视觉签核。"
       ],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/08-background.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/08-background.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:30.133Z"
     },
     {
       "id": "09-no-microphone",
@@ -153,9 +177,12 @@
         "保留已有资料"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/09-no-microphone.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/09-no-microphone.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:06.221Z"
     },
     {
       "id": "10-device-lost",
@@ -170,9 +197,12 @@
         "停止保存"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/10-device-lost.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/10-device-lost.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:07.472Z"
     },
     {
       "id": "11-transcribing",
@@ -186,9 +216,12 @@
         "分人与对齐进度"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/11-transcribing.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/11-transcribing.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:13.403Z"
     },
     {
       "id": "12-mini",
@@ -205,9 +238,12 @@
         "置顶"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/12-mini.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/12-mini.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:50.031Z"
     },
     {
       "id": "13-mini-paused",
@@ -221,9 +257,12 @@
         "主窗口恢复"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/13-mini-paused.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/13-mini-paused.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:51.709Z"
     },
     {
       "id": "14-mini-error",
@@ -237,65 +276,71 @@
         "保存已有录音"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/14-mini-error.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/14-mini-error.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:53.461Z"
     },
     {
       "id": "15-model-setup",
       "title": "模型 · 首次下载",
       "status": "pending",
       "observed": true,
-      "observation": "四组模型、4.22 GB 实际清单大小、开始下载与关闭入口核对；下载状态来自夹具。",
+      "observation": "当前原生弹窗为 720×565；本地运行标签、下载大小和模型清单已再次对照。",
       "checks": [
         "模型列表",
         "下载总量",
         "下载入口",
         "关闭不误取消"
       ],
-      "outstanding_visual_differences": [
-        "实际弹窗高度约 528，设计约 565；包含实际下载总量，间距仍待最终确认。"
-      ],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "outstanding_visual_differences": [],
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/15-model-setup.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/15-model-setup.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:32.413Z"
     },
     {
       "id": "16-model-progress",
       "title": "模型 · 下载与校验",
       "status": "pending",
       "observed": true,
-      "observation": "62% 和已下载大小、校验状态、取消/后台继续完整；实际点击过取消。",
+      "observation": "当前原生弹窗为 720×711；百分比与真实字节量同排、缓存说明及取消/后台继续入口已对照。",
       "checks": [
         "进度",
         "已下载大小",
         "文件校验",
         "取消"
       ],
-      "outstanding_visual_differences": [
-        "实际高度约 692，设计约 711；下载百分比与字节布局仍待最终确认。"
-      ],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "outstanding_visual_differences": [],
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/16-model-progress.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/16-model-progress.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:34.107Z"
     },
     {
       "id": "17-model-error",
       "title": "模型 · 失败与重试",
       "status": "pending",
       "observed": true,
-      "observation": "网络错误、缓存保留和重试入口核对；实际点击重试，文件校验由临时文件回归验证。",
+      "observation": "当前原生弹窗为 720×541；保留缓存、错误原因及重试按钮已对照。",
       "checks": [
         "失败原因",
         "重试",
         "缓存复用"
       ],
-      "outstanding_visual_differences": [
-        "实际高度约 528，设计约 541；间距仍待最终确认。"
-      ],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "outstanding_visual_differences": [],
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/17-model-error.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/17-model-error.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:35.773Z"
     },
     {
       "id": "18-settings-recording",
@@ -311,9 +356,12 @@
         "录音期间禁改"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/18-settings-recording.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/18-settings-recording.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:56.368Z"
     },
     {
       "id": "19-settings-models",
@@ -329,9 +377,12 @@
         "启用与关闭"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/19-settings-models.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/19-settings-models.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:57.920Z"
     },
     {
       "id": "20-account-dingtalk",
@@ -346,9 +397,12 @@
         "断开"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/20-account-dingtalk.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/20-account-dingtalk.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:57:59.453Z"
     },
     {
       "id": "21-account-feishu",
@@ -362,9 +416,12 @@
         "重新申请确认"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/21-account-feishu.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/21-account-feishu.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:01.088Z"
     },
     {
       "id": "22-account-notion",
@@ -378,9 +435,12 @@
         "断开"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/22-account-notion.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/22-account-notion.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:02.675Z"
     },
     {
       "id": "23-account-connected",
@@ -394,9 +454,12 @@
         "断开确认与结果"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/23-account-connected.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/23-account-connected.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:04.984Z"
     },
     {
       "id": "24-settings-data",
@@ -411,9 +474,12 @@
         "模型与用户资料边界"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/24-settings-data.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/24-settings-data.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:06.671Z"
     },
     {
       "id": "25-delivery",
@@ -428,9 +494,12 @@
         "同步预览入口"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/25-delivery.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/25-delivery.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:21.849Z"
     },
     {
       "id": "26-sync-preview",
@@ -445,9 +514,12 @@
         "未连接禁止发送"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/26-sync-preview.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/26-sync-preview.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:23.557Z"
     },
     {
       "id": "27-sync-progress",
@@ -461,9 +533,12 @@
         "不误关正在进行的任务"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/27-sync-progress.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/27-sync-progress.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:34.688Z"
     },
     {
       "id": "28-sync-result",
@@ -477,9 +552,12 @@
         "本地原件保留"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/28-sync-result.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/28-sync-result.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:41.135Z"
     },
     {
       "id": "29-recovery",
@@ -494,9 +572,12 @@
         "取消"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/29-recovery.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/29-recovery.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:42.698Z"
     },
     {
       "id": "30-recovery-empty",
@@ -510,16 +591,19 @@
         "打开原轨目录"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/30-recovery-empty.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/30-recovery-empty.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:44.421Z"
     },
     {
       "id": "31-execution",
       "title": "执行追踪",
       "status": "pending",
       "observed": true,
-      "observation": "六阶段来自 AppState 真实状态字段；当前示例处于已保存/空闲，不伪造正在推理。",
+      "observation": "已补齐与设计相同的转录进行中夹具；已保存音频显示已结束，有实时历史才显示实时 ASR 已结束，不将导入记录冒充实时识别。",
       "checks": [
         "采集实时状态",
         "ASR 队列",
@@ -527,11 +611,14 @@
         "Agent 发布"
       ],
       "outstanding_visual_differences": [
-        "需补充与设计稿相同的处理阶段夹具截图，当前实际状态为空闲/已保存。"
+        "状态卡的附加时长、阶段文案与细节布局仍需最终视觉签核。"
       ],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/31-execution.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/31-execution.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:56:37.535Z"
     },
     {
       "id": "32-paragraph-edit",
@@ -545,9 +632,12 @@
         "文字更新"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/32-paragraph-edit.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/32-paragraph-edit.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:45.979Z"
     },
     {
       "id": "33-speaker",
@@ -562,9 +652,12 @@
         "段落归属"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/33-speaker.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/33-speaker.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:47.569Z"
     },
     {
       "id": "34-action-item",
@@ -580,9 +673,12 @@
         "保存失败保留输入"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/34-action-item.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/34-action-item.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:58:49.318Z"
     },
     {
       "id": "35-delete-confirm",
@@ -596,9 +692,12 @@
         "源文件保留"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/35-delete-confirm.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/35-delete-confirm.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:39.719Z"
     },
     {
       "id": "36-quit-confirm",
@@ -612,9 +711,12 @@
         "保存失败不退出"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/36-quit-confirm.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/36-quit-confirm.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:43.106Z"
     },
     {
       "id": "37-notes",
@@ -629,9 +731,12 @@
         "来源引用"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/37-notes.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/37-notes.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:46.254Z"
     },
     {
       "id": "38-assistant",
@@ -646,9 +751,12 @@
         "空状态与模型缺失"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/38-assistant.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/38-assistant.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:48.039Z"
     },
     {
       "id": "39-narrow",
@@ -662,9 +770,12 @@
         "工具栏不截断"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/39-narrow.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/39-narrow.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:49.417Z"
     },
     {
       "id": "40-dark",
@@ -679,32 +790,38 @@
         "键盘焦点"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/40-dark.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/40-dark.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:57.882Z"
     },
     {
       "id": "41-import",
       "title": "导入音频 · 系统文件选择器",
       "status": "pending",
       "observed": true,
-      "observation": "真实 NSOpenPanel，仅音频可选；已导入 2 秒隔离 WAV 并保留源文件，最终版本亦验证取消。",
+      "observation": "隔离系统选择器及真实候选客户端均已导入；31 秒合成双人样本经内置本地引擎完成，原文件与副本哈希一致，新主入口已复验。",
       "checks": [
         "音频格式过滤",
         "取消",
         "复制源音频"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/41-import.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/41-import.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T09:59:59.901Z"
     },
     {
       "id": "42-export",
       "title": "导出 · 系统保存面板",
       "status": "pending",
       "observed": true,
-      "observation": "真实 NSSavePanel，已以指定名称保存 Markdown 并核对 1234 秒、正文/发言人，不含手写/AI内容。",
+      "observation": "隔离演示及真实候选客户端均已系统面板导出；原始/校正 Markdown、发言人时间标记、原始 SRT 经逐项核对。",
       "checks": [
         "文件名",
         "格式",
@@ -712,9 +829,12 @@
         "已存在文件覆盖由系统确认"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/42-export.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/42-export.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T10:00:01.887Z"
     },
     {
       "id": "43-menu-bar",
@@ -731,7 +851,7 @@
       "outstanding_visual_differences": [
         "缺真实菜单展开截图与点击证据。"
       ],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "等待用户展开真实菜单，截图并实际验证控制项。",
       "actual_screenshot": null,
       "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
     },
@@ -747,9 +867,12 @@
         "外部授权不自动确认"
       ],
       "outstanding_visual_differences": [],
-      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "next_step": "继续逐页视觉与交互签核；当前截图齐全不等同于 100% 还原通过。",
       "actual_screenshot": "Docs/design-v2/validation/final/44-errors.jpg",
-      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。",
+      "captureEvidence": "Docs/design-v2/validation/final/44-errors.capture.json",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+      "capturedAt": "2026-11-01T10:00:04.620Z"
     }
   ]
 }

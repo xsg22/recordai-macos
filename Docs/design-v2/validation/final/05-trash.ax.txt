@@ -30,7 +30,7 @@ Window: "RecordAI", App: RecordAI 界面预览.
 		28 container
 			29 text 回收站 恢复后，录音、文字和附件会一同回到录音库。
 			30 scroll area
-				31 text 产品方案讨论 2026年11月1日 17:07
+				31 text 产品方案讨论 2026年11月1日 17:56
 				32 button 恢复录音
 	33 toolbar
 		34 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel

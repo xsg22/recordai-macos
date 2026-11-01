@@ -56,5 +56,21 @@
     "dist/RecordAI-0.15.1-arm64.dmg",
     "dist/RecordAI-0.15.1-arm64.pkg"
   ],
-  "scope": "Only confirmed obsolete RecordAI package/staged app artifacts; no source, user data, models, dependency caches or remote release assets."
+  "scope": "Only confirmed obsolete RecordAI package/staged app artifacts; no source, user data, models, dependency caches or remote release assets.",
+  "latest_candidate_check": {
+    "recorded_at": "2026-11-01T18:07:21.113620+08:00",
+    "new_candidate_verified": true,
+    "dist_retained": [
+      "RecordAI-0.15.1-arm64.dmg",
+      "RecordAI-0.15.1-arm64.dmg.sha256",
+      "RecordAI-0.15.1-arm64.pkg",
+      "RecordAI-0.15.1-arm64.pkg.sha256",
+      "RecordAI-0.16.0-arm64.dmg",
+      "RecordAI-0.16.0-arm64.dmg.sha256",
+      "RecordAI-0.16.0-arm64.pkg",
+      "RecordAI-0.16.0-arm64.pkg.sha256"
+    ],
+    "additional_expired_dist_packages": [],
+    "note": "同版本候选包原位更新；仅有当前 0.16.0 与 0.15.1 回滚包及各自校验文件，本轮无需额外删除。"
+  }
 }

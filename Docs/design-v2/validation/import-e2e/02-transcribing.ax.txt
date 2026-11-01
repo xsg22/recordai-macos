@@ -1,0 +1,58 @@
+Window: "RecordAI", App: RecordAI.
+0 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise
+	1 split group recordings-AppWindow-1, SidebarNavigationSplitView
+		2 container
+			3 image RecordAI
+			4 text RecordAI 本地录音 · AI 转写
+			5 button (disabled) 开始新录音
+			6 button (disabled) 全部会议, 3
+			7 button (disabled) 星标, 0
+			8 button (disabled) 回收站, 0
+			9 text field (settable) 搜索会议名称或内容…
+			10 text 最近的会议
+			11 menu button 过滤, Description: filter, ID: line.3.horizontal.decrease
+			12 scroll area
+				13 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					14 button (selected) 合成会议导入验收，待处理，今天 17:41 · 31 秒
+					15 button 会议 2026/10/31 23:26，待处理，昨天 23:26
+					16 button 会议 2026/10/31 23:25，待处理，昨天 23:25
+			17 button Description: 设置, Help: 转录、同步账号与本机Agent
+			18 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
+		19 splitter (disabled, settable, float) 279
+		20 container
+			21 text field (settable) Value: 合成会议导入验收, Placeholder: 录音标题
+			22 button Description: 编辑录音标题, ID: pencil
+			23 button (disabled) Description: 添加星标, ID: star
+			24 text 2026年11月1日 17:41—17:41 · 31 秒
+			25 button (disabled) 继续录音
+			26 button 交付
+			27 menu button 更多, Help: 导出及更多操作, ID: ellipsis
+			28 busy indicator 0
+			29 text 正在本地识别第 1/1 段录音… · 音频已保存，可取消处理后稍后重试。
+			30 button 取消转录
+			31 button (selected) 转写
+			32 button 时间线
+			33 button 笔记与助手
+			34 slider (settable, float) Description: 音频波形播放进度, Value: 0, Details: 0 秒，共 31 秒
+			35 text 00:00 00:31
+			36 button Description: 后退 15 秒, ID: gobackward.15
+			37 button Description: 播放录音, ID: play.fill
+			38 button Description: 前进 15 秒, ID: goforward.15
+			39 scroll area
+				40 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					41 text 等待语音，识别文字会持续出现…
+			42 text 正在本地识别第 1/1 段录音… 0 字符
+	43 toolbar
+		44 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	45 text RecordAI
+	46 menu button Window sharing
+47 menu bar
+	48 RecordAI
+	49 File
+	50 Edit
+	51 View
+	52 RecordAI
+	53 Window
+	54 Help
+
+The focused UI element is 9 text field (settable) 搜索会议名称或内容…

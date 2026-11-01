@@ -5,10 +5,12 @@ struct RecordAIExecutionView: View {
     @Environment(\.dismiss) private var dismiss
 
     private var stages: [(String, String, String, Color)] {
-        let capture = state.recording ? "运行中" : "未运行"
-        let captureDetail = state.recording ? "MeetingRecorder · \(state.elapsed) 秒" : "等待录音会话"
-        let live = state.recording && state.liveEnabled ? "运行中" : state.recording ? "已关闭" : "未运行"
-        let liveDetail = state.liveStatus.isEmpty ? "实时 ASR 消费采集回调" : state.liveStatus
+        let hasSavedAudio = state.current?.audioFiles.isEmpty == false
+        let hasLiveHistory = state.current?.liveUtterances.isEmpty == false || state.current?.legacyLiveText.isEmpty == false
+        let capture = state.recording ? "运行中" : hasSavedAudio ? "已结束" : "未运行"
+        let captureDetail = state.recording ? "MeetingRecorder · \(state.elapsed) 秒" : hasSavedAudio ? "原始音频已保存" : "等待录音会话"
+        let live = state.recording && state.liveEnabled ? "运行中" : state.recording ? "已关闭" : hasLiveHistory ? "已结束" : "未运行"
+        let liveDetail = !state.recording && hasLiveHistory ? "草稿保留在实时历史" : state.liveStatus.isEmpty ? "实时 ASR 消费采集回调" : state.liveStatus
         let final = state.continuousProcessing ? "片段处理中" : state.busy ? phaseTitle : state.current?.text.isEmpty == false ? "已保存" : "等待触发"
         let finalDetail = state.continuousProcessing ? "Qwen 处理已关闭片段；录音继续" : state.busy ? state.status : "等待片段或完整音频任务"
         return [

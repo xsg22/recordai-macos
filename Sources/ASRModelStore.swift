@@ -176,7 +176,7 @@ struct ASRModelDownloadPanel: View {
                           ("Silero VAD", "语音检测", "waveform.path"),
                           ("Sortformer / 逐词对齐", "发言人与时间对齐", "person.2")]
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: busy ? 17 : error == nil ? 18 : 16) {
             HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 7) {
                 Text(ready ? "语音模型已就绪" : "下载语音模型").font(.system(size: 23, weight: .semibold))
@@ -185,7 +185,7 @@ struct ASRModelDownloadPanel: View {
             }
                 Spacer()
                 if let close { Button("完成", action: close).keyboardShortcut(.cancelAction) }
-            }.padding(.bottom, 10)
+            }.padding(.bottom, 16)
             VStack(spacing: 0) {
                 ForEach(Array(models.enumerated()), id: \.offset) { index, model in
                     HStack(spacing: 12) {
@@ -197,27 +197,37 @@ struct ASRModelDownloadPanel: View {
                         }
                         Spacer()
                         if ready { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).accessibilityLabel("已下载") }
-                        else { Text(busy ? "等待校验" : "本地运行").font(.system(size: 12)).foregroundStyle(.secondary) }
-                    }.padding(.vertical, 13)
+                        else {
+                            Text(busy ? "等待校验" : "本地运行").font(.system(size: 12)).foregroundStyle(RecordAITheme.muted)
+                                .padding(.horizontal, 6).padding(.vertical, 4)
+                                .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 5))
+                        }
+                    }.padding(.vertical, 14.5)
                     if index < models.count - 1 { Divider() }
                 }
             }
             if busy {
                 RecordAICard(quiet: true) {
-                    HStack { Text("正在下载与校验").font(AppTypography.body.weight(.medium)); Spacer(); Text("\(Int(progress * 100))%").monospacedDigit() }
-                    ProgressView(value: progress).tint(RecordAITheme.accent)
-                    if let totalBytes {
-                        Text(ByteCountFormatter.string(fromByteCount: Int64(Double(totalBytes) * max(0, min(1, progress))), countStyle: .file) + " / " + ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))
-                            .font(AppTypography.secondary).monospacedDigit().foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text("正在下载 · \(Int(progress * 100))%").font(AppTypography.body.weight(.medium)).monospacedDigit()
+                        Spacer()
+                        if let totalBytes {
+                            Text(ByteCountFormatter.string(fromByteCount: Int64(Double(totalBytes) * max(0, min(1, progress))), countStyle: .file) + " / " + ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))
+                                .font(AppTypography.secondary).monospacedDigit().foregroundStyle(.secondary)
+                        }
                     }
+                    ProgressView(value: progress).tint(RecordAITheme.accent)
                     Text(status).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Button("取消下载", action: cancel)
+                    }.frame(maxWidth: .infinity, minHeight: 161, alignment: .leading)
                 }
             } else if let error {
                 RecordAIInfo(text: error + " 已完成文件会保留，可重试继续下载。", warning: true)
             } else {
                 RecordAIInfo(text: ready ? status : "根据地区自动选择下载源，逐文件校验后才启用模型。录音和文字不会上传。")
             }
+            if error == nil { Spacer(minLength: 0) }
             HStack(alignment: .center, spacing: 16) {
                 VStack(alignment: .leading, spacing: 5) {
                     if let totalBytes { Text("下载大小：" + ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)) }
@@ -227,6 +237,6 @@ struct ASRModelDownloadPanel: View {
                 if !ready && !busy { Button(error == nil ? "下载语音模型" : "重试下载", action: download).buttonStyle(RecordAIPrimaryButtonStyle()) }
                 if busy, let close { Button("后台继续下载", action: close).buttonStyle(RecordAIPrimaryButtonStyle()) }
             }
-        }.frame(maxWidth: .infinity, alignment: .leading).buttonStyle(RecordAISecondaryButtonStyle())
+        }.frame(maxWidth: .infinity, minHeight: busy ? 655 : error == nil ? 509 : 485, alignment: .topLeading).buttonStyle(RecordAISecondaryButtonStyle())
     }
 }

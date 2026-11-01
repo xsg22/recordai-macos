@@ -1,0 +1,37 @@
+{
+  "kind": "macOS local speech synthesis, not a user recording",
+  "audio": "/Users/xueshengguo/Documents/projects/recordai-macos/.build/import-e2e-20261101/合成会议导入验收.wav",
+  "duration_seconds": 31.296249999999997,
+  "sha256": "5497257ed0001553b07f6fd15ae8c79179764e520f5bcfbd630d10ebfdac6f99",
+  "speakers": 2,
+  "segments": [
+    {
+      "speaker": "A",
+      "voice": "Tingting (中文（中国大陆）)",
+      "text": "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。",
+      "start": 0.5,
+      "end": 7.4238125
+    },
+    {
+      "speaker": "B",
+      "voice": "Eddy (中文（中国大陆）)",
+      "text": "设计方案已经完成评审。我会在十一月六日之前交付首页设计稿。",
+      "start": 8.3238125,
+      "end": 14.334687500000001
+    },
+    {
+      "speaker": "A",
+      "voice": "Tingting (中文（中国大陆）)",
+      "text": "好的。请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。",
+      "start": 15.234687500000001,
+      "end": 22.405375
+    },
+    {
+      "speaker": "B",
+      "voice": "Eddy (中文（中国大陆）)",
+      "text": "我记录了两个行动项：设计组完成首页交付，测试组验证离线流程。会议结束。",
+      "start": 23.305374999999998,
+      "end": 30.796249999999997
+    }
+  ]
+}

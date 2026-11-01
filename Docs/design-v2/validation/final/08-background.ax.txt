@@ -39,58 +39,57 @@ Window: "RecordAI", App: RecordAI 界面预览.
 				37 text 00:00 02:02 麦克风
 				38 button Description: 暂停录音, ID: pause.fill
 				39 button 停止并保存
-				40 text 后台录音中 实时识别继续运行，已确认文字持续保存。精简视图减少波形和正文刷新。
-				41 button 展开实时正文
-				42 text 录音状态也可从菜单栏查看，随时暂停或停止。
-				43 scroll area Secondary Actions: Scroll Up, Scroll Down
-					44 text 本地存储 · 隐私安全
-					45 button (selected) 会议总结
-					46 button 行动项
-					47 text 会议摘要
-					48 menu button 摘要操作, Description: More
-					49 text 本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。 关键要点 • 新版首页方案已通过评审 • 用户体系重构完成80% • 优先解决离线体验与文件管理问题 请核对摘要与录音。 行动项 3
-					50 button (disabled) 添加
-					51 button (disabled) Description: 标记完成：完成设计交付, ID: square
-					52 button (disabled) 完成设计交付
-					53 menu button (disabled) 行动项操作, Description: More
-					54 text 设计组 11月6日
-					55 button (disabled) Description: 标记完成：验证离线流程, ID: square
-					56 button (disabled) 验证离线流程
-					57 menu button (disabled) 行动项操作, Description: More
-					58 text 测试组 11月5日
-					59 button (disabled) Description: 标记完成：整理用户反馈, ID: square
-					60 button (disabled) 整理用户反馈
-					61 menu button (disabled) 行动项操作, Description: More
-					62 text 产品组 11月3日 相关内容
-					63 button (disabled) 添加
-					64 image Description: 文稿, ID: doc
-					65 button 产品需求.txt, 本地附件 · 34 bytes
-					66 menu button 附件操作, Description: More
-					67 scroll bar (settable, float) 0
-						68 value indicator (settable, float) 0
-						69 increment arrow button
-						70 decrement arrow button
-						71 increment page button
-						72 decrement page button
-				73 text 准备就绪 · 音频仅在这台 Mac 上处理 154 字符
-		74 button Description: 停止并保存, ID: stop.fill
-		75 button Description: 暂停录音, ID: pause.fill
-		76 text Help: 拖动此处移动录音条, Value: 正在录音 00:02:02
-		77 unknown Description: 录音声波, Details: 检测到声音
-		78 text 麦克风 产品周会
-		79 button Description: 收起为 mini, ID: chevron.up
-		80 menu button 更多录音操作, Description: More
-	81 toolbar
-		82 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
-	83 text RecordAI
-	84 menu button Window sharing
-85 menu bar
-	86 RecordAI 界面预览
-	87 File
-	88 Edit
-	89 View
-	90 逐页验收
-	91 Window
-	92 Help
+				40 text Help: 录音状态也可从菜单栏查看，随时暂停或停止。, Value: 后台录音中 实时识别继续运行。可展开正文查看最新文字。
+				41 button Description: 展开实时正文, Help: 录音状态也可从菜单栏查看，随时暂停或停止。
+				42 scroll area Secondary Actions: Scroll Up, Scroll Down
+					43 text 本地存储 · 隐私安全
+					44 button (selected) 会议总结
+					45 button 行动项
+					46 text 会议摘要
+					47 menu button 摘要操作, Description: More
+					48 text 本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。 关键要点 • 新版首页方案已通过评审 • 用户体系重构完成80% • 优先解决离线体验与文件管理问题 请核对摘要与录音。 行动项 3
+					49 button (disabled) 添加
+					50 button (disabled) Description: 标记完成：完成设计交付, ID: square
+					51 button (disabled) 完成设计交付
+					52 menu button (disabled) 行动项操作, Description: More
+					53 text 设计组 11月6日
+					54 button (disabled) Description: 标记完成：验证离线流程, ID: square
+					55 button (disabled) 验证离线流程
+					56 menu button (disabled) 行动项操作, Description: More
+					57 text 测试组 11月5日
+					58 button (disabled) Description: 标记完成：整理用户反馈, ID: square
+					59 button (disabled) 整理用户反馈
+					60 menu button (disabled) 行动项操作, Description: More
+					61 text 产品组 11月3日 相关内容
+					62 button (disabled) 添加
+					63 image Description: 文稿, ID: doc
+					64 button 产品需求.txt, 本地附件 · 34 bytes
+					65 menu button 附件操作, Description: More
+					66 scroll bar (settable, float) 0
+						67 value indicator (settable, float) 0
+						68 increment arrow button
+						69 decrement arrow button
+						70 increment page button
+						71 decrement page button
+				72 text 准备就绪 · 音频仅在这台 Mac 上处理 154 字符
+		73 button Description: 停止并保存, ID: stop.fill
+		74 button Description: 暂停录音, ID: pause.fill
+		75 text Help: 拖动此处移动录音条, Value: 正在录音 00:02:02
+		76 unknown Description: 录音声波, Details: 检测到声音
+		77 text 麦克风 产品周会
+		78 button Description: 收起为 mini, ID: chevron.up
+		79 menu button 更多, Description: More, Help: 更多录音操作, ID: ellipsis
+	80 toolbar
+		81 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	82 text RecordAI
+	83 menu button Window sharing
+84 menu bar
+	85 RecordAI 界面预览
+	86 File
+	87 Edit
+	88 View
+	89 逐页验收
+	90 Window
+	91 Help
 
 The focused UI element is 0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen

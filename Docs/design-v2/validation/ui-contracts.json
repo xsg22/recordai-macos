@@ -1,6 +1,6 @@
 {
-  "recorded_at": "2026-11-01T17:23:23.248035+08:00",
-  "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+  "recorded_at": "2026-11-01T18:03:20.248492+08:00",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
   "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23",
   "command": "python3 Scripts/test-ui-contracts.py",
   "exit_code": 0,

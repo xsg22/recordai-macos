@@ -56,7 +56,7 @@ Window: "RecordAI", App: RecordAI 界面预览.
 						54 button (disabled) Description: 01:12, Help: 播放这一段，结束后自动暂停
 						55 menu button 发言人 3, Help: 修改名称或合并同一人的发言
 						56 menu button 更多, Help: 编辑文字或修改本段发言人
-						57 text 后端这边，用户体系的重构已经完成80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。 本次实时识别 · 未定稿 正在识别 · 可能修订 预计本周五完成设计交付。
+						57 text 后端这边，用户体系的重构已经完成80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。 本次实时识别 · 未定稿 00:00 隔离演示：大家好，我们开始今天的产品周会。
 					58 scroll bar (settable, float) 0
 						59 value indicator (settable, float) 0
 						60 increment arrow button

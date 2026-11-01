@@ -12,7 +12,7 @@ Window: "", App: RecordAI 界面预览.
 		10 button 模型设置
 		11 scroll area Secondary Actions: Scroll Up, Scroll Down
 			12 list Secondary Actions: AXScrollToTop, AXScrollToBottom
-				13 text 这场会议有哪些后续工作？ 设计组完成首页方案交付；测试组检查离线流程。 17:07
+				13 text 这场会议有哪些后续工作？ 设计组完成首页方案交付；测试组检查离线流程。 17:56
 				14 disclosure triangle Description: 查看引用来源（1）, Value: off
 			15 scroll bar (settable, float) 0
 				16 value indicator (settable, float) 0

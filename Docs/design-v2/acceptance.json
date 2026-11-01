@@ -21,7 +21,7 @@
         "系统声音入口",
         "模型未就绪提示"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -44,7 +44,7 @@
         "摘要与行动项",
         "本地附件"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -65,7 +65,7 @@
         "星标筛选",
         "取消星标"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -86,7 +86,7 @@
         "清除检索",
         "保留选择"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -107,7 +107,7 @@
         "恢复录音",
         "原音频随记录恢复"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -130,7 +130,7 @@
         "停止保存",
         "切换 mini"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -151,7 +151,7 @@
         "继续录音",
         "停止保存"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -172,7 +172,7 @@
         "展开正文",
         "菜单栏控制"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -194,7 +194,7 @@
         "打开声音设置",
         "保留已有资料"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -216,7 +216,7 @@
         "原轨保全",
         "停止保存"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -237,7 +237,7 @@
         "取消保留音频",
         "分人与对齐进度"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -261,7 +261,7 @@
         "展开",
         "置顶"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -282,7 +282,7 @@
         "停止",
         "主窗口恢复"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -303,7 +303,7 @@
         "重试",
         "保存已有录音"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -325,7 +325,7 @@
         "下载入口",
         "关闭不误取消"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -347,7 +347,7 @@
         "文件校验",
         "取消"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -368,7 +368,7 @@
         "重试",
         "缓存复用"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -391,7 +391,7 @@
         "录音模式",
         "录音期间禁改"
       ],
-      "sourceDigest": "c42e875043b0d640781d7bb66b53394cc943e1cae2874668f492a2d344c2475b",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -414,7 +414,7 @@
         "取消下载",
         "启用与关闭"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -436,7 +436,7 @@
         "多账号选择",
         "断开"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -457,7 +457,7 @@
         "继续上次授权",
         "重新申请确认"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -478,7 +478,7 @@
         "重开授权页",
         "断开"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -499,7 +499,7 @@
         "连接状态",
         "断开确认与结果"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -521,7 +521,7 @@
         "重新发布快照",
         "模型与用户资料边界"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -543,7 +543,7 @@
         "音频导出",
         "同步预览入口"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -565,7 +565,7 @@
         "正文预览",
         "未连接禁止发送"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -586,7 +586,7 @@
         "阶段状态",
         "不误关正在进行的任务"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -607,7 +607,7 @@
         "失败可重试",
         "本地原件保留"
       ],
-      "sourceDigest": "c42e875043b0d640781d7bb66b53394cc943e1cae2874668f492a2d344c2475b",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -629,7 +629,7 @@
         "恢复不覆盖",
         "取消"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -650,7 +650,7 @@
         "重新检查",
         "打开原轨目录"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -672,7 +672,7 @@
         "定稿与分人",
         "Agent 发布"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -693,7 +693,7 @@
         "保存保留时标",
         "文字更新"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -715,7 +715,7 @@
         "恢复独立标签",
         "段落归属"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -738,7 +738,7 @@
         "完成状态",
         "保存失败保留输入"
       ],
-      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -759,7 +759,7 @@
         "移入回收站",
         "源文件保留"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -780,7 +780,7 @@
         "保存后退出",
         "保存失败不退出"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -802,7 +802,7 @@
         "生成取消",
         "来源引用"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -824,7 +824,7 @@
         "引用",
         "空状态与模型缺失"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -845,7 +845,7 @@
         "摘要可访问",
         "工具栏不截断"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -867,7 +867,7 @@
         "选中态",
         "键盘焦点"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -881,14 +881,15 @@
       "interactionEvidence": [
         "Docs/design-v2/validation/data-regression.json",
         "Docs/design-v2/validation/ui-contracts.json",
-        "Docs/design-v2/validation/final/41-import.ax.txt"
+        "Docs/design-v2/validation/final/41-import.ax.txt",
+        "Docs/design-v2/validation/import-e2e/result.json"
       ],
       "checks": [
         "音频格式过滤",
         "取消",
         "复制源音频"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -902,7 +903,8 @@
       "interactionEvidence": [
         "Docs/design-v2/validation/data-regression.json",
         "Docs/design-v2/validation/ui-contracts.json",
-        "Docs/design-v2/validation/final/42-export.ax.txt"
+        "Docs/design-v2/validation/final/42-export.ax.txt",
+        "Docs/design-v2/validation/import-e2e/result.json"
       ],
       "checks": [
         "文件名",
@@ -910,7 +912,7 @@
         "取消",
         "已存在文件覆盖由系统确认"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     },
     {
@@ -952,7 +954,7 @@
         "关闭可返回",
         "外部授权不自动确认"
       ],
-      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
     }
   ]

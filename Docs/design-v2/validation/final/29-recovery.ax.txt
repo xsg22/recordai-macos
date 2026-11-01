@@ -7,7 +7,7 @@ Window: "", App: RecordAI 界面预览.
 		5 image Description: 简介, ID: info.circle
 		6 text 原文、原轨和已保存片段都会保留；恢复不会覆盖已有录音。
 		7 scroll area
-			8 text 录音片段 · 11E47AE9 可恢复约 20 秒 · 原始音轨合成 麦克风原轨 可读取
+			8 text 录音片段 · 02CBC070 可恢复约 20 秒 · 原始音轨合成 麦克风原轨 可读取
 			9 button 恢复并保存此片段
 		10 button 重新检查
 		11 button 打开原轨文件夹

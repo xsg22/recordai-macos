@@ -8,16 +8,15 @@ struct RecordingCanvasView: View {
         VStack(alignment: .leading, spacing: 12) {
             if state.recording && (state.compactRecordingUI || !state.activeRecordingProfile.usesLiveASR) {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(state.paused ? "录音已暂停" : "后台录音中").font(AppTypography.heading)
-                    Text(state.activeRecordingProfile.usesLiveASR ? "实时识别继续运行，已确认文字持续保存。精简视图减少波形和正文刷新。" : "当前不加载实时识别模型，停止并保存后自动生成转录。")
-                        .foregroundStyle(.secondary)
+                    Text(state.paused ? "录音已暂停" : "后台录音中").font(AppTypography.heading).padding(.bottom, 6)
+                    Text(state.activeRecordingProfile.usesLiveASR ? "实时识别继续运行。可展开正文查看最新文字。" : "当前不加载实时识别模型，停止并保存后自动生成转录。")
+                        .font(.system(size: 14)).foregroundStyle(.secondary)
                     if state.mainWindowVisible && state.activeRecordingProfile.usesLiveASR {
                         Button("展开实时正文") { state.expandedRealtime = true }
                     }
-                    Text("录音状态也可从菜单栏查看，随时暂停或停止。")
-                        .font(AppTypography.secondary).foregroundStyle(.secondary)
-                }.padding(22).frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
+                }.padding(.horizontal, 20).padding(.top, 44).padding(.bottom, 20).frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
                     .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.top, 22).help("录音状态也可从菜单栏查看，随时暂停或停止。")
                 Spacer(minLength: 0)
             } else {
                 TranscriptTimelineView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)

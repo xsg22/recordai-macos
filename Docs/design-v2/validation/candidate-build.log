@@ -1,8 +1,8 @@
-2026-11-01 17:19:09.066 recording-entry-regression[84474:1831772] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
-2026-11-01 17:19:09.076 recording-entry-regression[84474:1831772] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
-2026-11-01 17:19:09.091 recording-entry-regression[84474:1831772] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
-2026-11-01 17:19:09.106 recording-entry-regression[84474:1831772] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
-2026-11-01 17:19:12.098 recording-entry-regression[84474:1831970] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-01 17:56:15.271 recording-entry-regression[90270:1900643] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-01 17:56:15.282 recording-entry-regression[90270:1900643] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-01 17:56:15.298 recording-entry-regression[90270:1900643] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-01 17:56:15.315 recording-entry-regression[90270:1900643] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-01 17:56:18.312 recording-entry-regression[90270:1900824] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
 PASS: 本机快照白名单、草稿隔离、ready、幂等版本、游标、只读、发布故障保原件、路径安全、删除回收
 MeetingLibrary smoke passed（仅临时测试数据）
 PASS: AppState旧库迁移/笔记保存/空标题保护/新转录不被旧编辑覆盖/全文搜索/会议导出，仅临时数据。
@@ -43,20 +43,22 @@ pkgbuild: Wrote package to /Users/xueshengguo/Documents/projects/recordai-macos/
 RecordAI-0.16.0-arm64.dmg: OK
 RecordAI-0.16.0-arm64.pkg: OK
 正在检查“Protective Master Boot Record（MBR：0）”的校验和…
-Protective Master Boot Record（MBR：0）：已验证CRC32 $6978E91B
+Protective Master Boot Record（MBR：0）：已验证CRC32 $260D913F
 正在检查“GPT Header（Primary GPT Header：1）”的校验和…
-    GPT Header（Primary GPT Header：1）：已验证CRC32 $2A5CB393
+    GPT Header（Primary GPT Header：1）：已验证CRC32 $76347FD9
 正在检查“GPT Partition Data（Primary GPT Table：2）”的校验和…
-GPT Partition Data（Primary GPT Table：已验证CRC32 $4EEC01DB
+GPT Partition Data（Primary GPT Table：已验证CRC32 $5392DB71
 正在检查“（Apple_Free：3）”的校验和…
                       （Apple_Free：3）：已验证CRC32 $00000000
 正在检查“disk image（Apple_APFS：4）”的校验和…
-            disk image（Apple_APFS：4）：已验证CRC32 $BDC8CF48
-正在检查“GPT Partition Data（Backup GPT Table：5）”的校验和…
-GPT Partition Data（Backup GPT Table：：已验证CRC32 $4EEC01DB
-正在检查“GPT Header（Backup GPT Header：6）”的校验和…
-     GPT Header（Backup GPT Header：6）：已验证CRC32 $1EB7F7AD
-已验证CRC32 $DFF176A0
+            disk image（Apple_APFS：4）：已验证CRC32 $7480C594
+正在检查“（Apple_Free：5）”的校验和…
+                      （Apple_Free：5）：已验证CRC32 $00000000
+正在检查“GPT Partition Data（Backup GPT Table：6）”的校验和…
+GPT Partition Data（Backup GPT Table：：已验证CRC32 $5392DB71
+正在检查“GPT Header（Backup GPT Header：7）”的校验和…
+     GPT Header（Backup GPT Header：7）：已验证CRC32 $6691E9A5
+已验证CRC32 $CA1057F3
 hdiutil: verify: checksum of "/Users/xueshengguo/Documents/projects/recordai-macos/dist/RecordAI-0.16.0-arm64.dmg" is VALID
 hdiutil: WARNING: 'hdiutil attach -readonly -nobrowse -mountpoint ...' is deprecated. Please use 'diskutil image attach --readOnly --mountOptions nobrowse --mountPoint ...' instead.
 PASS: 0.16.0 的签名、架构、内置 Python 3.12 与语音引擎、DMG/PKG 内容和校验值。

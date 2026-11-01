@@ -374,8 +374,14 @@ struct MainView: View {
                     .help("收起为 mini").accessibilityLabel("收起为 mini")
             }
             if !state.recording {
-                Button { state.continueRecording() } label: { Label("继续录音", systemImage: "mic") }
-                    .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+                if state.audio != nil && (state.text.isEmpty || state.current?.pendingAudioFiles.isEmpty == false) {
+                    Button { state.transcribe() } label: {
+                        Label(state.current?.pendingAudioFiles.isEmpty == false ? "继续转录" : "开始转录", systemImage: "waveform")
+                    }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+                } else {
+                    Button { state.continueRecording() } label: { Label("继续录音", systemImage: "mic") }
+                        .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+                }
             }
             Button { delivering = true } label: { Label("交付", systemImage: "square.and.arrow.up") }
                 .disabled(state.current == nil)
@@ -390,6 +396,7 @@ struct MainView: View {
                     Picker("录音模式", selection: $state.recordingProfile) { ForEach(RecordingProfile.allCases) { Text($0.title).tag($0) } }
                 }.disabled(state.locked)
                 Divider()
+                Button("继续录音") { state.continueRecording() }.disabled(state.locked || state.syncing)
                 Button("新会议录音") { state.toggleRecording() }.disabled(state.locked || state.syncing)
                 Divider()
                 Button("复制会议 Markdown") {
