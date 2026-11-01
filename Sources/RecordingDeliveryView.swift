@@ -38,7 +38,8 @@ struct RecordingDeliveryView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             RecordAIPageHeader(title: "导出与交付", subtitle: state.title + (state.text.isEmpty ? "" : " · 转录已保存")) {
-                Button("完成") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("完成") { dismiss() }
+                    .keyboardShortcut(showingAgentScope ? nil : .cancelAction)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -84,12 +85,16 @@ struct RecordingDeliveryView: View {
                                 .accessibilityLabel("数据目录与读取范围")
                                 .popover(isPresented: $showingAgentScope) {
                                     VStack(alignment: .leading, spacing: 16) {
-                                        Text("数据目录与读取范围").font(AppTypography.heading)
+                                        HStack {
+                                            Text("数据目录与读取范围").font(AppTypography.heading)
+                                            Spacer()
+                                            Button("关闭") { showingAgentScope = false }
+                                                .keyboardShortcut(.cancelAction)
+                                        }
                                         Text(state.agentDataURL.path).font(AppTypography.secondary).textSelection(.enabled)
                                         Text("只读接入，无需登录。默认读取定稿；实时草稿须显式请求。外部工具可以自行总结、问答或处理音频。")
                                             .font(AppTypography.secondary).foregroundStyle(.secondary)
                                     }.padding(20).frame(width: 420)
-                                        .onExitCommand { showingAgentScope = false }
                                 }
                         }
                         VStack(alignment: .leading, spacing: 12) {

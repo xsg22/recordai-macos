@@ -11,9 +11,11 @@ import CryptoKit
     private let mini: MiniRecordingController
     private let demoID: UUID
     private let recoveryID: UUID
+    private let previewRoot: URL
     private let pages = PreviewPage.load()
     init() {
         let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("recordai-ui-preview-" + UUID().uuidString)
+        previewRoot = root
         let library = try! MeetingLibrary(root: root)
         let demoID = UUID(); self.demoID = demoID
         let recoveryID = UUID(); self.recoveryID = recoveryID
@@ -143,6 +145,8 @@ import CryptoKit
                 .sheet(isPresented: Binding(get: { presented != 0 }, set: { if !$0 { presented = 0 } })) { previewSheet.id(presented) }
         }.defaultSize(width: 1440, height: 900).commands {
             CommandMenu("逐页验收") {
+                Button("检查窗口布局…") { inspectLayout() }
+                Divider()
                 ForEach(Array(Set(pages.map(\.group))).sorted(), id: \.self) { group in
                     Menu(group) { ForEach(pages.filter { $0.group == group }) { item in Button(item.id + " · " + item.title) { show(item.number) } } }
                 }
@@ -150,6 +154,26 @@ import CryptoKit
         }
         MenuBarExtra("录音预览", systemImage: "waveform") { RecordingMenuBarView(state: state) }
         Settings { RecordingAppConfigurationView(state: state, optionalModels: optionalModels).preferredColorScheme(page == 40 ? .dark : .light) }
+    }
+
+    /// Preview-only geometry evidence; never included in the shipping app.
+    private func inspectLayout() {
+        guard let window = state.mainWindow else { return }
+        var lines = ["page=\(page)", "window=\(window.frame)", "contentLayout=\(window.contentLayoutRect)",
+                     "minimum=\(window.minSize) contentMinimum=\(window.contentMinSize)",
+                     "screen=\(String(describing: window.screen?.visibleFrame))"]
+        func visit(_ view: NSView, depth: Int) {
+            lines.append(String(repeating: "  ", count: depth) + "\(type(of: view)) frame=\(view.frame) bounds=\(view.bounds) fitting=\(view.fittingSize)")
+            for child in view.subviews { visit(child, depth: depth + 1) }
+        }
+        if let root = window.contentView { visit(root, depth: 0) }
+        let url = previewRoot.appendingPathComponent("window-layout.txt")
+        try? lines.joined(separator: "\n").write(to: url, atomically: true, encoding: .utf8)
+        let alert = NSAlert()
+        alert.messageText = "窗口布局诊断"
+        alert.informativeText = lines.prefix(5).joined(separator: "\n") + "\n\n" + url.path
+        alert.addButton(withTitle: "完成")
+        alert.runModal()
     }
 
     @ViewBuilder private var previewSheet: some View {
