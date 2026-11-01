@@ -1,0 +1,64 @@
+{
+  "status": "passed",
+  "published_tag": "v0.16.0-functional.1",
+  "source_commit": "997eab3cd0b80df6b24d412ab46f5f963b3c2ab4",
+  "scope": "实际下载的 GitHub DMG 内引擎；合成中文音频、本机已安装模型只读使用。",
+  "audio_sha256": "5497257ed0001553b07f6fd15ae8c79179764e520f5bcfbd630d10ebfdac6f99",
+  "engine_sha256": "2f8e23f182513146b954f0447bf14d440ba8b7b390db12120ca91b65300f69fd",
+  "speaker_analysis_seconds": 4.632191334,
+  "paragraph_count": 4,
+  "speaker_sequence": [
+    [
+      "0"
+    ],
+    [
+      "1"
+    ],
+    [
+      "0"
+    ],
+    [
+      "1"
+    ]
+  ],
+  "speaker_alternation_correct": true,
+  "asr_text_preserved": true,
+  "paragraphs": [
+    {
+      "text": "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。",
+      "start": 0.506,
+      "end": 7.306,
+      "speakerIDs": [
+        "0"
+      ],
+      "separator": ""
+    },
+    {
+      "text": "设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。",
+      "start": 8.33,
+      "end": 13.85,
+      "speakerIDs": [
+        "1"
+      ],
+      "separator": "\n"
+    },
+    {
+      "text": "好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。",
+      "start": 15.162,
+      "end": 22.282,
+      "speakerIDs": [
+        "0"
+      ],
+      "separator": "\n"
+    },
+    {
+      "text": "我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。",
+      "start": 23.322,
+      "end": 30.282,
+      "speakerIDs": [
+        "1"
+      ],
+      "separator": "\n"
+    }
+  ]
+}

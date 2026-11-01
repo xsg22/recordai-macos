@@ -2,6 +2,8 @@
 
 RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
+**[下载 0.16.0 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.0-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.0-functional.1/RecordAI-0.16.0-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.0-functional.1/RecordAI-0.16.0-arm64.pkg)
+
 以下为原生客户端的实际截图，使用隔离演示资料。0.16.0 功能验证版优先交付已验证的本地转录主流程，完整 UI 逐页验收仍在进行，未宣称 100% 还原。
 
 ![RecordAI 首页](Docs/images/recordai-home.jpg)
