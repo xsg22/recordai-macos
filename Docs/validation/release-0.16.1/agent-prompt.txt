@@ -1,0 +1,1 @@
+'/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/.build/release-0161/RecordAI.app/Contents/MacOS/recordai' --root '/Users/xueshengguo/Library/Application Support/CoHearTranscribe/AgentData' setup --json

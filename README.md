@@ -2,9 +2,9 @@
 
 RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
-**[下载 0.16.0 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.0-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.0-functional.1/RecordAI-0.16.0-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.0-functional.1/RecordAI-0.16.0-arm64.pkg)
+**[下载 0.16.1 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.1-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.1-functional.1/RecordAI-0.16.1-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.1-functional.1/RecordAI-0.16.1-arm64.pkg)
 
-以下为原生客户端的实际截图，使用隔离演示资料。0.16.0 功能验证版优先交付已验证的本地转录主流程，完整 UI 逐页验收仍在进行，未宣称 100% 还原。
+以下为原生客户端的实际截图，使用隔离演示资料。0.16.1 功能验证版优先交付已验证的本地转录主流程，完整 UI 逐页验收仍在进行，未宣称 100% 还原。
 
 ![RecordAI 首页](Docs/images/recordai-home.jpg)
 
@@ -19,7 +19,7 @@ RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并�
 
 </details>
 
-[完整 44 页设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [下载安装包](https://github.com/xsg22/recordai-macos/releases)
+[完整设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [下载安装包](https://github.com/xsg22/recordai-macos/releases)
 
 选择麦克风、系统声音或两者作为音源，录音时可暂停、继续或切换到 mini 录音条；完成后可回放、按时间定位转录并导出。首次使用需要下载语音模型。
 
@@ -59,12 +59,14 @@ zsh Scripts/release.zsh
 
 该命令及 GitHub 发布工作流会要求全部 UI 验收通过。仅准备本地候选包可运行 `zsh Scripts/release.zsh --candidate`；它不会发布。
 
-明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.0-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
+明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.1-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
 
 详见[发布流程](Docs/发布流程.md)。Python 3.12 和语音引擎随安装包提供，最终用户无需另外安装 Python。
 
-## 开发分支：统一 Agent 接入（尚未发布）
+## 统一 Agent 接入
 
 首次获得已保存的非空转录时提示一次；在设置的“Agent 与数据”和交付页也可复制同一份接入提示词。粘贴给本地 Agent 后，由它获取当前版本 Skill 并按自己的环境安装。RecordAI 不要求选择 Agent，也不直接修改 Agent 配置。
 
-CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。当前 GitHub 安装包不包含本节新增功能。
+CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。该功能随 0.16.1 功能验证版提供；真实各品牌 Agent 的加载兼容性尚未全部联测。
+
+![首次转录后的 Agent 接入引导（合成音频验收资料）](Docs/validation/release-0.16.1/02-transcribed.jpg)

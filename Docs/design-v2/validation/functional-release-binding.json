@@ -1,7 +1,7 @@
 {
-  "recorded_at": "2026-11-01T18:37:18.759087+08:00",
-  "verifiedSourceCommit": "19c613ce2628ddafa6680fc2d34ec129273c8311",
-  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+  "recorded_at": "2026-11-01T14:35:36.000530+00:00",
+  "verifiedSourceCommit": "26a451ea6cad74a11a668d71ebcb62a79e4a54c4",
+  "sourceDigest": "85199959bda62f66f72921baaf10656d7970c1da071600a2aa8a7761894026e9",
   "runtimeInputs": [
     "Native/AgentCLI/main.swift",
     "Native/QwenRuntime/requirements.lock",
@@ -15,7 +15,8 @@
     "Scripts/prepare-asr-runtime.py",
     "Scripts/qwen-runtime.spec"
   ],
-  "runtimeInputDigest": "f1d547feba10459d211a2eb19dcdfc58ad0e003c8786a79c40605c884a3fdf56",
+  "runtimeInputDigest": "cec8bd5896d29679eb0499fe771441191e2b5405c1248c219f7bd67dbf74068a",
   "embeddedAsrSha256": "86c513d8f3fede8fd5f118be9c7cc6d1ecf9565094ee033ae9379a2d9e01c15c",
-  "releasePolicy": "用户明确允许主功能验证通过后先发布一版；本通道仅创建功能验证 prerelease，不将 UI 验收标为通过。"
+  "releasePolicy": "用户明确允许主功能验证通过后先发布一版；本通道仅创建功能验证 prerelease，不将 UI 验收标为通过。",
+  "evidenceRoot": "Docs/validation/release-0.16.1"
 }

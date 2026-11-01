@@ -48,9 +48,12 @@ def validate(report, regression, contracts, package, binding, source_hash, runti
 
 
 def main():
-    evidence = ROOT / "Docs/design-v2/validation"
+    binding = json.loads((ROOT / "Docs/design-v2/validation/functional-release-binding.json").read_text())
+    # Preserve historical release evidence; each release may bind its own fresh validation directory.
+    evidence = (ROOT / binding.get("evidenceRoot", "Docs/design-v2/validation")).resolve()
+    if not evidence.is_relative_to((ROOT / "Docs").resolve()):
+        raise ValueError("发布证据目录必须位于项目 Docs 内")
     read = lambda name: json.loads((evidence / (name + ".json")).read_text())
-    binding = read("functional-release-binding")
     source_hash = digest(list((ROOT / "Sources").glob("*.swift")) + [p for p in (ROOT / "Resources").rglob("*") if p.is_file()])
     runtime_paths = [ROOT / name for name in binding["runtimeInputs"]]
     version = plistlib.loads((ROOT / "Resources/Info.plist").read_bytes())["CFBundleShortVersionString"]

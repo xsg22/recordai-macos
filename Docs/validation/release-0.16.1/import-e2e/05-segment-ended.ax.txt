@@ -1,0 +1,4 @@
+The following is a diff from the previous accessibility tree for Window: "RecordAI" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~			43 slider (settable, float) Description: 音频波形播放进度, Value: 13.85, Details: 13 秒，共 31 秒
+~			46 button Description: 播放录音, ID: play.fill
+The focused UI element is 9 text field (settable) 搜索会议名称或内容…
