@@ -1,0 +1,48 @@
+{
+  "recorded_at": "2026-11-01T14:38:58.196986+00:00",
+  "removed": [
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/RecordAI-0.15.1-arm64.dmg",
+      "logicalBytes": 205834627
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/RecordAI-0.15.1-arm64.dmg.sha256",
+      "logicalBytes": 92
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/RecordAI-0.15.1-arm64.pkg",
+      "logicalBytes": 152112879
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/RecordAI-0.15.1-arm64.pkg.sha256",
+      "logicalBytes": 92
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/.build/previous.dmg",
+      "logicalBytes": 208579879
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/.build/dmg-0.16.1",
+      "logicalBytes": 464218950
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/.build/local-candidate-packages-0161",
+      "logicalBytes": 363233477
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist/github-v0.16.1-functional.1/dmg-chunks",
+      "logicalBytes": 79133343
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist/github-v0.16.1-functional.1/pkg-chunks",
+      "logicalBytes": 142101814
+    }
+  ],
+  "logicalBytesRemoved": 1615215153,
+  "kept": [
+    "dist/RecordAI-0.16.1-arm64.dmg and pkg + checksums downloaded from GitHub",
+    "recordai-macos/dist/github-v0.16.0-functional.1 rollback packages",
+    "Current and rollback signed App bundles"
+  ],
+  "preserved": "Source, user recordings, models, dependency caches and all remote release assets."
+}

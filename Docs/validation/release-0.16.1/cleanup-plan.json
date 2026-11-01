@@ -1,0 +1,16 @@
+{
+  "keep": [
+    "dist/RecordAI-0.16.1-arm64.dmg",
+    "dist/RecordAI-0.16.1-arm64.pkg",
+    "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1"
+  ],
+  "remove_after_local_candidate_and_rollback_verification": [
+    "recordai-macos/dist/RecordAI-0.15.1-arm64.dmg",
+    "recordai-macos/dist/RecordAI-0.15.1-arm64.dmg.sha256",
+    "recordai-macos/dist/RecordAI-0.15.1-arm64.pkg",
+    "recordai-macos/dist/RecordAI-0.15.1-arm64.pkg.sha256",
+    "recordai-macos/.build/previous.dmg",
+    "recordai-agent-onboarding/.build/dmg-0.16.1"
+  ],
+  "scope": "Only known project installer outputs and packaging staging. Preserve source, user data, models, dependencies and remote assets."
+}

@@ -1,0 +1,11 @@
+{
+  "transcriptionAndSRT": true,
+  "preCancellation": true,
+  "diarizationAndAlignment": true,
+  "paragraphCount": 4,
+  "speakerCount": 2,
+  "finalTextPreserved": true,
+  "packagedSetupVersion": "0.16.1",
+  "packagedCLIPath": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/.build/published-0161/RecordAI.app/Contents/MacOS/recordai",
+  "packagedEngineSHA256": "2f8e23f182513146b954f0447bf14d440ba8b7b390db12120ca91b65300f69fd"
+}

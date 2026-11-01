@@ -1,6 +1,6 @@
 # 首次转录后的 Agent 接入与录音控制
 
-日期：2026-11-01。开发分支 `codex/agent-onboarding` 已实现统一复制提示词、首次引导、自描述接口、Skill 分发与显式冷启动控制。自动化及原生入口验证记录见 `Docs/validation/agent-onboarding`。已发布的 `v0.16.0-functional.1` 不包含本次新增功能；尚未完成各品牌 Agent 的真实安装与真实硬件录音联测。最新决策：所有 Agent 统一使用接入提示词，替代此前 App 内选择 Agent 并安装的方案。
+日期：2026-11-01。开发分支 `codex/agent-onboarding` 已实现统一复制提示词、首次引导、自描述接口、Skill 分发与显式冷启动控制。自动化及原生入口验证记录见 `Docs/validation/agent-onboarding`。本功能已随 `v0.16.1-functional.1` 发布；尚未完成各品牌 Agent 的真实安装与真实硬件录音联测。最新决策：所有 Agent 统一使用接入提示词，替代此前 App 内选择 Agent 并安装的方案。
 
 ## 用户体验
 
@@ -48,7 +48,7 @@ Skill 包采用 `recordai/SKILL.md` 加按需引用的资源。文件格式可�
 
 ## 统一接入提示词与自描述接口
 
-下列接口已在本开发分支实现，当前 GitHub 发行包尚不包含这些新入口。
+下列接口已实现并包含于 GitHub 的 0.16.1 功能验证版。
 
 - CLI：`recordai setup --json`，支持现有 `--root` 指定实际 AgentData 根目录。
 - MCP：只读工具 `get_agent_setup`。

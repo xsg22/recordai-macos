@@ -11,3 +11,5 @@
 本轮重新执行 14 组录音/资料回归、8 组既有契约及新增 CLI/MCP/Skill 隔离集成；退出码均为0。import-e2e 为本轮门禁附件，根目录保留原始截图与AX操作记录。历史 0.16.0 证据留在原目录，未重新标记为当前通过。
 
 未验范围：各品牌 Agent 的真实加载、真实硬件录音与首次授权、外部 OAuth 和远端发文、45 页完整 UI 视觉还原。本通道仅允许功能验证 prerelease。
+
+GitHub 发布已完成。发布资产 SHA-256 与页面提供的摘要一致；下载的 DMG/PKG 经再次挂载和展开，包内引擎真实执行中文转录、SRT、预取消、VAD、双声音区分与对齐均通过。见 published-result.json 与 published-package-verification.log。保留当前 GitHub 安装包和 0.16.0 回滚包，清理记录见 cleanup-result.json。
