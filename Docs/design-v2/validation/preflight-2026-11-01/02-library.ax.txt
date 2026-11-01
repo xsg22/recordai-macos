@@ -1,0 +1,90 @@
+Window: "RecordAI", App: RecordAI 界面预览.
+0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen
+	1 split group SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen
+		2 container
+			3 image RecordAI
+			4 text RecordAI 本地录音 · AI 转写
+			5 button 开始新录音
+			6 button 全部会议, 5
+			7 button 星标, 1
+			8 button 回收站, 1
+			9 text field (settable) 搜索会议名称或内容…
+			10 text 最近的会议
+			11 menu button 过滤, Description: filter, ID: line.3.horizontal.decrease
+			12 scroll area Secondary Actions: Scroll Up, Scroll Down
+				13 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					14 button 待恢复录音, 待处理, 11月1日 15:56
+					15 button (selected) 产品周会, 已完成, 11月1日 09:00, 00:20
+					16 button (selected) 客户需求讨论, 已完成, 10月31日 09:00, 30:00
+					17 button (selected) 每周项目进展, 已完成, 10月30日 09:00, 30:00
+					18 button (selected) 课程录音, 已完成, 10月29日 09:00, 30:00
+				19 scroll bar (settable, float) 0
+					20 value indicator (settable, float) 0
+					21 increment arrow button
+					22 decrement arrow button
+					23 increment page button
+					24 decrement page button
+			25 button Description: 设置, Help: 转录、同步账号与本机Agent
+			26 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
+		27 splitter (disabled, settable, float) 279
+		28 container
+			29 text field (settable) Value: 产品周会, Placeholder: 录音标题
+			30 button Description: 编辑录音标题, ID: pencil
+			31 button Description: 取消星标, ID: star.fill
+			32 text 2026年11月1日 09:00
+			33 button 继续录音
+			34 button 交付
+			35 menu button 更多, Help: 导出及更多操作, ID: ellipsis
+			36 button (selected) 转写
+			37 button 时间线
+			38 button 笔记与助手
+			39 slider (settable, float) Description: 音频波形播放进度, Value: 0, Details: 0 秒，共 20 秒
+			40 text 00:00 00:20
+			41 button Description: 后退 15 秒, ID: gobackward.15
+			42 button Description: 播放录音, ID: play.fill
+			43 button Description: 前进 15 秒, ID: goforward.15
+			44 scroll area
+				45 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					46 button Description: 00:00, Help: 播放这一段，结束后自动暂停
+					47 menu button 发言人 1, Help: 修改名称或合并同一人的发言
+					48 menu button 更多, Help: 编辑文字或修改本段发言人, ID: ellipsis
+					49 button Description: 播放本段：大家好，我们开始今天的产品周会。主要讨论项目进度和下一步工作。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					50 button Description: 00:08, Help: 播放这一段，结束后自动暂停
+					51 menu button 发言人 2, Help: 修改名称或合并同一人的发言
+					52 menu button 更多, Help: 编辑文字或修改本段发言人, ID: ellipsis
+					53 button Description: 播放本段：本周设计方案已经完成评审。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+			54 scroll area
+				55 text 本地存储 · 隐私安全
+				56 button (selected) 会议总结
+				57 button 行动项
+				58 text 会议摘要
+				59 menu button 更多, Description: More, ID: ellipsis
+				60 text 团队已完成设计方案评审，下一步将继续推进实现与验证。 关键要点 • 本周完成首页与录音体验设计交付 • 验证无设备和离线使用流程 • 整理用户反馈并安排下次评审 请核对摘要与录音。 行动项 2
+				61 button 添加
+				62 button Description: 标记完成：完成设计交付, ID: square
+				63 button 完成设计交付
+				64 menu button 更多, Description: More, ID: ellipsis
+				65 text 设计组 11月6日
+				66 button Description: 标记完成：检查离线录音流程, ID: square
+				67 button 检查离线录音流程
+				68 menu button 更多, Description: More, ID: ellipsis
+				69 text 测试组 相关内容
+				70 button 添加
+				71 image Description: 文稿, ID: doc
+				72 button 产品需求.txt, 本地附件 · 34 bytes
+				73 menu button 更多, Description: More, ID: ellipsis
+			74 text 准备就绪 · 音频仅在这台 Mac 上处理 45 字符
+	75 toolbar
+		76 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	77 text RecordAI
+	78 menu button Window sharing
+79 menu bar
+	80 RecordAI 界面预览
+	81 File
+	82 Edit
+	83 View
+	84 逐页验收
+	85 Window
+	86 Help
+
+The focused UI element is 0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen

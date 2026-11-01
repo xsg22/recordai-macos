@@ -1,0 +1,18 @@
+{
+  "id": "02-library",
+  "title": "会议详情 · 正文与摘要",
+  "status": "pending",
+  "observed": true,
+  "observation": "280/310 三栏，26 号标题、16 号逐字稿、独立时间列、真实音频波形和播放定位已核对。",
+  "checks": [
+    "三栏布局",
+    "真实波形",
+    "逐段定位",
+    "摘要与行动项",
+    "本地附件"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/02-library.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

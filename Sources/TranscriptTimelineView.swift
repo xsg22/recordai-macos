@@ -6,29 +6,31 @@ struct TranscriptTimelineView: View {
     @ObservedObject var state: AppState
     @State private var history = false
     @State private var following = true
-    @State private var editingFull = false
     @State private var editing: TranscriptParagraph?
     @State private var renaming: String?
-    @State private var name = ""
-    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
+    private let accent = RecordAITheme.accent
     private var showingLive: Bool { state.recording || state.preparing || (state.busy && state.transcriptPhase == .recognizing) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            stageBanner
+            if state.preparing || state.transcriptPhase == .failed { stageBanner }
+            if history || state.editingTranscript {
             HStack {
+                if !state.liveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
                 Picker("转写来源", selection: $history) {
                     Text("正文").tag(false); Text("实时历史").tag(true)
                 }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 240).controlSize(.regular)
+                }
                 Spacer()
                 if showingLive || history {
                     Toggle("跟随最新", isOn: $following).toggleStyle(.checkbox).font(AppTypography.secondary)
                 } else {
-                    Button(editingFull ? "完成编辑" : "编辑全文") { editingFull.toggle() }.disabled(state.busy)
+                    Button(state.editingTranscript ? "完成编辑" : "编辑全文") { state.editingTranscript.toggle() }.disabled(state.busy)
                 }
             }
-            if !history && editingFull && !showingLive { fullEditor }
-            else { timeline }
+            }
+            if !history && state.editingTranscript && !showingLive { fullEditor }
+            else { timeline.padding(.top, showingLive ? 10 : 0) }
             if let record = state.current, !record.speakerAnalysisMessage.isEmpty, !showingLive && !history {
                 Text(record.speakerAnalysisMessage).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(3)
             }
@@ -38,19 +40,28 @@ struct TranscriptTimelineView: View {
                 }.font(AppTypography.secondary)
             }
         }
-        .onChange(of: state.selection) { history = false; editingFull = false; following = true }
-        .onChange(of: state.recording) { if state.recording { history = false; following = true; editingFull = false } }
+        .contextMenu {
+            Toggle("查看实时历史", isOn: $history)
+            Toggle("跟随最新", isOn: $following)
+        }
+        .onChange(of: state.selection) { history = false; state.editingTranscript = false; following = true }
+        .onChange(of: state.recording) { if state.recording { history = false; following = true; state.editingTranscript = false } }
         .onChange(of: history) { following = !history }
         .sheet(item: $editing) { paragraph in
-            TranscriptParagraphEditor(paragraph: paragraph, cancel: { editing = nil }, save: { updated in
-                state.editTranscriptParagraph(paragraph.id, text: updated); editing = nil
+            TranscriptParagraphEditor(paragraph: paragraph, speakerName: state.current?.paragraphSpeaker(paragraph) ?? "", cancel: { editing = nil }, save: { updated in
+                let success = state.editTranscriptParagraph(paragraph.id, text: updated)
+                if success { editing = nil }; return success
             })
         }
-        .alert("发言人名称", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("例如：小王", text: $name)
-            Button("保存") { if let id = renaming { state.renameSpeaker(id, name: name) }; renaming = nil }
-            Button("取消", role: .cancel) { renaming = nil }
-        } message: { Text("名称由你填写；声音标签不会自动对应真实身份。") }
+        .sheet(isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            if let id = renaming, let record = state.current {
+                SpeakerEditor(record: record, speakerID: id, cancel: { renaming = nil }) { value, target in
+                    guard state.selection == record.id else { return false }
+                    let success = state.renameSpeaker(id, name: value, mergeInto: target)
+                    if success { renaming = nil }; return success
+                }
+            }
+        }
     }
     private var stageBanner: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -127,15 +138,18 @@ struct TranscriptTimelineView: View {
         } else if !showingLive { Text("录音或导入音频后，转录正文会显示在这里。").font(AppTypography.body).foregroundStyle(.secondary).padding(.vertical, 18) }
     }
     private func paragraphRow(_ paragraph: TranscriptParagraph, record: MeetingRecord) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .top, spacing: 18) {
                 if let time = paragraph.start {
                     Button(clock(time)) { state.playTranscriptParagraph(paragraph) }
-                        .buttonStyle(.plain).font(AppTypography.secondary.monospacedDigit()).foregroundStyle(accent)
-                        .frame(minHeight: 28).contentShape(Rectangle())
+                        .buttonStyle(.plain).font(AppTypography.secondary.monospacedDigit()).foregroundStyle(RecordAITheme.muted)
+                        .frame(width: 46, height: 28).contentShape(Rectangle())
                         .disabled(!state.canPlayTranscriptParagraph(paragraph))
                         .help("播放这一段，结束后自动暂停")
                 }
+            VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 9) {
+                Text(avatar(paragraph, record: record)).font(.system(size: 11, weight: .medium)).foregroundStyle(accent)
+                    .frame(width: 26, height: 26).background(RecordAITheme.avatar, in: Circle()).accessibilityHidden(true)
                 if let id = paragraph.speakerIDs.first, paragraph.speakerIDs.count == 1 {
                     speakerMenu(id, record: record)
                 } else {
@@ -143,6 +157,11 @@ struct TranscriptTimelineView: View {
                 }
                 Spacer()
                 Menu {
+                    if showingLive || !state.liveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
+                        Toggle("查看实时历史", isOn: $history)
+                        Toggle("跟随最新", isOn: $following)
+                        Divider()
+                    }
                     Button("编辑这段") { editing = paragraph }.disabled(state.locked)
                     Menu("修改这段发言人") {
                         let ids = Array(Set((Array(record.speakerNames.keys) + record.transcriptParagraphs.flatMap(\.speakerIDs)).map { record.canonicalSpeaker($0) })).sorted()
@@ -157,32 +176,43 @@ struct TranscriptTimelineView: View {
                     }
                 } label: { Image(systemName: "ellipsis").frame(width: 28, height: 28) }.menuStyle(.borderlessButton).fixedSize().help("编辑文字或修改本段发言人")
             }
-            Button { state.playTranscriptParagraph(paragraph) } label: {
-                Text(paragraph.text).font(AppTypography.transcript).lineSpacing(7)
-                    .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-            }.buttonStyle(.plain).disabled(!state.canPlayTranscriptParagraph(paragraph))
-                .help("点击播放本段，播完自动暂停；文字校正请使用段落菜单")
-                .accessibilityLabel("播放本段：" + paragraph.text)
+            Group {
+                if state.canPlayTranscriptParagraph(paragraph) {
+                    Button { state.playTranscriptParagraph(paragraph) } label: { paragraphText(paragraph) }.buttonStyle(.plain)
+                        .help("点击播放本段，播完自动暂停；文字校正请使用段落菜单")
+                        .accessibilityLabel("播放本段：" + paragraph.text)
+                } else { paragraphText(paragraph).textSelection(.enabled) }
+            }
                 .contextMenu {
                     Button("复制这段文字") {
                         NSPasteboard.general.clearContents(); NSPasteboard.general.setString(paragraph.text, forType: .string)
                     }
                     Button("编辑这段") { editing = paragraph }.disabled(state.locked)
                 }
-        }.padding(.vertical, 4).padding(.horizontal, 6)
+            }
+        }.padding(.vertical, 17)
             .background(state.playingParagraphID == paragraph.id ? accent.opacity(0.09) : .clear, in: RoundedRectangle(cornerRadius: 6))
+    }
+    private func paragraphText(_ paragraph: TranscriptParagraph) -> some View {
+        Text(paragraph.text).font(.system(size: 16)).lineSpacing(8).foregroundStyle(RecordAITheme.ink)
+            .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+    }
+    private func avatar(_ paragraph: TranscriptParagraph, record: MeetingRecord) -> String {
+        guard let id = paragraph.speakerIDs.first else { return "?" }
+        let ids = Set(record.speakerNames.keys.map { record.canonicalSpeaker($0) }).sorted()
+        return ids.firstIndex(of: record.canonicalSpeaker(id)).map { String($0 + 1) } ?? "?"
     }
     private func speakerMenu(_ id: String, record: MeetingRecord) -> some View {
         let canonical = record.canonicalSpeaker(id)
         let others = record.speakerNames.keys.filter { record.canonicalSpeaker($0) == $0 && $0 != canonical }.sorted()
         return Menu {
             if canonical != id { Button("恢复独立发言人标签") { state.unmergeSpeaker(id) } }
-            Button("修改名称…") { renaming = canonical; name = record.speakerName(canonical) }
+            Button("修改名称…") { renaming = canonical }
             if !others.isEmpty {
                 Menu("合并到") { ForEach(others, id: \.self) { target in Button(record.speakerName(target)) { state.mergeSpeaker(canonical, into: target) } } }
             }
         } label: { Text(record.speakerName(canonical)).font(AppTypography.body.weight(.medium)).lineLimit(1).truncationMode(.tail).frame(minHeight: 28) }
-            .menuStyle(.borderlessButton).fixedSize().help("修改名称或合并同一人的发言")
+            .menuStyle(.borderlessButton).tint(RecordAITheme.ink).foregroundStyle(RecordAITheme.ink).fixedSize().help("修改名称或合并同一人的发言")
     }
     @ViewBuilder private var currentLiveRows: some View {
         if !state.text.isEmpty { Divider(); Text("本次实时识别 · 未定稿").font(AppTypography.secondary).foregroundStyle(.secondary) }
@@ -229,21 +259,32 @@ struct TranscriptTimelineView: View {
     }
 }
 
-private struct TranscriptParagraphEditor: View {
+struct TranscriptParagraphEditor: View {
     let cancel: () -> Void
-    let save: (String) -> Void
+    let save: (String) -> Bool
+    private let paragraph: TranscriptParagraph
+    private let speakerName: String
+    @State private var failed = false
     @State private var draft: String
-    init(paragraph: TranscriptParagraph, cancel: @escaping () -> Void, save: @escaping (String) -> Void) {
-        self.cancel = cancel; self.save = save
+    init(paragraph: TranscriptParagraph, speakerName: String = "", cancel: @escaping () -> Void, save: @escaping (String) -> Bool) {
+        self.cancel = cancel; self.save = save; self.paragraph = paragraph; self.speakerName = speakerName
         _draft = State(initialValue: paragraph.text)
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("编辑这段文字").font(AppTypography.heading)
-            Text("保留这段录音的时间和发言人标签。").font(AppTypography.secondary).foregroundStyle(.secondary)
-            TextEditor(text: $draft).font(AppTypography.transcript).lineSpacing(6)
-            HStack { Button("取消", action: cancel); Spacer(); Button("保存") { save(draft) }.buttonStyle(.borderedProminent) }
-        }.padding(24).frame(width: 620, height: 360)
+        VStack(alignment: .leading, spacing: 20) {
+            RecordAIPageHeader(title: "编辑这段文字", subtitle: "保留录音时间和发言人标签。") { Button("取消", action: cancel).keyboardShortcut(.cancelAction) }
+            TextEditor(text: $draft).font(AppTypography.body).lineSpacing(6).padding(12)
+                .scrollContentBackground(.hidden).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(RecordAITheme.border, lineWidth: 1))
+                .accessibilityLabel("段落正文")
+            if failed { RecordAIInfo(text: "尚未保存，输入仍保留，请重试。", warning: true) }
+            HStack {
+                if let start = paragraph.start, let end = paragraph.end {
+                    Text(String(format: "%02d:%02d—%02d:%02d", Int(start) / 60, Int(start) % 60, Int(end) / 60, Int(end) % 60) + (speakerName.isEmpty ? "" : " · " + speakerName)).font(AppTypography.secondary).foregroundStyle(.secondary)
+                }
+                Spacer(); Button("保存") { failed = !save(draft) }.buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction)
+            }
+        }.padding(28).frame(width: 720, height: 446).buttonStyle(RecordAISecondaryButtonStyle())
     }
 }
 

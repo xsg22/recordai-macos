@@ -1,0 +1,15 @@
+Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#37-notes".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 58-60
+~1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#37-notes
+~		51 heading 笔记与本地助手, Value: 2
+~			52 text 笔记与本地助手
+~		55 text 我的笔记 摘要 对话 Live Q&A
+~		56 text 随手记录想法，原稿始终保留。AI 结果单独保存。
+~		57 container
++			58 text 重点确认：
++			59 text • 本周设计交付时间
++			60 text • 离线体验验证范围
++		61 button 查看来源
++		62 button 增强笔记
+The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#37-notes

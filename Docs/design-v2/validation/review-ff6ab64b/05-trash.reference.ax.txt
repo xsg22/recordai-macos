@@ -1,0 +1,34 @@
+- main:
+  - generic: RecordAI
+  - complementary:
+    - img "RecordAI 图标"
+    - strong: RecordAI
+    - generic: 本地录音 · AI 转写
+    - button "♩ 开始新录音"
+    - text: ♧ 全部会议
+    - emphasis: "12"
+    - text: ☆ 星标
+    - emphasis: "3"
+    - text: ♲ 回收站
+    - emphasis: "2"
+    - generic: ⌕ 搜索会议名称或内容…
+    - generic: 最近的会议
+    - text: ♧ 产品周会
+    - generic: 今天 10:00 · 20 分钟
+    - text: ♧ 用户访谈
+    - generic: 昨天 15:00 · 48 分钟
+    - text: ♧ 市场策略讨论
+    - generic: 10月28日 · 1小时3分钟
+    - text: ♧ 与 Design 团队同步
+    - generic: 10月27日 · 37分钟
+    - generic: ⚙ 设置
+    - generic: ↗ 执行追踪
+  - main:
+    - heading "回收站" [level=1]
+    - generic: 恢复后，录音、文字和附件会一同回到录音库。
+    - text: 产品方案讨论
+    - paragraph: 10月25日 · 34分钟
+    - button "恢复录音"
+    - text: 课程录音
+    - paragraph: 10月24日 · 42分钟
+    - button "恢复录音"

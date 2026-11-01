@@ -1,0 +1,18 @@
+{
+  "recorded_at": "2026-11-01T17:23:23.248035+08:00",
+  "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+  "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23",
+  "command": "python3 Scripts/test-ui-contracts.py",
+  "exit_code": 0,
+  "tests": [
+    "BrowserAuthorizationSmoke",
+    "NotionConnectionSmoke",
+    "DingTalkNotificationSmoke",
+    "DingTalkSyncStagesSmoke",
+    "FeishuAuthorizationRecoverySmoke",
+    "OptionalModelSmoke",
+    "OptionalModelFallbackSmoke",
+    "IntelligenceSmoke"
+  ],
+  "scope": "授权取消/重开/state回调、个人账号/私人页面契约、飞书续授权、钉钉部分成功和本人提醒、模型校验/源回退、助手引用契约；全为隔离夹具，无真实授权或发文。"
+}

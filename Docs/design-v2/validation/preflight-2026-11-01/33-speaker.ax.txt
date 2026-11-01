@@ -1,0 +1,21 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 发言人名称
+		3 button 取消
+		4 text 声音标签不会自动对应真实身份。 当前标签 发言人 2
+		5 text field (settable) Description: 发言人名称, Value: 发言人 2
+		6 text 合并到已有发言人
+		7 pop up button 已有发言人, Value: 不合并
+		8 text 合并后可从段落菜单恢复独立标签。
+		9 button 保存
+10 menu bar
+	11 RecordAI 界面预览
+	12 File
+	13 Edit
+	14 View
+	15 逐页验收
+	16 Window
+	17 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

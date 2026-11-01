@@ -20,6 +20,34 @@ struct MeetingAssistantEntry: Codable, Equatable, Identifiable {
     var contextWasTruncated = false
 }
 
+struct MeetingActionItem: Codable, Equatable, Identifiable {
+    var id = UUID()
+    var title: String
+    var isDone = false
+    var assignee = ""
+    var dueDate: Date?
+
+    init(id: UUID = UUID(), title: String, isDone: Bool = false, assignee: String = "", dueDate: Date? = nil) {
+        self.id = id; self.title = title; self.isDone = isDone; self.assignee = assignee; self.dueDate = dueDate
+    }
+    private enum CodingKeys: String, CodingKey { case id, title, isDone, assignee, dueDate }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        title = try values.decode(String.self, forKey: .title)
+        isDone = try values.decodeIfPresent(Bool.self, forKey: .isDone) ?? false
+        assignee = try values.decodeIfPresent(String.self, forKey: .assignee) ?? ""
+        dueDate = try values.decodeIfPresent(Date.self, forKey: .dueDate)
+    }
+}
+
+struct MeetingAttachment: Codable, Equatable, Identifiable {
+    var id = UUID()
+    var filename: String
+    var displayName: String
+    var bytes: Int64
+}
+
 /// seconds 沿用 0.1 版的转录处理耗时；duration 才是会议音频时长。
 struct MeetingRecord: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
@@ -41,6 +69,9 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     /// capture session UUID -> 托管音频文件名，与音频登记同一次原子保存。
     var importedCaptureSessions: [String: String] = [:]
     var status: MeetingStatus = .completed
+    var isStarred = false
+    var actionItems: [MeetingActionItem] = []
+    var attachments: [MeetingAttachment] = []
     var recoveryMessage: String? = nil
     /// 采集异常永久留作素材质量提示，不随ASR重试清除。
     var captureWarnings: [String] = []
@@ -76,7 +107,7 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case captureWarnings, id, title, created, text, subtitles, language, seconds, duration, notes, summary
+        case captureWarnings, id, title, created, text, subtitles, language, seconds, duration, notes, summary, isStarred, actionItems, attachments
         case legacyLiveText, liveUtterances, transcriptParagraphs, speakerNames, speakerAliases, speakerAnalysisStatus, speakerAnalysisMessage
         case importedCaptureSessions, transcriptionEngine, previewEngine, pendingAudioFiles, audioDurations, audioFiles, recordingSessionMode, continuousSegmentFiles, status, recoveryMessage, updated, previewText, enhancedNotes, assistantEntries, summaryCitations, enhancedNotesCitations, summaryContextWasTruncated, enhancedNotesContextWasTruncated
     }
@@ -100,6 +131,9 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
         pendingAudioFiles = try values.decodeIfPresent([String].self, forKey: .pendingAudioFiles) ?? []
         audioDurations = try values.decodeIfPresent([String: Double].self, forKey: .audioDurations) ?? [:]
         status = try values.decodeIfPresent(MeetingStatus.self, forKey: .status) ?? .completed
+        isStarred = try values.decodeIfPresent(Bool.self, forKey: .isStarred) ?? false
+        actionItems = try values.decodeIfPresent([MeetingActionItem].self, forKey: .actionItems) ?? []
+        attachments = try values.decodeIfPresent([MeetingAttachment].self, forKey: .attachments) ?? []
         captureWarnings = try values.decodeIfPresent([String].self, forKey: .captureWarnings) ?? []
         recoveryMessage = try values.decodeIfPresent(String.self, forKey: .recoveryMessage)
         updated = try values.decodeIfPresent(Date.self, forKey: .updated) ?? created
@@ -123,11 +157,12 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
 }
 
 enum MeetingLibraryError: LocalizedError {
-    case unsafeAudioPath, missingAudio, invalidTitle, missingMeeting
+    case unsafeAudioPath, missingAudio, missingAttachment, invalidTitle, missingMeeting
     var errorDescription: String? {
         switch self {
         case .unsafeAudioPath: return "会议音频路径无效，无法访问会议目录以外的文件。"
         case .missingAudio: return "找不到音频文件，请重新导入。"
+        case .missingAttachment: return "找不到本地附件，请重新添加。"
         case .invalidTitle: return "会议标题不能为空。"
         case .missingMeeting: return "找不到这条会议记录。"
         }
@@ -196,6 +231,7 @@ final class MeetingLibrary {
             throw MeetingLibraryError.invalidTitle
         }
         for file in record.audioFiles { _ = try audioURL(file, meeting: record.id) }
+        for attachment in record.attachments { _ = try attachmentURL(attachment, meeting: record.id) }
         var saved = record
         saved.updated = Date()
         let directory = directory(for: saved.id)
@@ -304,6 +340,51 @@ final class MeetingLibrary {
         try record.audioFiles.map { try audioURL($0, meeting: record.id) }
     }
 
+    func attachmentURL(_ attachment: MeetingAttachment, meeting id: UUID) throws -> URL {
+        let filename = attachment.filename
+        guard !filename.isEmpty, filename != ".", filename != "..", !filename.contains("/"), !filename.contains("\\") else { throw MeetingLibraryError.unsafeAudioPath }
+        let folder = directory(for: id).appendingPathComponent("Attachments", isDirectory: true)
+        let destination = folder.appendingPathComponent(filename)
+        for component in [directory(for: id), folder, destination] {
+            if (try? component.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true { throw MeetingLibraryError.unsafeAudioPath }
+        }
+        return directory(for: id).resolvingSymlinksInPath().standardizedFileURL
+            .appendingPathComponent("Attachments", isDirectory: true).appendingPathComponent(filename)
+    }
+
+    @discardableResult func importAttachment(_ source: URL, into record: inout MeetingRecord) throws -> MeetingAttachment {
+        let canonical = source.resolvingSymlinksInPath()
+        let values = try canonical.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+        guard values.isRegularFile == true else { throw MeetingLibraryError.unsafeAudioPath }
+        let suffix = canonical.pathExtension.prefix(16)
+        let ext = suffix.allSatisfy { $0.isLetter || $0.isNumber } ? String(suffix) : ""
+        let filename = UUID().uuidString + (ext.isEmpty ? "" : "." + ext)
+        let attachment = MeetingAttachment(filename: filename, displayName: source.lastPathComponent, bytes: Int64(values.fileSize ?? 0))
+        let destination = try attachmentURL(attachment, meeting: record.id)
+        try manager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try manager.copyItem(at: canonical, to: destination)
+        let original = record
+        record.attachments.append(attachment)
+        do { record = try save(record) }
+        catch { record = original; try? manager.removeItem(at: destination); throw error }
+        return attachment
+    }
+
+    /// 移除附件仅移入会议自身的附件回收目录，不删除用户选择的源文件。
+    func removeAttachment(_ id: UUID, from record: inout MeetingRecord) throws {
+        guard let attachment = record.attachments.first(where: { $0.id == id }) else { return }
+        let source = try attachmentURL(attachment, meeting: record.id)
+        let folder = directory(for: record.id).appendingPathComponent("RemovedAttachments", isDirectory: true)
+        guard (try? folder.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true else { throw MeetingLibraryError.unsafeAudioPath }
+        try manager.createDirectory(at: folder, withIntermediateDirectories: true)
+        let destination = folder.appendingPathComponent(attachment.filename)
+        try manager.moveItem(at: source, to: destination)
+        let original = record
+        record.attachments.removeAll { $0.id == id }
+        do { record = try save(record) }
+        catch { record = original; try? manager.moveItem(at: destination, to: source); throw error }
+    }
+
     private func audioURL(_ filename: String, meeting id: UUID) throws -> URL {
         guard !filename.isEmpty, filename != ".", filename != "..",
               !filename.contains("/"), !filename.contains("\\") else { throw MeetingLibraryError.unsafeAudioPath }
@@ -348,12 +429,48 @@ final class MeetingLibrary {
         try markdown(for: record).write(to: destination, atomically: true, encoding: .utf8)
     }
 
-    /// 整个会议（含托管音频）移入系统废纸篓；不删除用户导入前的源文件。
+    private var trashDirectory: URL { root.appendingPathComponent("Trash", isDirectory: true) }
+
+    private func validateTrashDirectory() throws {
+        if (try? trashDirectory.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true {
+            throw MeetingLibraryError.unsafeAudioPath
+        }
+    }
+
+    func listTrashed() throws -> [MeetingRecord] {
+        try validateTrashDirectory()
+        guard manager.fileExists(atPath: trashDirectory.path) else { return [] }
+        return try manager.contentsOfDirectory(at: trashDirectory, includingPropertiesForKeys: [.isSymbolicLinkKey])
+            .compactMap { directory in
+                guard let id = UUID(uuidString: directory.lastPathComponent),
+                      (try? directory.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true,
+                      let data = try? Data(contentsOf: directory.appendingPathComponent("meeting.json")),
+                      let record = try? JSONDecoder().decode(MeetingRecord.self, from: data), record.id == id else { return nil }
+                return record
+            }.sorted { $0.updated > $1.updated }
+    }
+
+    /// 移入本应用回收站；恢复时完整移回，不触碰导入前的源文件。
     func trash(_ id: UUID) throws {
         _ = try load(id)
-        try manager.trashItem(at: directory(for: id), resultingItemURL: nil)
+        try validateTrashDirectory()
+        try manager.createDirectory(at: trashDirectory, withIntermediateDirectories: true)
+        try manager.moveItem(at: directory(for: id), to: trashDirectory.appendingPathComponent(id.uuidString, isDirectory: true))
         do { try publisher.remove(id); publicationError = nil }
-        catch { publicationError = "会议已移入废纸篓，本机Agent快照清理失败，请重新发布。" }
+        catch { publicationError = "会议已移入回收站，本机Agent快照清理失败，请重新发布。" }
+    }
+
+    @discardableResult func restoreTrashed(_ id: UUID) throws -> MeetingRecord {
+        try validateTrashDirectory()
+        let source = trashDirectory.appendingPathComponent(id.uuidString, isDirectory: true)
+        guard (try? source.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true,
+              try listTrashed().contains(where: { $0.id == id }) else { throw MeetingLibraryError.missingMeeting }
+        // moveItem 拒绝覆盖；与活跃库同名时保留两份原件并报告错误。
+        try manager.moveItem(at: source, to: directory(for: id))
+        let restored = try load(id)
+        do { try publisher.publish(restored, libraryRoot: root); publicationError = nil }
+        catch { publicationError = "录音已恢复，本机Agent快照暂未更新，请重新发布。" }
+        return restored
     }
 
     /// 用于初次发布和显式修复；不改变会议状态。

@@ -1,0 +1,46 @@
+Window: "RecordAI", App: RecordAI 界面预览.
+0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen
+	1 split group SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen
+		2 container
+			3 image RecordAI
+			4 text RecordAI 本地录音 · AI 转写
+			5 button 开始新录音
+			6 button 全部会议, 0
+			7 button 星标, 0
+			8 button 回收站, 0
+			9 text field (settable) 搜索会议名称或内容…
+			10 text 最近的会议
+			11 menu button 按处理状态筛选, Description: filter
+			12 scroll area
+				13 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+			14 button Description: 设置, Help: 转录、同步账号与本机Agent
+			15 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
+		16 splitter (disabled, settable, float) 279
+		17 container
+			18 image Description: 音频波形, ID: waveform
+			19 text 开始你的第一段录音 会议、访谈、课程、灵感…
+RecordAI 帮你录音、转写和整理，
+让重要的内容不再遗漏。
+			20 image Description: 录音设置, ID: chevron.down
+			21 menu button 录音设置
+			22 button 开始录音
+			23 button 导入音频, 支持 MP3、M4A、WAV
+常用音频格式
+			24 button 录制系统声音, 录制线上会议、视频
+或电脑播放的声音
+			25 text 首次使用需要下载语音模型
+			26 button 下载模型 ↗
+	27 toolbar
+		28 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	29 text RecordAI
+	30 menu button Window sharing
+31 menu bar
+	32 RecordAI 界面预览
+	33 File
+	34 Edit
+	35 View
+	36 逐页验收
+	37 Window
+	38 Help
+
+The focused UI element is 0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen

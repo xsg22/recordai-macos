@@ -1,0 +1,71 @@
+Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#31-execution".
+1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#31-execution
+	2 container
+		3 text RecordAI
+		4 image RecordAI 图标
+		5 text RecordAI
+		6 text 本地录音 · AI 转写
+		7 button ♩　开始新录音
+		8 text ♧　全部会议
+		9 text 12
+		10 text ☆　星标
+		11 text 3
+		12 text ♲　回收站
+		13 text 0
+		14 text ⌕　搜索会议名称或内容…
+		15 text 最近的会议
+		16 text ♧　产品周会
+		17 text 　　今天 10:00 · 20 分钟
+		18 text ♧　用户访谈
+		19 text 　　昨天 15:00 · 48 分钟
+		20 text ♧　市场策略讨论
+		21 text 　　10月28日 · 1小时3分钟
+		22 text ♧　与 Design 团队同步
+		23 text 　　10月27日 · 37分钟
+		24 text ⚙　设置 ↗　执行追踪
+		25 heading 产品周会　☆, Value: 1
+			26 text 产品周会　 ☆
+		27 text 2026年11月1日　10:00—10:20 · 20分钟
+		28 button ♩　继续录音
+		29 button 交付
+		30 button •••
+		31 container
+			32 text ▤　转写 ◷　时间线 ✎　笔记与助手
+			33 text 08:16
+			34 text 00:00 20:34 ↶₁₅ ▶ ₁₅↷ 00:00 1 发言人 1 ⌄ 大家好，我们开始今天的产品周会。主要讨论三个议题：上周进展、下个迭代的重点，以及用户反馈的处理情况。 00:28 2 发言人 2 ⌄ 我先同步一下设计侧的进展。新版首页的视觉方案已经完成评审，目前正在进行细节设计，预计本周五可以交付给开发。 01:12 3 发言人 3 ⌄ 后端这边，用户体系的重构已经完成 80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。 02:35 1 发言人 1 ⌄ 好的。接下来看看用户反馈的情况，重点关注离线使用和文件管理的体验。
+		35 container
+			36 text ▣　本地存储 · 隐私安全 会议总结 行动项
+			37 heading ▤　会议摘要, Value: 3
+				38 text ▤　会议摘要
+			39 text 本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。
+			40 heading ✧　关键要点, Value: 3
+				41 text ✧　关键要点
+			42 text • 新版首页方案已通过评审
+			43 text • 用户体系重构完成 80%
+			44 text • 优先解决离线体验与文件管理问题
+			45 heading ☑　行动项 3, Value: 3
+				46 text ☑　行动项
+			47 text 完成设计交付 设计组 周五 验证离线流程 测试组 11月5日 整理用户反馈 产品组 11月3日
+			48 heading ⌕　相关内容, Value: 3
+				49 text ⌕　相关内容
+			50 text ▧ 产品需求文档.pdf 本地附件 · 1.2 MB
+		51 heading 执行追踪, Value: 2
+			52 text 执行追踪
+		53 text 当前会话的真实处理阶段。
+		54 button 完成
+		55 text 产品周会
+		56 text 处理中 总状态 正在生成最终转录 音频采集
+		57 text 原始音频已保存
+		58 text 已结束 实时 ASR
+		59 text 草稿保留在实时历史
+		60 text 已结束 片段队列
+		61 text 会议模式保留完整音频
+		62 text 未启用 最终转录
+		63 text Qwen 识别音频片段
+		64 text 处理中 发言人 / 对齐
+		65 text 正文保存后异步执行
+		66 text 等待 Agent 发布
+		67 text 已保存快照可供本机工具读取
+		68 text 已就绪
+
+The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#31-execution

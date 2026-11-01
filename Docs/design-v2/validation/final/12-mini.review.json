@@ -1,0 +1,19 @@
+{
+  "id": "12-mini",
+  "title": "mini · 录音中",
+  "status": "pending",
+  "observed": true,
+  "observation": "真实独立 660×76 窗口，停止/暂停/展开/置顶/拖动入口核对，早前实际拖动和置顶切换。",
+  "checks": [
+    "拖动",
+    "计时",
+    "暂停",
+    "停止",
+    "展开",
+    "置顶"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/12-mini.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

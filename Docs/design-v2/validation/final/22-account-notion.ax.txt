@@ -1,0 +1,23 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 同步账号
+		3 button 完成
+		4 text 连接个人账号，转录完成后预览并同步。
+		5 button Description: 钉钉, Value: 未选择
+		6 button Description: 飞书, Value: 未选择
+		7 button Description: Notion, Value: 已选择
+		8 text N Notion · 私人会议页面 未连接 Notion 使用 Notion 官方授权页面连接工作区，会议保存为私人页面。同步前可预览正文，原始音频保留在本机。
+		9 button 连接 Notion 账号
+		10 image Description: 简介, ID: info.circle
+		11 text 只在你点击同步后发送选定文字。原始音频保留在本机。
+12 menu bar
+	13 RecordAI 界面预览
+	14 File
+	15 Edit
+	16 View
+	17 逐页验收
+	18 Window
+	19 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

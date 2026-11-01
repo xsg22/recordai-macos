@@ -1,0 +1,16 @@
+{
+  "id": "39-narrow",
+  "title": "窄窗口 · 摘要抽屉",
+  "status": "pending",
+  "observed": true,
+  "observation": "1040×900 下侧栏 260，摘要隐藏但可从更多菜单打开真实摘要抽屉；已实际打开。",
+  "checks": [
+    "三栏收敛",
+    "摘要可访问",
+    "工具栏不截断"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/39-narrow.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

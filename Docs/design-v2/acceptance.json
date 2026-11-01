@@ -1,0 +1,959 @@
+{
+  "revision": "v2.0",
+  "overall": "incomplete",
+  "pages": [
+    {
+      "id": "01-home",
+      "title": "首页 · 首次使用",
+      "design": "Docs/design-v2/index.html#01-home",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/01-home.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/01-home.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/01-home.ax.txt"
+      ],
+      "checks": [
+        "开始录音入口",
+        "导入音频入口",
+        "系统声音入口",
+        "模型未就绪提示"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "02-library",
+      "title": "会议详情 · 正文与摘要",
+      "design": "Docs/design-v2/index.html#02-library",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/02-library.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/02-library.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/02-library.ax.txt"
+      ],
+      "checks": [
+        "三栏布局",
+        "真实波形",
+        "逐段定位",
+        "摘要与行动项",
+        "本地附件"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "03-starred",
+      "title": "星标录音",
+      "design": "Docs/design-v2/index.html#03-starred",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/03-starred.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/03-starred.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/03-starred.ax.txt"
+      ],
+      "checks": [
+        "星标持久化",
+        "星标筛选",
+        "取消星标"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "04-search",
+      "title": "搜索 · 无结果",
+      "design": "Docs/design-v2/index.html#04-search",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/04-search.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/04-search.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/04-search.ax.txt"
+      ],
+      "checks": [
+        "正文和标题检索",
+        "清除检索",
+        "保留选择"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "05-trash",
+      "title": "回收站",
+      "design": "Docs/design-v2/index.html#05-trash",
+      "implementation": "Sources/RecordingTrashView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/05-trash.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/05-trash.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/05-trash.ax.txt"
+      ],
+      "checks": [
+        "本项目删除记录",
+        "恢复录音",
+        "原音频随记录恢复"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "06-recording",
+      "title": "录音中 · 实时转写",
+      "design": "Docs/design-v2/index.html#06-recording",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/06-recording.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/06-recording.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/06-recording.ax.txt"
+      ],
+      "checks": [
+        "计时与电平",
+        "实时草稿标识",
+        "暂停",
+        "停止保存",
+        "切换 mini"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "07-paused",
+      "title": "录音已暂停",
+      "design": "Docs/design-v2/index.html#07-paused",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/07-paused.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/07-paused.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/07-paused.ax.txt"
+      ],
+      "checks": [
+        "暂停状态",
+        "继续录音",
+        "停止保存"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "08-background",
+      "title": "后台录音 · 精简视图",
+      "design": "Docs/design-v2/index.html#08-background",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/08-background.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/08-background.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/08-background.ax.txt"
+      ],
+      "checks": [
+        "后台 ASR 保持",
+        "展开正文",
+        "菜单栏控制"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "09-no-microphone",
+      "title": "无麦克风",
+      "design": "Docs/design-v2/index.html#09-no-microphone",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/09-no-microphone.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/09-no-microphone.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/09-no-microphone.ax.txt"
+      ],
+      "checks": [
+        "开始按钮不可重复触发",
+        "选择系统声音",
+        "打开声音设置",
+        "保留已有资料"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "10-device-lost",
+      "title": "设备断开 · 可重试",
+      "design": "Docs/design-v2/index.html#10-device-lost",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/10-device-lost.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/10-device-lost.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/10-device-lost.ax.txt"
+      ],
+      "checks": [
+        "自动暂停",
+        "重试继续",
+        "原轨保全",
+        "停止保存"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "11-transcribing",
+      "title": "转录进行中",
+      "design": "Docs/design-v2/index.html#11-transcribing",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/11-transcribing.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/11-transcribing.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/11-transcribing.ax.txt"
+      ],
+      "checks": [
+        "阶段进度",
+        "取消保留音频",
+        "分人与对齐进度"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "12-mini",
+      "title": "mini · 录音中",
+      "design": "Docs/design-v2/index.html#12-mini",
+      "implementation": "Sources/MiniRecordingView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/12-mini.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/12-mini.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/12-mini.ax.txt"
+      ],
+      "checks": [
+        "拖动",
+        "计时",
+        "暂停",
+        "停止",
+        "展开",
+        "置顶"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "13-mini-paused",
+      "title": "mini · 暂停",
+      "design": "Docs/design-v2/index.html#13-mini-paused",
+      "implementation": "Sources/MiniRecordingView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/13-mini-paused.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/13-mini-paused.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/13-mini-paused.ax.txt"
+      ],
+      "checks": [
+        "继续",
+        "停止",
+        "主窗口恢复"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "14-mini-error",
+      "title": "mini · 设备异常",
+      "design": "Docs/design-v2/index.html#14-mini-error",
+      "implementation": "Sources/MiniRecordingView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/14-mini-error.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/14-mini-error.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/14-mini-error.ax.txt"
+      ],
+      "checks": [
+        "错误展开",
+        "重试",
+        "保存已有录音"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "15-model-setup",
+      "title": "模型 · 首次下载",
+      "design": "Docs/design-v2/index.html#15-model-setup",
+      "implementation": "Sources/ASRModelStore.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/15-model-setup.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/15-model-setup.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/15-model-setup.ax.txt"
+      ],
+      "checks": [
+        "模型列表",
+        "下载总量",
+        "下载入口",
+        "关闭不误取消"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "16-model-progress",
+      "title": "模型 · 下载与校验",
+      "design": "Docs/design-v2/index.html#16-model-progress",
+      "implementation": "Sources/ASRModelStore.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/16-model-progress.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/16-model-progress.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/16-model-progress.ax.txt"
+      ],
+      "checks": [
+        "进度",
+        "已下载大小",
+        "文件校验",
+        "取消"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "17-model-error",
+      "title": "模型 · 失败与重试",
+      "design": "Docs/design-v2/index.html#17-model-error",
+      "implementation": "Sources/ASRModelStore.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/17-model-error.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/17-model-error.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/17-model-error.ax.txt"
+      ],
+      "checks": [
+        "失败原因",
+        "重试",
+        "缓存复用"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "18-settings-recording",
+      "title": "设置 · 录音与转录",
+      "design": "Docs/design-v2/index.html#18-settings-recording",
+      "implementation": "Sources/RecordingAppConfigurationView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/18-settings-recording.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/18-settings-recording.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/18-settings-recording.ax.txt"
+      ],
+      "checks": [
+        "音源",
+        "会话类型",
+        "语言",
+        "录音模式",
+        "录音期间禁改"
+      ],
+      "sourceDigest": "c42e875043b0d640781d7bb66b53394cc943e1cae2874668f492a2d344c2475b",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "19-settings-models",
+      "title": "设置 · 本地助手模型",
+      "design": "Docs/design-v2/index.html#19-settings-models",
+      "implementation": "Sources/RecordingAppConfigurationView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/19-settings-models.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/19-settings-models.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/19-settings-models.ax.txt"
+      ],
+      "checks": [
+        "模型选择",
+        "资源要求",
+        "条款由用户确认",
+        "取消下载",
+        "启用与关闭"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "20-account-dingtalk",
+      "title": "账号 · 钉钉",
+      "design": "Docs/design-v2/index.html#20-account-dingtalk",
+      "implementation": "Sources/AccountConnectionPanel.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/20-account-dingtalk.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/20-account-dingtalk.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/20-account-dingtalk.ax.txt"
+      ],
+      "checks": [
+        "连接状态",
+        "本人提醒选项",
+        "多账号选择",
+        "断开"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "21-account-feishu",
+      "title": "账号 · 飞书",
+      "design": "Docs/design-v2/index.html#21-account-feishu",
+      "implementation": "Sources/AccountConnectionPanel.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/21-account-feishu.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/21-account-feishu.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/21-account-feishu.ax.txt"
+      ],
+      "checks": [
+        "查询授权",
+        "继续上次授权",
+        "重新申请确认"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "22-account-notion",
+      "title": "账号 · Notion",
+      "design": "Docs/design-v2/index.html#22-account-notion",
+      "implementation": "Sources/AccountConnectionPanel.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/22-account-notion.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/22-account-notion.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/22-account-notion.ax.txt"
+      ],
+      "checks": [
+        "连接与取消等待",
+        "重开授权页",
+        "断开"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "23-account-connected",
+      "title": "账号 · 已连接",
+      "design": "Docs/design-v2/index.html#23-account-connected",
+      "implementation": "Sources/AccountConnectionPanel.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/23-account-connected.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/23-account-connected.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/23-account-connected.ax.txt"
+      ],
+      "checks": [
+        "当前账号",
+        "连接状态",
+        "断开确认与结果"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "24-settings-data",
+      "title": "设置 · Agent 与本机资料",
+      "design": "Docs/design-v2/index.html#24-settings-data",
+      "implementation": "Sources/RecordingAppConfigurationView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/24-settings-data.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/24-settings-data.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/24-settings-data.ax.txt"
+      ],
+      "checks": [
+        "数据目录",
+        "复制接入说明",
+        "重新发布快照",
+        "模型与用户资料边界"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "25-delivery",
+      "title": "导出与交付",
+      "design": "Docs/design-v2/index.html#25-delivery",
+      "implementation": "Sources/RecordingDeliveryView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/25-delivery.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/25-delivery.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/25-delivery.ax.txt"
+      ],
+      "checks": [
+        "复制",
+        "TXT Markdown JSON SRT",
+        "音频导出",
+        "同步预览入口"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "26-sync-preview",
+      "title": "同步 · 内容预览",
+      "design": "Docs/design-v2/index.html#26-sync-preview",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/26-sync-preview.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/26-sync-preview.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/26-sync-preview.ax.txt"
+      ],
+      "checks": [
+        "目的账号",
+        "发送范围",
+        "正文预览",
+        "未连接禁止发送"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "27-sync-progress",
+      "title": "同步 · 进行中",
+      "design": "Docs/design-v2/index.html#27-sync-progress",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/27-sync-progress.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/27-sync-progress.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/27-sync-progress.ax.txt"
+      ],
+      "checks": [
+        "禁重复提交",
+        "阶段状态",
+        "不误关正在进行的任务"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "28-sync-result",
+      "title": "同步 · 成功与失败",
+      "design": "Docs/design-v2/index.html#28-sync-result",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/28-sync-result.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/28-sync-result.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/28-sync-result.ax.txt"
+      ],
+      "checks": [
+        "远端链接",
+        "失败可重试",
+        "本地原件保留"
+      ],
+      "sourceDigest": "c42e875043b0d640781d7bb66b53394cc943e1cae2874668f492a2d344c2475b",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "29-recovery",
+      "title": "恢复 · 可恢复片段",
+      "design": "Docs/design-v2/index.html#29-recovery",
+      "implementation": "Sources/CaptureRecoveryView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/29-recovery.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/29-recovery.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/29-recovery.ax.txt"
+      ],
+      "checks": [
+        "扫描",
+        "时长与质量提示",
+        "恢复不覆盖",
+        "取消"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "30-recovery-empty",
+      "title": "恢复 · 无未登记片段",
+      "design": "Docs/design-v2/index.html#30-recovery-empty",
+      "implementation": "Sources/CaptureRecoveryView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/30-recovery-empty.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/30-recovery-empty.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/30-recovery-empty.ax.txt"
+      ],
+      "checks": [
+        "空状态",
+        "重新检查",
+        "打开原轨目录"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "31-execution",
+      "title": "执行追踪",
+      "design": "Docs/design-v2/index.html#31-execution",
+      "implementation": "Sources/RecordAIExecutionView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/31-execution.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/31-execution.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/31-execution.ax.txt"
+      ],
+      "checks": [
+        "采集实时状态",
+        "ASR 队列",
+        "定稿与分人",
+        "Agent 发布"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "32-paragraph-edit",
+      "title": "编辑逐字稿段落",
+      "design": "Docs/design-v2/index.html#32-paragraph-edit",
+      "implementation": "Sources/TranscriptTimelineView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/32-paragraph-edit.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/32-paragraph-edit.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/32-paragraph-edit.ax.txt"
+      ],
+      "checks": [
+        "取消不写入",
+        "保存保留时标",
+        "文字更新"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "33-speaker",
+      "title": "发言人 · 改名与合并",
+      "design": "Docs/design-v2/index.html#33-speaker",
+      "implementation": "Sources/SpeakerEditor.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/33-speaker.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/33-speaker.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/33-speaker.ax.txt"
+      ],
+      "checks": [
+        "名称校验",
+        "合并",
+        "恢复独立标签",
+        "段落归属"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "34-action-item",
+      "title": "行动项 · 添加与编辑",
+      "design": "Docs/design-v2/index.html#34-action-item",
+      "implementation": "Sources/MeetingActionEditor.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/34-action-item.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/34-action-item.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/34-action-item.ax.txt"
+      ],
+      "checks": [
+        "标题",
+        "负责人",
+        "截止日",
+        "完成状态",
+        "保存失败保留输入"
+      ],
+      "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "35-delete-confirm",
+      "title": "移入回收站确认",
+      "design": "Docs/design-v2/index.html#35-delete-confirm",
+      "implementation": "Sources/RecordingTrashView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/35-delete-confirm.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/35-delete-confirm.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/35-delete-confirm.ax.txt"
+      ],
+      "checks": [
+        "取消",
+        "移入回收站",
+        "源文件保留"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "36-quit-confirm",
+      "title": "录音中退出确认",
+      "design": "Docs/design-v2/index.html#36-quit-confirm",
+      "implementation": "Sources/QuitConfirmationView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/36-quit-confirm.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/36-quit-confirm.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/36-quit-confirm.ax.txt"
+      ],
+      "checks": [
+        "返回录音",
+        "保存后退出",
+        "保存失败不退出"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "37-notes",
+      "title": "笔记与本地助手",
+      "design": "Docs/design-v2/index.html#37-notes",
+      "implementation": "Sources/MeetingWorkspaceView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/37-notes.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/37-notes.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/37-notes.ax.txt"
+      ],
+      "checks": [
+        "手写笔记保存",
+        "AI 内容分开",
+        "生成取消",
+        "来源引用"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "38-assistant",
+      "title": "助手 · 对话与 Live Q&A",
+      "design": "Docs/design-v2/index.html#38-assistant",
+      "implementation": "Sources/MeetingWorkspaceView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/38-assistant.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/38-assistant.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/38-assistant.ax.txt"
+      ],
+      "checks": [
+        "提问",
+        "实时来源标识",
+        "引用",
+        "空状态与模型缺失"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "39-narrow",
+      "title": "窄窗口 · 摘要抽屉",
+      "design": "Docs/design-v2/index.html#39-narrow",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/39-narrow.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/39-narrow.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/39-narrow.ax.txt"
+      ],
+      "checks": [
+        "三栏收敛",
+        "摘要可访问",
+        "工具栏不截断"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "40-dark",
+      "title": "深色模式",
+      "design": "Docs/design-v2/index.html#40-dark",
+      "implementation": "Sources/CoHearTranscribeApp.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/40-dark.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/40-dark.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/40-dark.ax.txt"
+      ],
+      "checks": [
+        "文字对比",
+        "状态色",
+        "选中态",
+        "键盘焦点"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "41-import",
+      "title": "导入音频 · 系统文件选择器",
+      "design": "Docs/design-v2/index.html#41-import",
+      "implementation": "Sources/AppState.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/41-import.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/41-import.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/41-import.ax.txt"
+      ],
+      "checks": [
+        "音频格式过滤",
+        "取消",
+        "复制源音频"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "42-export",
+      "title": "导出 · 系统保存面板",
+      "design": "Docs/design-v2/index.html#42-export",
+      "implementation": "Sources/AppState.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/42-export.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/42-export.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/42-export.ax.txt"
+      ],
+      "checks": [
+        "文件名",
+        "格式",
+        "取消",
+        "已存在文件覆盖由系统确认"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "43-menu-bar",
+      "title": "菜单栏录音控制",
+      "design": "Docs/design-v2/index.html#43-menu-bar",
+      "implementation": "Sources/RecordingWindowObserver.swift",
+      "status": "pending",
+      "screenshot": null,
+      "visualEvidence": "Docs/design-v2/validation/final/43-menu-bar.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json"
+      ],
+      "checks": [
+        "恢复窗口",
+        "mini",
+        "暂停继续",
+        "停止保存"
+      ],
+      "sourceDigest": null,
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "44-errors",
+      "title": "通用错误与授权等待",
+      "design": "Docs/design-v2/index.html#44-errors",
+      "implementation": "Sources/RecordAIErrorView.swift",
+      "status": "pending",
+      "screenshot": "Docs/design-v2/validation/final/44-errors.jpg",
+      "visualEvidence": "Docs/design-v2/validation/final/44-errors.review.json",
+      "interactionEvidence": [
+        "Docs/design-v2/validation/data-regression.json",
+        "Docs/design-v2/validation/ui-contracts.json",
+        "Docs/design-v2/validation/final/44-errors.ax.txt"
+      ],
+      "checks": [
+        "具体原因",
+        "关闭可返回",
+        "外部授权不自动确认"
+      ],
+      "sourceDigest": "ca4c3160c4b4f10905f4527e2975e6027c8d5db2609871682078f17abe5b71b3",
+      "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 同步账号
+		3 button 完成
+		4 text 连接个人账号，转录完成后预览并同步。
+		5 button Description: 钉钉, Value: 未选择
+		6 button Description: 飞书, Value: 已选择
+		7 button Description: Notion, Value: 未选择
+		8 image Description: 纯文本文稿, ID: doc.text
+		9 text 飞书 · 我的文档 授权状态查询暂未完成；没有发起新申请，请稍后再检查 首次连接会在官方浏览器引导中初始化应用，再授权个人文档权限。无需手填 App ID 或密钥；企业可能要求管理员批准。
+		10 button 检查授权状态
+		11 button 连接飞书账号
+		12 image Description: 简介, ID: info.circle
+		13 text 只在你点击同步后发送选定文字。原始音频保留在本机。
+14 menu bar
+	15 RecordAI 界面预览
+	16 File
+	17 Edit
+	18 View
+	19 逐页验收
+	20 Window
+	21 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

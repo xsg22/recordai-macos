@@ -16,6 +16,18 @@ struct LibrarySmoke {
         let library = try MeetingLibrary(root: temp)
         check(try library.list().count == 1, "历史迁移")
         check(try library.load(oldID).duration == 0, "旧耗时不冒充会议时长")
+        check(try !library.load(oldID).isStarred, "旧记录默认无星标")
+        var starred = try library.load(oldID)
+        starred.isStarred = true
+        starred.actionItems = [MeetingActionItem(title: "确认负责人", isDone: true, assignee: "产品组", dueDate: Date(timeIntervalSince1970: 1234))]
+        _ = try library.save(starred)
+        check(try MeetingLibrary(root: temp).load(oldID).isStarred, "星标持久化")
+        check(try MeetingLibrary(root: temp).load(oldID).actionItems.first?.isDone == true, "行动项持久化")
+        check(try MeetingLibrary(root: temp).load(oldID).actionItems.first?.assignee == "产品组", "行动项负责人持久化")
+        check(try MeetingLibrary(root: temp).load(oldID).actionItems.first?.dueDate == Date(timeIntervalSince1970: 1234), "截止日期持久化")
+        let oldAction = Data("{\"id\":\"\(UUID().uuidString)\",\"title\":\"旧行动项\",\"isDone\":false}".utf8)
+        let decodedAction = try JSONDecoder().decode(MeetingActionItem.self, from: oldAction)
+        check(decodedAction.assignee.isEmpty && decodedAction.dueDate == nil, "旧行动项兼容")
         check(try Data(contentsOf: temp.appendingPathComponent("history-v0.1-backup.json")) == Data(legacy.utf8), "完整备份")
         check(try Data(contentsOf: history) == Data(legacy.utf8), "旧原件保留")
         _ = try library.rename(oldID, title: "已修改")
@@ -27,6 +39,22 @@ struct LibrarySmoke {
         check(fm.fileExists(atPath: source.path) && imported != source, "源文件保留")
         check(try Data(contentsOf: imported) == Data(contentsOf: source), "音频复制完整")
         check(try library.audioURLs(for: meeting) == [imported], "定位托管音频")
+        let attachmentSource = temp.appendingPathComponent("requirements.txt")
+        try Data("本地附件".utf8).write(to: attachmentSource)
+        let attachment = try library.importAttachment(attachmentSource, into: &meeting)
+        let attachmentURL = try library.attachmentURL(attachment, meeting: meeting.id)
+        check(try Data(contentsOf: attachmentURL) == Data(contentsOf: attachmentSource), "附件保存副本")
+        check(try library.load(meeting.id).attachments.first?.id == attachment.id, "附件元数据持久化")
+        var invalidAttachment = MeetingAttachment(filename: "../../secret", displayName: "unsafe", bytes: 0)
+        expectFailure("附件跨目录路径拒绝") { _ = try library.attachmentURL(invalidAttachment, meeting: meeting.id) }
+        invalidAttachment.filename = "escape.txt"
+        try fm.createSymbolicLink(at: attachmentURL.deletingLastPathComponent().appendingPathComponent("escape.txt"), withDestinationURL: attachmentSource)
+        expectFailure("附件符号链接拒绝") { _ = try library.attachmentURL(invalidAttachment, meeting: meeting.id) }
+        var invalidAttachmentRecord = meeting
+        invalidAttachmentRecord.title = ""
+        let beforeFailedImport = try fm.contentsOfDirectory(atPath: attachmentURL.deletingLastPathComponent().path).sorted()
+        expectFailure("附件保存失败回滚副本") { _ = try library.importAttachment(attachmentSource, into: &invalidAttachmentRecord) }
+        check(try fm.contentsOfDirectory(atPath: attachmentURL.deletingLastPathComponent().path).sorted() == beforeFailedImport, "失败不遗留附件副本")
         check(try library.list(query: "离线").isEmpty, "历史摘要不参与录音搜索")
         check(try library.list(query: "负责人").isEmpty, "历史笔记不参与录音搜索")
         meeting.text = "编辑后文本"
@@ -42,6 +70,23 @@ struct LibrarySmoke {
         let output = temp.appendingPathComponent("export.md")
         try library.exportMarkdown(restored, to: output)
         check(try String(contentsOf: output, encoding: .utf8) == markdown, "Markdown导出")
+        try library.trash(meeting.id)
+        check(try !library.list().contains { $0.id == meeting.id }, "回收站不进入活跃库")
+        check(try library.listTrashed().contains { $0.id == meeting.id }, "回收站列出录音")
+        check(fm.fileExists(atPath: source.path), "回收站保留导入源文件")
+        check(!fm.fileExists(atPath: imported.path), "活跃音轨随会议移入回收站")
+        _ = try library.save(restored)
+        expectFailure("恢复不得覆盖活跃同名记录") { _ = try library.restoreTrashed(meeting.id) }
+        check(try library.listTrashed().contains { $0.id == meeting.id }, "恢复冲突保留回收站原件")
+        try fm.removeItem(at: library.directory(for: meeting.id))
+        let restoredTrash = try library.restoreTrashed(meeting.id)
+        check(restoredTrash.text == restored.text && fm.fileExists(atPath: imported.path), "恢复保全正文与托管音频")
+        check(try Data(contentsOf: library.attachmentURL(attachment, meeting: meeting.id)) == Data("本地附件".utf8), "回收站恢复附件")
+        check(try Data(contentsOf: imported) == Data("audio".utf8), "恢复音频内容完整")
+        expectFailure("重复恢复不覆盖已恢复记录") { _ = try library.restoreTrashed(meeting.id) }
+        var attachmentRecord = restoredTrash
+        try library.removeAttachment(attachment.id, from: &attachmentRecord)
+        check(attachmentRecord.attachments.isEmpty && fm.fileExists(atPath: attachmentSource.path), "移除附件不删除源文件")
         var recording = MeetingRecord(title: "未完成录音", status: .recorded)
         let recordingURL = try library.recordingURL(for: &recording)
         check(recording.status == .recording && recordingURL.pathExtension == "m4a", "录音前落盘")

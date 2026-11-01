@@ -1,0 +1,20 @@
+{
+  "captured_at": "2026-11-01T16:24:01.748104+08:00",
+  "status": "passed",
+  "version": "0.16.0",
+  "scope": "候选安装包内冻结的 Qwen/Python 3.12 与 Paraformer VAD，真实离线中文转写、SRT 和预取消；没有采集麦克风或用户录音。",
+  "input": {
+    "kind": "macOS say-generated synthetic speech",
+    "voice": "Tingting",
+    "text": "这是录音软件的安装包验收测试，会议记录已经保存。",
+    "sha256": "4a1e72f4a7d43085b4e466bb841c81a05b473c7187ad1249eb4995782f51ebc5"
+  },
+  "engine_sha256": "86c513d8f3fede8fd5f118be9c7cc6d1ecf9565094ee033ae9379a2d9e01c15c",
+  "transcript": "这是录音软件的安装包验收测试会议记录，已经保存。",
+  "model_source": "用户已安装模型，只读使用；未下载或修改权重",
+  "visual_acceptance": "not covered",
+  "reverified_at": "2026-11-01T17:23:23.248035+08:00",
+  "reverified_exit_code": 0,
+  "engine_matches_current_candidate": true,
+  "current_candidate_sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5"
+}

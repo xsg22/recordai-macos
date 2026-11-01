@@ -14,12 +14,15 @@ enum PersonalDestination: String, CaseIterable, Identifiable {
 @MainActor
 final class AppState: ObservableObject {
     @Published var history: [MeetingRecord] = []
+    @Published private(set) var trashedHistory: [MeetingRecord] = []
+    @Published var deletionRequest: MeetingRecord?
     @Published var selection: UUID?
     @Published var text = ""
     @Published var notes = ""
     @Published var summary = ""
     @Published var title = ""
     @Published var search = ""
+    @Published var editingTranscript = false
     @Published var audio: URL?
     @Published var playbackSegment = 0
     @Published var language = "zh"
@@ -27,6 +30,7 @@ final class AppState: ObservableObject {
     @Published var recording = false
     @Published var preparing = false
     @Published private(set) var quitting = false
+    private var quitPromptVisible = false
     @Published var paused = false
     @Published var recordingMode: MeetingRecordingMode = .microphone
     @Published var level: Float = 0
@@ -38,7 +42,9 @@ final class AppState: ObservableObject {
     @Published private(set) var recoveryStatus = ""
     private var recoveryTask: Task<Void, Never>?
     @Published var status = "准备就绪 · 音频仅在这台 Mac 上处理"
-    @Published var error: String?
+    @Published var error: String? { didSet { errorRetry = nil } }
+    @Published private(set) var errorRetry: (() -> Void)?
+    private var errorMeetingID: UUID?
     @Published var elapsed = 0
     @Published var playing = false
     @Published private(set) var playingParagraphID: UUID?
@@ -158,16 +164,18 @@ final class AppState: ObservableObject {
         return AgentDataPublisher.markdown(current)
     }
 
-    init(storageURL: URL? = nil, connectionNamespace: String = "") {
+    init(storageURL: URL? = nil, connectionNamespace: String = "", speechModelStore: ASRModelStore? = nil,
+         dingTalkConnection: DingTalkAccountConnection? = nil, feishuConnection: FeishuAccountConnection? = nil,
+         notionConnection: NotionAccountConnection? = nil) {
         storage = storageURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("CoHearTranscribe", isDirectory: true)
-        speechModels = ASRModelStore()
+        speechModels = speechModelStore ?? ASRModelStore()
         dingTalk = MCPConnectionStore(namespace: connectionNamespace + "dingtalk")
         feishu = MCPConnectionStore(namespace: connectionNamespace + "feishu")
         notion = MCPConnectionStore(namespace: connectionNamespace + "notion")
-        dingTalkAccount = DingTalkAccountConnection()
-        notionAccount = NotionAccountConnection(store: notion)
-        feishuAccount = FeishuAccountConnection()
+        dingTalkAccount = dingTalkConnection ?? DingTalkAccountConnection()
+        notionAccount = notionConnection ?? NotionAccountConnection(store: notion)
+        feishuAccount = feishuConnection ?? FeishuAccountConnection()
         speechModels.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
         dingTalkAccount.onProgress = { [weak self] message in
             self?.syncStatus = message
@@ -182,6 +190,7 @@ final class AppState: ObservableObject {
         do {
             library = try MeetingLibrary(root: storage)
             history = try library?.list() ?? []
+            trashedHistory = try library?.listTrashed() ?? []
             if let warnings = library?.warnings, !warnings.isEmpty { error = warnings.joined(separator: "\n") }
         } catch { self.error = "读取会议库失败：\(error.localizedDescription)" }
         recorder.onUpdate = { [weak self] seconds, level in
@@ -232,6 +241,55 @@ final class AppState: ObservableObject {
         else { history.insert(saved, at: 0) }
     }
 
+    func toggleStar() {
+        guard !locked, current != nil else { return }
+        guard saveEdits() else { return }
+        guard var record = current else { return }
+        record.isStarred.toggle()
+        do { try update(record) } catch { self.error = "保存星标失败：\(error.localizedDescription)" }
+    }
+
+    @discardableResult func updateActionItems(_ change: (inout [MeetingActionItem]) -> Void) -> Bool {
+        guard !locked, current != nil else { return false }
+        guard saveEdits() else { return false }
+        guard var record = current else { return false }
+        change(&record.actionItems)
+        do { try update(record); return true }
+        catch { self.error = "保存行动项失败：\(error.localizedDescription)"; return false }
+    }
+
+    func chooseAttachment() {
+        guard !locked, current != nil else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false; panel.allowsMultipleSelection = false
+        panel.message = "附件会保存本地副本，不会随转录自动发送。"
+        if panel.runModal() == .OK, let url = panel.url { addAttachment(url) }
+    }
+
+    @discardableResult func addAttachment(_ url: URL) -> Bool {
+        guard !locked, let library, saveEdits(), var record = current else { return false }
+        do {
+            _ = try library.importAttachment(url, into: &record)
+            publishStoredRecord(record); return true
+        } catch { self.error = "添加附件失败：\(error.localizedDescription)"; return false }
+    }
+
+    func openAttachment(_ attachment: MeetingAttachment, reveal: Bool = false) {
+        guard let record = current, let stored = record.attachments.first(where: { $0.id == attachment.id }), let library else { return }
+        do {
+            let url = try library.attachmentURL(stored, meeting: record.id)
+            guard FileManager.default.fileExists(atPath: url.path) else { throw MeetingLibraryError.missingAttachment }
+            if reveal { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+            else if !NSWorkspace.shared.open(url) { self.error = "未找到可以打开此附件的应用，请在 Finder 中查看。" }
+        } catch { self.error = "无法打开附件：\(error.localizedDescription)" }
+    }
+
+    @discardableResult func removeAttachment(_ id: UUID) -> Bool {
+        guard !locked, let library, saveEdits(), var record = current else { return false }
+        do { try library.removeAttachment(id, from: &record); publishStoredRecord(record); return true }
+        catch { self.error = "移除附件失败：\(error.localizedDescription)"; return false }
+    }
+
     func scheduleSave() {
         autosave?.cancel()
         autosave = Task { [weak self] in
@@ -239,19 +297,28 @@ final class AppState: ObservableObject {
         }
     }
 
-    func saveEdits() {
+    @discardableResult func saveEdits() -> Bool {
         autosave?.cancel(); autosave = nil
-        guard var current else { return }
+        guard var current else { return true }
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let savedTitle = cleanTitle.isEmpty ? current.title : cleanTitle
-        guard current.title != savedTitle || current.text != text || current.notes != notes || (current.summary ?? "") != summary || current.enhancedNotes != enhancedNotes else { return }
+        guard current.title != savedTitle || current.text != text || current.notes != notes || (current.summary ?? "") != summary || current.enhancedNotes != enhancedNotes else { return true }
+        if (current.summary ?? "") != summary { current.summaryCitations = []; current.summaryContextWasTruncated = false }
         current.title = savedTitle; current.text = text; current.notes = notes; current.summary = summary.isEmpty ? nil : summary
         current.enhancedNotes = enhancedNotes
-        do { try update(current) } catch { self.error = "保存失败：\(error.localizedDescription)" }
+        do { try update(current); return true } catch { self.error = "保存失败：\(error.localizedDescription)"; return false }
+    }
+
+    @discardableResult func updateSummary(_ value: String, meetingID: UUID) -> Bool {
+        guard !locked, !assistantBusy, selection == meetingID, saveEdits(), var record = current else { return false }
+        record.summary = value.isEmpty ? nil : value
+        record.summaryCitations = []; record.summaryContextWasTruncated = false
+        do { try update(record); summary = value; return true }
+        catch { self.error = "保存摘要失败：\(error.localizedDescription)"; return false }
     }
 
     func select(_ id: UUID?, saveCurrent: Bool = true) {
-        if saveCurrent { saveEdits() }
+        if saveCurrent && !saveEdits() { return }
         if id != selection { cancelAssistant() }
         stopPlayback()
         selection = id
@@ -277,9 +344,22 @@ final class AppState: ObservableObject {
         if panel.runModal() == .OK, let url = panel.url { useAudio(url) }
     }
 
+    func reportRecoverableError(_ message: String, retry: @escaping () -> Void) {
+        error = message
+        errorMeetingID = selection
+        errorRetry = retry
+    }
+
+    func retryLastError() {
+        guard let retry = errorRetry else { return }
+        guard selection == errorMeetingID else { error = "当前会议已改变，请返回原会议后重试。"; return }
+        guard !locked && !syncing else { error = "已有任务正在进行，请等待完成后再重试。"; return }
+        error = nil
+        retry()
+    }
+
     func useAudio(_ url: URL) {
-        guard !locked, let library else { return }
-        saveEdits()
+        guard !locked, let library, saveEdits() else { return }
         do {
             var record = MeetingRecord(title: url.deletingPathExtension().lastPathComponent, language: language, status: .recorded)
             _ = try library.importAudio(url, into: &record)
@@ -296,7 +376,7 @@ final class AppState: ObservableObject {
                     }
                 }
             }
-        } catch { self.error = "导入失败：\(error.localizedDescription)" }
+        } catch { reportRecoverableError("导入失败：\(error.localizedDescription)") { [weak self] in self?.useAudio(url) } }
     }
 
     func transcribe() {
@@ -435,7 +515,8 @@ final class AppState: ObservableObject {
                     status = "转录已保存，发言人分析未完成"
                 } else {
                     finishFailedTranscription(id: id, cancelled: false); transcriptPhase = .failed
-                    self.error = error.localizedDescription; status = "转录失败，可重试"
+                    reportRecoverableError(error.localizedDescription) { [weak self] in self?.transcribe() }
+                    status = "转录失败，可重试"
                 }
             }
             transcriptionGeneration = nil
@@ -924,7 +1005,7 @@ final class AppState: ObservableObject {
             playbackDuration = player.duration
             if playbackTime >= player.duration { player.currentTime = 0 }
             try startPlayer()
-        } catch { self.error = "播放失败：\(error.localizedDescription)" }
+        } catch { reportRecoverableError("播放失败：\(error.localizedDescription)") { [weak self] in self?.togglePlayback() } }
     }
     private func startPlayer() throws {
         guard let player else { return }
@@ -934,7 +1015,7 @@ final class AppState: ObservableObject {
         playbackTimer?.invalidate()
         // 点句只在本地检查时间边界，不调模型；20ms检查避免旧200ms轮询明显越过句尾。
         let timer = Timer(timeInterval: 0.02, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshPlayback() }
+            Task { @MainActor [weak self] in self?.refreshPlayback() }
         }
         playbackTimer = timer
         RunLoop.main.add(timer, forMode: .common)
@@ -969,7 +1050,7 @@ final class AppState: ObservableObject {
     func stopPlayback() { paragraphPlaybackEnd = nil; playingParagraphID = nil; player?.stop(); player = nil; playing = false; playbackTime = 0; playbackTimer?.invalidate(); playbackTimer = nil }
 
     func export(kind: String) {
-        saveEdits(); guard let current else { return }
+        guard saveEdits(), let current else { return }
         let ext = kind == "字幕" ? "srt" : kind == "Markdown" ? "md" : kind == "JSON" ? "json" : "txt"
         var content = ext == "srt" ? current.subtitles : ext == "md" ? markdown : text
         if ext == "json" {
@@ -1023,14 +1104,34 @@ final class AppState: ObservableObject {
     }
 
     func deleteCurrent() {
-        guard let selection, !locked else { return }
-        let alert = NSAlert()
-        alert.messageText = "将这场会议移到废纸篓？"
-        alert.informativeText = "会议文本和托管音频将一起移入废纸篓；导入前的源文件会保留。"
-        alert.addButton(withTitle: "移到废纸篓"); alert.addButton(withTitle: "取消")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        do { try library?.trash(selection); history.removeAll { $0.id == selection }; select(nil) }
+        guard !locked, saveEdits(), let current else { return }
+        deletionRequest = current
+    }
+
+    @discardableResult func confirmTrash(_ id: UUID) -> Bool {
+        guard !locked, selection == id, let library, saveEdits(), let record = current else { return false }
+        do {
+            try library.trash(id)
+            history.removeAll { $0.id == id }
+            trashedHistory = (try? library.listTrashed()) ?? ([record] + trashedHistory.filter { $0.id != id })
+            select(nil, saveCurrent: false); deletionRequest = nil
+            status = "录音已移入回收站，可以恢复。"
+            return true
+        } catch { self.error = error.localizedDescription; return false }
+    }
+
+    @discardableResult func restoreTrash(_ id: UUID) -> Bool {
+        guard !locked, let library, saveEdits() else { return false }
+        do {
+            let record = try library.restoreTrashed(id)
+            publishStoredRecord(record)
+            trashedHistory = (try? library.listTrashed()) ?? trashedHistory.filter { $0.id != id }
+            select(id, saveCurrent: false)
+            status = "录音已恢复，文字与托管音频均保留。"
+            return true
+        }
         catch { self.error = error.localizedDescription }
+        return false
     }
     var dataRootURL: URL { storage }
     func revealDataRoot() { NSWorkspace.shared.open(storage) }
@@ -1042,7 +1143,7 @@ final class AppState: ObservableObject {
 
     func syncMeeting() {
         guard canSyncFinalTranscript else { error = "请等待完整转录定稿后再同步，实时预览不会发送。"; return }
-        saveEdits()
+        guard saveEdits() else { return }
         guard current?.status == .completed else { return }
         syncing = true; remoteURL = nil; syncReceipt = ""; syncFeedback = nil
         syncStatus = "正在同步，请稍候…"
@@ -1165,12 +1266,17 @@ final class AppState: ObservableObject {
         }
     }
 
-    func renameSpeaker(_ id: String, name: String) {
+    @discardableResult func renameSpeaker(_ id: String, name: String, mergeInto target: String? = nil) -> Bool {
         let name = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(60))
-        guard !name.isEmpty, var current else { return }
-        saveEdits(); current = self.current ?? current
-        current.speakerNames[current.canonicalSpeaker(id)] = name
-        do { try update(current) } catch { self.error = error.localizedDescription }
+        guard !locked, !name.isEmpty, saveEdits(), var current else { return false }
+        let source = current.canonicalSpeaker(id)
+        current.speakerNames[source] = name
+        if let target {
+            let target = current.canonicalSpeaker(target)
+            guard source != target, current.speakerNames[target] != nil else { return false }
+            current.speakerAliases[source] = target
+        }
+        do { try update(current); return true } catch { self.error = error.localizedDescription; return false }
     }
     func mergeSpeaker(_ source: String, into target: String) {
         guard var current else { return }
@@ -1184,12 +1290,12 @@ final class AppState: ObservableObject {
         current.speakerAliases.removeValue(forKey: id)
         do { try update(current) } catch { self.error = error.localizedDescription }
     }
-    func editTranscriptParagraph(_ id: UUID, text: String) {
-        guard !locked, var current, current.hasCurrentParagraphs,
-              let index = current.transcriptParagraphs.firstIndex(where: { $0.id == id }) else { return }
+    @discardableResult func editTranscriptParagraph(_ id: UUID, text: String) -> Bool {
+        guard !locked, saveEdits(), var current, current.hasCurrentParagraphs,
+              let index = current.transcriptParagraphs.firstIndex(where: { $0.id == id }) else { return false }
         current.transcriptParagraphs[index].text = text
         current.text = current.paragraphText
-        do { try update(current); self.text = current.text } catch { self.error = error.localizedDescription }
+        do { try update(current); self.text = current.text; return true } catch { self.error = error.localizedDescription; return false }
     }
     /// 段落归属独立于全局合并，正文、分隔符与时间轴保持原样。
     func assignParagraphSpeaker(_ paragraphID: UUID, speakerID: String?) {
@@ -1271,23 +1377,26 @@ final class AppState: ObservableObject {
     }
 
     func prepareToQuit() -> Bool {
-        if quitting { return false }
+        if quitting || quitPromptVisible { return false }
         let activity = QuitActivity.resolve(recording: recording, preparing: preparing, transcribing: busy || continuousWorker != nil, recovering: recoveryBusy,
             externalTask: syncing || dingTalkAccount.busy || notionAccount.busy || feishuAccount.busy || assistantBusy)
         if activity == .idle { stopPlayback(); return saveBeforeQuit() }
-        let alert = NSAlert()
-        alert.messageText = activity.title
-        alert.informativeText = activity.detail
-        alert.addButton(withTitle: activity.action ?? "返回应用")
-        if activity.action != nil { alert.addButton(withTitle: "返回应用") }
-        guard alert.runModal() == .alertFirstButtonReturn, activity.action != nil else { return false }
-        switch activity {
-        case .recording:
-            quitting = true
-            finishRecording(finalize: false, onSaved: { NSApp.terminate(nil) })
-        case .transcribing:
-            Task { if await cancelTranscriptionAndSaveForQuit() { NSApp.terminate(nil) } }
-        default: break
+        quitPromptVisible = true
+        showRecordingWindow()
+        QuitConfirmation.present(activity, parent: mainWindow) { [weak self] confirmed in
+            guard let self else { return }
+            self.quitPromptVisible = false
+            guard confirmed else { return }
+            switch activity {
+            case .recording:
+                if self.recording {
+                    self.quitting = true
+                    self.finishRecording(finalize: false, onSaved: { NSApp.terminate(nil) })
+                } else if !self.preparing && self.saveBeforeQuit() { NSApp.terminate(nil) }
+            case .transcribing:
+                Task { if await self.cancelTranscriptionAndSaveForQuit() { NSApp.terminate(nil) } }
+            default: break
+            }
         }
         return false
     }

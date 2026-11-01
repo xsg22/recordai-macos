@@ -1,0 +1,114 @@
+Window: "RecordAI", App: RecordAI 界面预览.
+0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen
+	1 split group SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen
+		2 container
+			3 image RecordAI
+			4 text RecordAI 本地录音 · AI 转写
+			5 button (disabled) 开始新录音
+			6 button (disabled) 全部会议, 6
+			7 button (disabled) 星标, 1
+			8 button (disabled) 回收站, 0
+			9 text field (settable) 搜索会议名称或内容…
+			10 text 最近的会议
+			11 menu button 按处理状态筛选, Description: filter
+			12 scroll area Secondary Actions: Scroll Up, Scroll Down
+				13 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					14 button 产品方案讨论，已完成，今天 16:45 · 34 分钟
+					15 button (selected) 产品周会，已完成，今天 10:00 · 20 分钟
+					16 button 用户访谈，已完成，昨天 15:00 · 48 分钟
+					17 button 市场策略讨论，已完成，10月28日 · 1小时3分钟
+					18 button 与 Design 团队同步，已完成，10月27日 · 37 分钟
+					19 button 待恢复录音，待处理，10月22日
+				20 scroll bar (settable, float) 0
+					21 value indicator (settable, float) 0
+					22 increment arrow button
+					23 decrement arrow button
+					24 increment page button
+					25 decrement page button
+			26 button Description: 设置, Help: 转录、同步账号与本机Agent
+			27 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
+		28 splitter (disabled, settable, float) 279
+		29 container
+			30 text field (settable) Value: 产品周会, Placeholder: 录音标题
+			31 button Description: 编辑录音标题, ID: pencil
+			32 button (disabled) Description: 取消星标, ID: star.fill
+			33 text 2026年11月1日 10:00—10:20 · 20 分钟
+			34 button (disabled) 继续录音
+			35 button 交付
+			36 menu button 更多, Help: 导出及更多操作, ID: ellipsis
+			37 busy indicator 0
+			38 text 正在区分发言人… · 音频已保存，可取消处理后稍后重试。
+			39 button 取消分析
+			40 button (selected) 转写
+			41 button 时间线
+			42 button 笔记与助手
+			43 slider (settable, float) Description: 音频波形播放进度, Value: 0, Details: 0 秒，共 1,234 秒
+			44 text 00:00 20:34
+			45 button Description: 后退 15 秒, ID: gobackward.15
+			46 button Description: 播放录音, ID: play.fill
+			47 button Description: 前进 15 秒, ID: goforward.15
+			48 scroll area Secondary Actions: Scroll Up, Scroll Down
+				49 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					50 button Description: 00:00, Help: 播放这一段，结束后自动暂停
+					51 menu button 发言人 1, Help: 修改名称或合并同一人的发言
+					52 menu button 更多, Help: 编辑文字或修改本段发言人
+					53 button Description: 播放本段：大家好，我们开始今天的产品周会。主要讨论三个议题：上周进展、下个迭代的重点，以及用户反馈的处理情况。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					54 button Description: 00:28, Help: 播放这一段，结束后自动暂停
+					55 menu button 发言人 2, Help: 修改名称或合并同一人的发言
+					56 menu button 更多, Help: 编辑文字或修改本段发言人
+					57 button Description: 播放本段：我先同步一下设计侧的进展。新版首页的视觉方案已经完成评审，目前正在进行细节设计，预计本周五可以交付给开发。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					58 button Description: 01:12, Help: 播放这一段，结束后自动暂停
+					59 menu button 发言人 3, Help: 修改名称或合并同一人的发言
+					60 menu button 更多, Help: 编辑文字或修改本段发言人
+					61 button Description: 播放本段：后端这边，用户体系的重构已经完成80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+				62 scroll bar (settable, float) 0
+					63 value indicator (settable, float) 0
+					64 increment arrow button
+					65 decrement arrow button
+					66 increment page button
+					67 decrement page button
+			68 scroll area Secondary Actions: Scroll Up, Scroll Down
+				69 text 本地存储 · 隐私安全
+				70 button (selected) 会议总结
+				71 button 行动项
+				72 text 会议摘要
+				73 menu button 摘要操作, Description: More
+				74 text 本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。 关键要点 • 新版首页方案已通过评审 • 用户体系重构完成80% • 优先解决离线体验与文件管理问题 请核对摘要与录音。 行动项 3
+				75 button (disabled) 添加
+				76 button (disabled) Description: 标记完成：完成设计交付, ID: square
+				77 button (disabled) 完成设计交付
+				78 menu button (disabled) 行动项操作, Description: More
+				79 text 设计组 11月6日
+				80 button (disabled) Description: 标记完成：验证离线流程, ID: square
+				81 button (disabled) 验证离线流程
+				82 menu button (disabled) 行动项操作, Description: More
+				83 text 测试组 11月5日
+				84 button (disabled) Description: 标记完成：整理用户反馈, ID: square
+				85 button (disabled) 整理用户反馈
+				86 menu button (disabled) 行动项操作, Description: More
+				87 text 产品组 11月3日 相关内容
+				88 button (disabled) 添加
+				89 image Description: 文稿, ID: doc
+				90 button 产品需求.txt, 本地附件 · 34 bytes
+				91 menu button 附件操作, Description: More
+				92 scroll bar (settable, float) 0
+					93 value indicator (settable, float) 0
+					94 increment arrow button
+					95 decrement arrow button
+					96 increment page button
+					97 decrement page button
+			98 text 正在区分发言人… 154 字符
+	99 toolbar
+		100 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	101 text RecordAI
+	102 menu button Window sharing
+103 menu bar
+	104 RecordAI 界面预览
+	105 File
+	106 Edit
+	107 View
+	108 逐页验收
+	109 Window
+	110 Help
+
+The focused UI element is 0 standard window RecordAI, Secondary Actions: Raise, ID: SwiftUI.WindowGroup<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.ModifiedContent<SwiftUI.IDView<RecordAIPreview.MainView, Swift.Int>, SwiftUI._BackgroundModifier<SwiftUI.ModifiedContent<RecordAIPreview.RecordingWindowObserver, SwiftUI._FrameLayout>>>, SwiftUI._FlexFrameLayout>, SwiftUI._EnvironmentKeyWritingModifier<Swift.Optional<SwiftUI.Font>>>, SwiftUI._EnvironmentKeyWritingModifier<SwiftUI.ControlSize>>, SwiftUI._Preferen

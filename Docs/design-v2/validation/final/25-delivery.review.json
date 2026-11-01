@@ -1,0 +1,17 @@
+{
+  "id": "25-delivery",
+  "title": "导出与交付",
+  "status": "pending",
+  "observed": true,
+  "observation": "复制和五种导出入口、同步预览、本机 Agent 区完整；正文复制和真实 Markdown 保存均已执行。",
+  "checks": [
+    "复制",
+    "TXT Markdown JSON SRT",
+    "音频导出",
+    "同步预览入口"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/25-delivery.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

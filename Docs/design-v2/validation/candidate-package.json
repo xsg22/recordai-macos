@@ -1,0 +1,23 @@
+{
+  "recorded_at": "2026-11-01T17:23:23.248035+08:00",
+  "version": "0.16.0",
+  "status": "candidate-not-published",
+  "ui_acceptance": "pending",
+  "sourceDigest": "fdbfb82d6123635abd2e43fb5584f8b8ca71126a4a35700811bf7fbfebc2e8a5",
+  "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23",
+  "script_exit_code": 0,
+  "main_binary_sha256": "a5aa41e3d162022cf41d2697da3e05971bb12bbe974952651cd63430f3e8d174",
+  "embedded_asr_sha256": "86c513d8f3fede8fd5f118be9c7cc6d1ecf9565094ee033ae9379a2d9e01c15c",
+  "checks": [
+    "22 isolated regression/contract groups",
+    "codesign --verify --deep --strict",
+    "arm64 main executable",
+    "embedded Python 3.12",
+    "DMG checksum and read-only mounted content match",
+    "PKG payload content and executable match"
+  ],
+  "artifacts": {
+    "RecordAI-0.16.0-arm64.dmg": "8f40c3fc988b0554d7cebfb1113b9fd9fd6c7c0d2b1fd179e8cc458528932df2",
+    "RecordAI-0.16.0-arm64.pkg": "81bea7a5658cb4123ffe4e91b597f26f9a4a3a2da4b81a7dd095b5e01545f5af"
+  }
+}

@@ -23,6 +23,9 @@ jobs:
         with:
           python-version: '3.12'
           architecture: arm64
+      - name: Require complete UI acceptance before publishing
+        if: ${{ inputs.publish_release }}
+        run: python3 Scripts/check-ui-acceptance.py
       - name: Read release version
         id: version
         run: echo "version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)" >> "$GITHUB_OUTPUT"
@@ -41,19 +44,14 @@ jobs:
         run: |
           mkdir -p .build
           python3 Scripts/test-recording-entry.py
+          python3 Scripts/test-ui-contracts.py
       - name: Build and sign application packages
         run: |
           COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" \
             zsh Scripts/build.zsh
       - name: Verify release assets
         run: |
-          codesign --verify --deep --strict .build/local/RecordAI.app
-          hdiutil verify dist/RecordAI-${{ steps.version.outputs.version }}-arm64.dmg
-          (cd dist && shasum -c RecordAI-${{ steps.version.outputs.version }}-arm64.dmg.sha256)
-          (cd dist && shasum -c RecordAI-${{ steps.version.outputs.version }}-arm64.pkg.sha256)
-          pkgutil --expand dist/RecordAI-${{ steps.version.outputs.version }}-arm64.pkg .build/pkg-expanded
-          file .build/local/RecordAI.app/Contents/MacOS/RecordAIApp
-          file .build/local/RecordAI.app/Contents/MacOS/recordai
+          RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" zsh Scripts/verify-release.zsh
       - uses: actions/upload-artifact@v4
         with:
           name: RecordAI-${{ steps.version.outputs.version }}-arm64

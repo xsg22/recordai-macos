@@ -1,0 +1,17 @@
+{
+  "id": "01-home",
+  "title": "首页 · 首次使用",
+  "status": "pending",
+  "observed": true,
+  "observation": "首页主内容 430 宽、录音设置与导入/系统声音入口、未就绪提示完整。",
+  "checks": [
+    "开始录音入口",
+    "导入音频入口",
+    "系统声音入口",
+    "模型未就绪提示"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/01-home.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

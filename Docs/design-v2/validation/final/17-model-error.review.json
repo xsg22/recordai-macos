@@ -1,0 +1,18 @@
+{
+  "id": "17-model-error",
+  "title": "模型 · 失败与重试",
+  "status": "pending",
+  "observed": true,
+  "observation": "网络错误、缓存保留和重试入口核对；实际点击重试，文件校验由临时文件回归验证。",
+  "checks": [
+    "失败原因",
+    "重试",
+    "缓存复用"
+  ],
+  "outstanding_visual_differences": [
+    "实际高度约 528，设计约 541；间距仍待最终确认。"
+  ],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/17-model-error.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

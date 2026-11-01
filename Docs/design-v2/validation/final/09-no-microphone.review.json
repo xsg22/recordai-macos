@@ -1,0 +1,17 @@
+{
+  "id": "09-no-microphone",
+  "title": "无麦克风",
+  "status": "pending",
+  "observed": true,
+  "observation": "无设备时禁用开始/继续；系统声音与声音设置入口保留，侧栏高度溢出已修复。",
+  "checks": [
+    "开始按钮不可重复触发",
+    "选择系统声音",
+    "打开声音设置",
+    "保留已有资料"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/09-no-microphone.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

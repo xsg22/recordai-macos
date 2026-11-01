@@ -1,0 +1,17 @@
+Window: "RecordAI", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 image Description: 麦克风, ID: mic
+		3 text 保存当前录音后退出？ 停止采集并保存完整音频后退出，本次不等待最终转录。下次打开可继续转录；保存失败会留在应用中。
+		4 button 返回录音
+		5 button 保存录音并退出
+6 menu bar
+	7 RecordAI 界面预览
+	8 File
+	9 Edit
+	10 View
+	11 逐页验收
+	12 Window
+	13 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

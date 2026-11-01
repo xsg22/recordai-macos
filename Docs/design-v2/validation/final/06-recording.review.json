@@ -1,0 +1,18 @@
+{
+  "id": "06-recording",
+  "title": "录音中 · 实时转写",
+  "status": "pending",
+  "observed": true,
+  "observation": "录音时标、历史波形、暂停/停止、底部录音条完整；实时历史移入段落菜单保留。",
+  "checks": [
+    "计时与电平",
+    "实时草稿标识",
+    "暂停",
+    "停止保存",
+    "切换 mini"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/06-recording.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

@@ -1,0 +1,11 @@
+Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#35-delete-confirm".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 52-53, 57
+~1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#35-delete-confirm
+~		51 text ♲
++		52 heading 移到回收站？, Value: 2
++			53 text 移到回收站？
+~		54 text 会议文本、托管音频和附件一起移入回收站，可以恢复；导入前的源文件保留。
+~		55 button 取消
+~		56 button 移到回收站
+The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#35-delete-confirm

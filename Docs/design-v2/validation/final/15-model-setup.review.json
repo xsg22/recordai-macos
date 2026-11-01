@@ -1,0 +1,19 @@
+{
+  "id": "15-model-setup",
+  "title": "模型 · 首次下载",
+  "status": "pending",
+  "observed": true,
+  "observation": "四组模型、4.22 GB 实际清单大小、开始下载与关闭入口核对；下载状态来自夹具。",
+  "checks": [
+    "模型列表",
+    "下载总量",
+    "下载入口",
+    "关闭不误取消"
+  ],
+  "outstanding_visual_differences": [
+    "实际弹窗高度约 528，设计约 565；包含实际下载总量，间距仍待最终确认。"
+  ],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/15-model-setup.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

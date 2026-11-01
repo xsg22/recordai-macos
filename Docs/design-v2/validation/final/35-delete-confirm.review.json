@@ -1,0 +1,16 @@
+{
+  "id": "35-delete-confirm",
+  "title": "移入回收站确认",
+  "status": "pending",
+  "observed": true,
+  "observation": "470 宽确认框、完整保全文案、取消/移入回收站核对；实际取消，删除保全有回归。",
+  "checks": [
+    "取消",
+    "移入回收站",
+    "源文件保留"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/35-delete-confirm.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

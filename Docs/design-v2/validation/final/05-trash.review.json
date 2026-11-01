@@ -1,0 +1,16 @@
+{
+  "id": "05-trash",
+  "title": "回收站",
+  "status": "pending",
+  "observed": true,
+  "observation": "卡片标题误删已修复；恢复动作在隔离库实际执行，音频和附件保全另有回归。",
+  "checks": [
+    "本项目删除记录",
+    "恢复录音",
+    "原音频随记录恢复"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/05-trash.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

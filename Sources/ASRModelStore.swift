@@ -69,7 +69,8 @@ struct ASRModelManifest: Decodable, Sendable {
     func refresh() {
         guard !busy else { return }
         ready = manifest?.isInstalled(at: root) == true
-        if !ready { status = "语音模型尚未就绪，请下载或重试校验。"; progress = 0 }
+        if ready { status = "语音模型已下载，可离线使用。"; progress = 1; error = nil }
+        else { status = "语音模型尚未就绪，请下载或重试校验。"; progress = 0 }
     }
     func download() {
         guard !busy else { return }
@@ -151,24 +152,81 @@ struct ASRModelManifest: Decodable, Sendable {
 
 struct ASRModelSetupView: View {
     @ObservedObject var store: ASRModelStore
+    var close: (() -> Void)? = nil
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label("语音模型", systemImage: "arrow.down.circle").font(.headline)
-            Text(store.status).font(.system(size: 14)).fixedSize(horizontal: false, vertical: true)
-            if let manifest = store.manifest {
-                Text("Paraformer · Qwen ASR · Sortformer · 逐词对齐\n下载大小：\(ByteCountFormatter.string(fromByteCount: manifest.totalBytes, countStyle: .file))")
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+        ASRModelDownloadPanel(ready: store.ready, busy: store.busy, progress: store.progress,
+            status: store.status, error: store.error, totalBytes: store.manifest?.totalBytes,
+            download: { store.download() }, cancel: { store.cancel() }, close: close)
+    }
+}
+
+/// Pure presentation shared by the real download flow and isolated UI state previews.
+struct ASRModelDownloadPanel: View {
+    let ready: Bool
+    let busy: Bool
+    let progress: Double
+    let status: String
+    let error: String?
+    let totalBytes: Int64?
+    let download: () -> Void
+    let cancel: () -> Void
+    var close: (() -> Void)? = nil
+    private let models = [("Paraformer", "中英双语实时转写", "waveform"),
+                          ("Qwen3-ASR", "会后定稿", "text.alignleft"),
+                          ("Silero VAD", "语音检测", "waveform.path"),
+                          ("Sortformer / 逐词对齐", "发言人与时间对齐", "person.2")]
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text(ready ? "语音模型已就绪" : "下载语音模型").font(.system(size: 23, weight: .semibold))
+                Text("完成一次下载后，即可在本机离线转录。")
+                    .font(AppTypography.secondary).foregroundStyle(.secondary)
             }
-            Text("中国地区优先国内源，其他地区优先海外源；下载失败自动切换，文件统一校验。")
-                .font(.system(size: 12)).foregroundStyle(.secondary)
-            if store.busy { ProgressView(value: store.progress); Text("\(Int(store.progress * 100))%") .monospacedDigit() }
-            if let error = store.error { Text(error).font(.system(size: 13)).foregroundStyle(.red).textSelection(.enabled) }
-            HStack {
-                if store.busy { Button("取消下载") { store.cancel() } }
-                else if !store.ready { Button(store.error == nil ? "下载语音模型" : "重试下载") { store.download() }.buttonStyle(.borderedProminent) }
+                Spacer()
+                if let close { Button("完成", action: close).keyboardShortcut(.cancelAction) }
+            }.padding(.bottom, 10)
+            VStack(spacing: 0) {
+                ForEach(Array(models.enumerated()), id: \.offset) { index, model in
+                    HStack(spacing: 12) {
+                        Image(systemName: model.2).font(.system(size: 19)).foregroundStyle(RecordAITheme.accent)
+                            .frame(width: 38, height: 38).background(RecordAITheme.accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(model.0).font(AppTypography.body.weight(.medium))
+                            Text(model.1).font(AppTypography.secondary).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if ready { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).accessibilityLabel("已下载") }
+                        else { Text(busy ? "等待校验" : "本地运行").font(.system(size: 12)).foregroundStyle(.secondary) }
+                    }.padding(.vertical, 13)
+                    if index < models.count - 1 { Divider() }
+                }
             }
-            Text("模型保存在本机数据目录，升级 App 后继续复用。下载只获取模型文件，录音和文字不会上传。")
-                .font(.system(size: 12)).foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+            if busy {
+                RecordAICard(quiet: true) {
+                    HStack { Text("正在下载与校验").font(AppTypography.body.weight(.medium)); Spacer(); Text("\(Int(progress * 100))%").monospacedDigit() }
+                    ProgressView(value: progress).tint(RecordAITheme.accent)
+                    if let totalBytes {
+                        Text(ByteCountFormatter.string(fromByteCount: Int64(Double(totalBytes) * max(0, min(1, progress))), countStyle: .file) + " / " + ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file))
+                            .font(AppTypography.secondary).monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    Text(status).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Button("取消下载", action: cancel)
+                }
+            } else if let error {
+                RecordAIInfo(text: error + " 已完成文件会保留，可重试继续下载。", warning: true)
+            } else {
+                RecordAIInfo(text: ready ? status : "根据地区自动选择下载源，逐文件校验后才启用模型。录音和文字不会上传。")
+            }
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 5) {
+                    if let totalBytes { Text("下载大小：" + ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)) }
+                    Text("保存在本机数据目录，升级后继续复用。")
+                }.font(AppTypography.secondary).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                if !ready && !busy { Button(error == nil ? "下载语音模型" : "重试下载", action: download).buttonStyle(RecordAIPrimaryButtonStyle()) }
+                if busy, let close { Button("后台继续下载", action: close).buttonStyle(RecordAIPrimaryButtonStyle()) }
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading).buttonStyle(RecordAISecondaryButtonStyle())
     }
 }

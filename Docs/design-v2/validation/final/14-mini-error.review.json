@@ -1,0 +1,16 @@
+{
+  "id": "14-mini-error",
+  "title": "mini · 设备异常",
+  "status": "pending",
+  "observed": true,
+  "observation": "真实 660×168 异常 mini，原因可读，当前无设备重试禁用，停止/展开入口保留。",
+  "checks": [
+    "错误展开",
+    "重试",
+    "保存已有录音"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/14-mini-error.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

@@ -2,7 +2,22 @@
 
 RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
-![RecordAI 录音首页，使用空白演示资料](Docs/images/recordai-home.png)
+以下为原生客户端的实际截图，使用隔离演示资料。0.16.0 界面仍在逐页验收，尚未发布。
+
+![RecordAI 首页](Docs/images/recordai-home.jpg)
+
+![会议正文、摘要与行动项](Docs/images/recordai-library.jpg)
+
+![独立 mini 录音条](Docs/images/recordai-mini.jpg)
+
+<details>
+<summary>查看深色模式</summary>
+
+![RecordAI 深色模式](Docs/images/recordai-dark.jpg)
+
+</details>
+
+[完整 44 页设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [下载安装包](https://github.com/xsg22/recordai-macos/releases)
 
 选择麦克风、系统声音或两者作为音源，录音时可暂停、继续或切换到 mini 录音条；完成后可回放、按时间定位转录并导出。首次使用需要下载语音模型。
 
@@ -28,3 +43,16 @@ COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" /b
 ```
 
 模型权重、第三方运行时二进制、安装包、录音与授权凭据不纳入仓库。模型推理验收需要另外下载模型和测试音频。
+
+
+## 构建与发布
+
+重复的回归、打包、签名和安装包内容校验已合并到脚本：
+
+```zsh
+zsh Scripts/release.zsh
+```
+
+该命令及 GitHub 发布工作流会要求全部 UI 验收通过。仅准备本地候选包可运行 `zsh Scripts/release.zsh --candidate`；它不会发布。
+
+详见[发布流程](Docs/发布流程.md)。Python 3.12 和语音引擎随安装包提供，最终用户无需另外安装 Python。

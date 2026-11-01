@@ -1,0 +1,17 @@
+Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#20-account-dingtalk".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 54, 61, 63-66
+~1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#20-account-dingtalk
+~		51 heading 同步账号, Value: 2
+~			52 text 同步账号
+~		53 text 连接个人账号，转录完成后预览并同步。
++		54 button 完成
+~		55 text 钉钉 飞书 Notion ▤
+~		56 heading 钉钉 · 我的文档, Value: 3
+~			57 text 钉钉 · 我的文档
+~		58 text 尚未连接
+~		59 text 通过官方授权页面连接个人工作区。同步前会显示发送范围，原始音频保留在本机。
+~		60 text ☑ 同步后向“我”发送完成提醒
++		61 button 连接钉钉账号
+~		62 text ⓘ　只在你点击同步后发送选定文字，不会自动上传录音。
+The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#20-account-dingtalk

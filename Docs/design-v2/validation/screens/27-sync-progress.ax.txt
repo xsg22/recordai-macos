@@ -1,0 +1,32 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 同步这场会议
+		3 button (disabled) 关闭
+		4 text 产品周会
+		5 button (disabled) Description: 钉钉, Value: 已选择
+		6 button (disabled) Description: 飞书, Value: 未选择
+		7 button (disabled) Description: Notion, Value: 未选择
+		8 text 钉钉 · 演示账号 · 隔离预览 已连接 发送：录音名称、时间、时长和转录正文。原始音频不会发送。
+		9 scroll area Description: 同步正文预览, Secondary Actions: Scroll Up, Scroll Down
+			10 text 产品周会 2026年11月1日 10:00 · 1,234 秒 发言人 1 0 秒 大家好，我们开始今天的产品周会。主要讨论三个议题：上周进展、下个迭代的重点，以及用户反馈的处理情况。 发言人 2 28 秒 我先同步一下设计侧的进展。新版首页的视觉方案已经完成评审，目前正在进行细节设计，预计本周五可以交付给开发。 发言人 3 72 秒 后端这边，用户体系的重构已经完成80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。
+			11 scroll bar (settable, float) 0
+				12 value indicator (settable, float) 0
+				13 increment arrow button
+				14 decrement arrow button
+				15 increment page button
+				16 decrement page button
+		17 text 正在保存文档 · 请勿重复提交。
+		18 button (disabled) 连接账号
+		19 busy indicator 0
+		20 button (disabled) 同步中…
+21 menu bar
+	22 RecordAI 界面预览
+	23 File
+	24 Edit
+	25 View
+	26 逐页验收
+	27 Window
+	28 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

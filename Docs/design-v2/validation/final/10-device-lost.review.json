@@ -1,0 +1,17 @@
+{
+  "id": "10-device-lost",
+  "title": "设备断开 · 可重试",
+  "status": "pending",
+  "observed": true,
+  "observation": "告警位于全文顶部；当前无麦克风时重试保持禁用，不冒充设备恢复；停止保全入口完整。",
+  "checks": [
+    "自动暂停",
+    "重试继续",
+    "原轨保全",
+    "停止保存"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/10-device-lost.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

@@ -3,7 +3,7 @@ import Foundation
 @main struct QuitFlowSmoke {
     @MainActor static func main() async throws {
         precondition(QuitActivity.resolve(recording: false, preparing: false, transcribing: false, externalTask: false) == .idle)
-        precondition(QuitActivity.resolve(recording: true, preparing: false, transcribing: false, externalTask: false).action == "保存录音并退出")
+        precondition(QuitActivity.resolve(recording: true, preparing: false, transcribing: false, externalTask: false).action == "保存后退出")
         precondition(QuitActivity.resolve(recording: false, preparing: false, transcribing: true, externalTask: false).action == "取消转录并退出")
         precondition(QuitActivity.resolve(recording: true, preparing: true, transcribing: false, externalTask: false) == .saving)
         precondition(QuitActivity.resolve(recording: false, preparing: false, transcribing: true, externalTask: true) == .external)

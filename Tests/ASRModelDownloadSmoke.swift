@@ -34,6 +34,9 @@ import Foundation
         precondition(!store.ready, "模型文件丢失或损坏后重新进入下载流程")
         let corrupt = try OptionalModelIntegrity.verify(root.appendingPathComponent(first.path), file: first.integrity)
         precondition(!corrupt, "损坏文件必须校验失败")
+        try payload.write(to: root.appendingPathComponent(first.path))
+        store.refresh()
+        precondition(store.ready && store.progress == 1 && !store.status.contains("尚未就绪"), "模型恢复后状态与进度必须同步更新")
         var escaped = files; escaped[0]["path"] = "../escape"
         fields["files"] = escaped
         do { _ = try ASRModelManifest.parse(JSONSerialization.data(withJSONObject: fields)); preconditionFailure("拒绝路径逃逸") }

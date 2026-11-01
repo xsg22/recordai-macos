@@ -1,0 +1,16 @@
+{
+  "id": "21-account-feishu",
+  "title": "账号 · 飞书",
+  "status": "pending",
+  "observed": true,
+  "observation": "查询入口与未连接状态核对；续旧 device-code、不重复申请由真实本地假 CLI 测试验证。",
+  "checks": [
+    "查询授权",
+    "继续上次授权",
+    "重新申请确认"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/21-account-feishu.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

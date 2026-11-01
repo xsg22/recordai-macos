@@ -1,0 +1,18 @@
+{
+  "id": "19-settings-models",
+  "title": "设置 · 本地助手模型",
+  "status": "pending",
+  "observed": true,
+  "observation": "模型名、下载量/内存、条款、下载与关闭完整可见；次要管理移入独立弹出面板，尚未代用户接受条款。",
+  "checks": [
+    "模型选择",
+    "资源要求",
+    "条款由用户确认",
+    "取消下载",
+    "启用与关闭"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/19-settings-models.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

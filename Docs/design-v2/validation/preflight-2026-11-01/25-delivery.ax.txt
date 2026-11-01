@@ -1,0 +1,37 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 导出与交付
+		3 button 完成
+		4 text 产品周会
+		5 scroll area Secondary Actions: Scroll Up, Scroll Down
+			6 text 文字与音频
+			7 button 复制正文
+			8 button 复制 Markdown
+			9 button TXT
+			10 button Markdown
+			11 button JSON
+			12 button (disabled) 原始 SRT
+			13 button 导出全部录音片段…
+			14 text JSON包含时间、分段、发言人及本机音频路径；原始SRT保留识别时的文字，人工校正不会改写它。 同步到个人工作区 钉钉 · 飞书 · Notion 预览转录内容后同步到已连接的个人账号。音频保留在本机。
+			15 button 预览并同步…
+			16 text 交给本机 Agent 直接读文件，或通过只读 CLI / MCP 接入。无需登录。 /var/folders/7q/hmc6ctqj0qdf7mnc0p7g_j6m0000gn/T/recordai-ui-preview-D0C0DE16-B1E7-41B1-B026-72570154CA12/AgentData
+			17 button 打开数据目录
+			18 button 复制接入说明
+			19 text 默认读取定稿；实时草稿须显式请求。外部工具可以自行总结、问答或处理音频。
+			20 scroll bar (settable, float) 0
+				21 value indicator (settable, float) 0
+				22 increment arrow button
+				23 decrement arrow button
+				24 increment page button
+				25 decrement page button
+26 menu bar
+	27 RecordAI 界面预览
+	28 File
+	29 Edit
+	30 View
+	31 逐页验收
+	32 Window
+	33 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

@@ -1,0 +1,16 @@
+{
+  "id": "32-paragraph-edit",
+  "title": "编辑逐字稿段落",
+  "status": "pending",
+  "observed": true,
+  "observation": "720×446 编辑框、时间/发言人、取消和保存完整，实际取消不修改原文，保留时间由回归验证。",
+  "checks": [
+    "取消不写入",
+    "保存保留时标",
+    "文字更新"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/32-paragraph-edit.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

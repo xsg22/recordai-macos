@@ -1,0 +1,37 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 设置
+		3 button (selected) 录音与转录
+		4 button 本地模型
+		5 button 同步账号
+		6 button Agent 与数据
+		7 text 本机存储
+		8 scroll area Secondary Actions: Scroll Up, Scroll Down
+			9 text 录音与转录 设置下一次录音使用的音源和处理方式。 默认音源
+			10 pop up button Description: 默认音源, Value: 麦克风
+			11 text 会话类型
+			12 pop up button Description: 录音会话, Value: 会议录音
+			13 text 保留完整会议上下文，停止后统一识别、分人和对齐。 转写语言
+			14 pop up button Description: 转写语言, Value: 中文
+			15 text 录音模式
+			16 pop up button Description: 录音模式, Value: 实时转录（默认）
+			17 text 实时转录（默认） 录音时持续显示文字；最小化或隐藏窗口后自动减少界面刷新，识别继续。
+			18 image Description: 简介, ID: info.circle
+			19 text 录音过程中设置会锁定，修改只影响下一次录音。隐藏窗口或切换 mini 不会停止采集。
+			20 scroll bar (settable, float) 0
+				21 value indicator (settable, float) 0
+				22 increment arrow button
+				23 decrement arrow button
+				24 increment page button
+				25 decrement page button
+26 menu bar
+	27 RecordAI 界面预览
+	28 File
+	29 Edit
+	30 View
+	31 逐页验收
+	32 Window
+	33 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

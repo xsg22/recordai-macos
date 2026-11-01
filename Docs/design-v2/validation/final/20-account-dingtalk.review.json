@@ -1,0 +1,17 @@
+{
+  "id": "20-account-dingtalk",
+  "title": "账号 · 钉钉",
+  "status": "pending",
+  "observed": true,
+  "observation": "钉钉卡片、本人提醒、连接入口核对；仅隔离账号夹具，无真实授权或发文。",
+  "checks": [
+    "连接状态",
+    "本人提醒选项",
+    "多账号选择",
+    "断开"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/20-account-dingtalk.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

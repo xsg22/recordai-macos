@@ -1,0 +1,18 @@
+{
+  "id": "34-action-item",
+  "title": "行动项 · 添加与编辑",
+  "status": "pending",
+  "observed": true,
+  "observation": "事项、负责人、可选日期和完成状态完整；完成行高度已按稿收紧，保存失败保留草稿有回归。",
+  "checks": [
+    "标题",
+    "负责人",
+    "截止日",
+    "完成状态",
+    "保存失败保留输入"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/34-action-item.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

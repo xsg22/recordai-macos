@@ -1,0 +1,18 @@
+{
+  "id": "08-background",
+  "title": "后台录音 · 精简视图",
+  "status": "pending",
+  "observed": true,
+  "observation": "精简正文说明、展开入口和底部录音条存在；后台 ASR 保持由状态回归验证。",
+  "checks": [
+    "后台 ASR 保持",
+    "展开正文",
+    "菜单栏控制"
+  ],
+  "outstanding_visual_differences": [
+    "精简说明卡片顶部约比设计稿高 23 个逻辑像素，待最终对齐。"
+  ],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/08-background.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

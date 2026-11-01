@@ -1,0 +1,22 @@
+Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#24-settings-data".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 54
+~1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#24-settings-data
+~		51 container
+~			52 text 设置 ≋　录音与转录 ◈　本地模型 ♧　同步账号 ▣　Agent 与数据
+~		53 heading Agent 与本机资料, Value: 2
++			54 text Agent 与本机资料
+~		55 text 管理录音存储和其他本机工具的读取入口。
+~		56 heading 本机 Agent, Value: 3
+~			57 text 本机 Agent
+~		58 text Application Support / RecordAI / AgentData
+~		59 button 打开数据目录
+~		60 button 复制接入说明
+~		61 button 重新发布快照
+~		62 text 默认读取定稿。外部工具可通过文件、CLI 或 MCP 消费。
+~		63 heading 原始资料, Value: 3
++			64 text 原始资料
++		65 button 打开资料目录
++		66 button 当前录音目录
++		67 text 原始音频和历史内容保留在本机，卸载应用不会自动删除资料。
+The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#24-settings-data

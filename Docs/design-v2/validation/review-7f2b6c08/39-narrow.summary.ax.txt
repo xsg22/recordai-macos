@@ -1,0 +1,44 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 button 完成
+		3 scroll area Secondary Actions: Scroll Up, Scroll Down
+			4 text 本地存储 · 隐私安全
+			5 button (selected) 会议总结
+			6 button 行动项
+			7 text 会议摘要
+			8 menu button 摘要操作, Description: More
+			9 text 本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。 关键要点 • 新版首页方案已通过评审 • 用户体系重构完成80% • 优先解决离线体验与文件管理问题 请核对摘要与录音。 行动项 3
+			10 button 添加
+			11 button Description: 标记完成：完成设计交付, ID: square
+			12 button 完成设计交付
+			13 menu button 行动项操作, Description: More
+			14 text 设计组 11月6日
+			15 button Description: 标记完成：验证离线流程, ID: square
+			16 button 验证离线流程
+			17 menu button 行动项操作, Description: More
+			18 text 测试组 11月5日
+			19 button Description: 标记完成：整理用户反馈, ID: square
+			20 button 整理用户反馈
+			21 menu button 行动项操作, Description: More
+			22 text 产品组 11月3日 相关内容
+			23 button 添加
+			24 image Description: 文稿, ID: doc
+			25 button 产品需求.txt, 本地附件 · 34 bytes
+			26 menu button 附件操作, Description: More
+			27 scroll bar (settable, float) 0
+				28 value indicator (settable, float) 0
+				29 increment arrow button
+				30 decrement arrow button
+				31 increment page button
+				32 decrement page button
+33 menu bar
+	34 RecordAI 界面预览
+	35 File
+	36 Edit
+	37 View
+	38 逐页验收
+	39 Window
+	40 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

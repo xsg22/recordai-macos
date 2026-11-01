@@ -1,0 +1,89 @@
+- main:
+  - generic: RecordAI
+  - complementary:
+    - img "RecordAI 图标"
+    - strong: RecordAI
+    - generic: 本地录音 · AI 转写
+    - button "♩ 开始新录音"
+    - text: ♧ 全部会议
+    - emphasis: "12"
+    - text: ☆ 星标
+    - emphasis: "3"
+    - text: ♲ 回收站
+    - emphasis: "0"
+    - generic: ⌕ 搜索会议名称或内容…
+    - generic: 最近的会议
+    - text: ♧ 产品周会
+    - generic: 今天 10:00 · 20 分钟
+    - text: ♧ 用户访谈
+    - generic: 昨天 15:00 · 48 分钟
+    - text: ♧ 市场策略讨论
+    - generic: 10月28日 · 1小时3分钟
+    - text: ♧ 与 Design 团队同步
+    - generic: 10月27日 · 37分钟
+    - generic: ⚙ 设置
+    - generic: ↗ 执行追踪
+  - main:
+    - heading "产品周会 ☆" [level=1]
+    - generic: 2026年11月1日 10:00—10:20 · 20分钟
+    - button "♩ 继续录音"
+    - button "交付"
+    - button "•••"
+    - generic: ▤ 转写
+    - generic: ◷ 时间线
+    - generic: ✎ 笔记与助手
+    - generic: 08:16
+    - generic: 00:00
+    - generic: 20:34
+    - generic: ↶₁₅
+    - generic: ▶
+    - generic: ₁₅↷
+    - generic: 00:00
+    - generic: "1"
+    - text: 发言人 1
+    - generic: ⌄
+    - paragraph: 大家好，我们开始今天的产品周会。主要讨论三个议题：上周进展、下个迭代的重点，以及用户反馈的处理情况。
+    - generic: 00:28
+    - generic: "2"
+    - text: 发言人 2
+    - generic: ⌄
+    - paragraph: 我先同步一下设计侧的进展。新版首页的视觉方案已经完成评审，目前正在进行细节设计，预计本周五可以交付给开发。
+    - generic: 01:12
+    - generic: "3"
+    - text: 发言人 3
+    - generic: ⌄
+    - paragraph: 后端这边，用户体系的重构已经完成 80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。
+    - generic: 02:35
+    - generic: "1"
+    - text: 发言人 1
+    - generic: ⌄
+    - paragraph: 好的。接下来看看用户反馈的情况，重点关注离线使用和文件管理的体验。
+    - complementary:
+      - generic: ▣ 本地存储 · 隐私安全
+      - generic: 会议总结
+      - generic: 行动项
+      - heading "▤ 会议摘要" [level=3]
+      - paragraph: 本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。
+      - heading "✧ 关键要点" [level=3]
+      - paragraph:
+        - text: • 新版首页方案已通过评审
+        - text: • 用户体系重构完成 80%
+        - text: • 优先解决离线体验与文件管理问题
+      - heading "☑ 行动项 3" [level=3]:
+        - text: ☑ 行动项
+        - generic: "3"
+      - text: 完成设计交付
+      - generic: 设计组 周五
+      - text: 验证离线流程
+      - generic: 测试组 11月5日
+      - text: 整理用户反馈
+      - generic: 产品组 11月3日
+      - heading "⌕ 相关内容" [level=3]
+      - text: ▧
+      - text: 产品需求文档.pdf
+      - generic: 本地附件 · 1.2 MB
+  - generic: ♲
+  - heading "移到回收站？" [level=2]
+  - paragraph: 会议文本、托管音频和附件一起移入回收站，可以恢复；导入前的源文件保留。
+  - button "取消"
+  - button "移到回收站"

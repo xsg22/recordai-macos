@@ -14,7 +14,7 @@ enum QuitActivity: Equatable {
     var title: String {
         switch self {
         case .idle: return "退出倾听转录"
-        case .recording: return "保存当前录音后退出？"
+        case .recording: return "保存录音后退出？"
         case .transcribing: return "取消转录并退出？"
         case .saving: return "正在准备或保存录音"
         case .recovering: return "正在恢复录音"
@@ -23,7 +23,7 @@ enum QuitActivity: Equatable {
     }
     var detail: String {
         switch self {
-        case .recording: return "停止采集并保存完整音频后退出，本次不等待最终转录。下次打开可继续转录；保存失败会留在应用中。"
+        case .recording: return "录音仍在进行。保存成功后才会退出；已有文字和音频会保留。"
         case .transcribing: return "音频和已有正文会保留。等待转录任务取消并保存后退出，下次打开可重试未完成片段。"
         case .recovering: return "请等待恢复保存完成，或在恢复窗口取消后再退出；原始音轨会保留。"
         case .saving: return "请等待当前准备或保存步骤结束后再退出，以免中断音频落盘。"
@@ -33,7 +33,7 @@ enum QuitActivity: Equatable {
     }
     var action: String? {
         switch self {
-        case .recording: return "保存录音并退出"
+        case .recording: return "保存后退出"
         case .transcribing: return "取消转录并退出"
         default: return nil
         }

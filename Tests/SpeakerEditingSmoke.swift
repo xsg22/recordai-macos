@@ -16,6 +16,9 @@ import Foundation
         precondition(state.current?.speakerName("a:1") == "小王")
         state.unmergeSpeaker("a:1")
         precondition(state.current?.speakerName("a:1") == "发言人 2")
+        precondition(!state.renameSpeaker("a:1", name: "  "))
+        precondition(!state.renameSpeaker("a:1", name: "不应保存", mergeInto: "unknown"))
+        precondition(state.current?.speakerName("a:1") == "发言人 2")
         let originalParagraphs = state.current!.transcriptParagraphs
         state.assignParagraphSpeaker(originalParagraphs[0].id, speakerID: "a:1")
         precondition(state.current?.transcriptParagraphs[0].speakerIDs == ["a:1"])
@@ -37,6 +40,21 @@ import Foundation
         state.text = "全文人工修改";state.saveEdits()
         precondition(state.current?.hasCurrentParagraphs == false)
         precondition(!state.markdown.contains("**小王"), "不向修改后的全文强行套用旧标签")
+        state.text = saved.text; precondition(state.saveEdits())
+        let beforeFailure = state.current!
+        try FileManager.default.removeItem(at: library.directory(for: record.id))
+        try Data("blocked".utf8).write(to: library.directory(for: record.id))
+        precondition(!state.renameSpeaker("a:0", name: "不能落盘"))
+        precondition(!state.editTranscriptParagraph(record.transcriptParagraphs[0].id, text: "不能落盘"))
+        precondition(!state.updateSummary("不能落盘", meetingID: record.id))
+        precondition(state.current == beforeFailure && state.text == saved.text && state.summary == (beforeFailure.summary ?? ""), "写盘失败时不发布未保存内容")
+        state.notes = "尚未保存的笔记"
+        state.syncMeeting()
+        precondition(!state.syncing && state.error?.contains("保存失败") == true, "本机保存失败时不能开始远端写入")
+        state.useAudio(root.appendingPathComponent("not-imported.wav"))
+        precondition(state.error?.contains("保存失败") == true, "本机保存失败时不能切换导入内容")
+        state.export(kind: "Markdown")
+        precondition(state.error?.contains("保存失败") == true, "本机保存失败时不打开导出面板")
         print("PASS: 改名、合并、恢复独立标签、按段纠错与定位保留、全文修改后不展示过期标签。仅临时会议。")
     }
 }

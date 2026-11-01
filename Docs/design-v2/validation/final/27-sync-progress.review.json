@@ -1,0 +1,16 @@
+{
+  "id": "27-sync-progress",
+  "title": "同步 · 进行中",
+  "status": "pending",
+  "observed": true,
+  "observation": "重复提交、关闭与目的地禁用；进度主按钮保持蓝色，状态可读。",
+  "checks": [
+    "禁重复提交",
+    "阶段状态",
+    "不误关正在进行的任务"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/27-sync-progress.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

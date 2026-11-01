@@ -1,0 +1,755 @@
+{
+  "recorded_at": "2026-11-01T17:24:21.320480+08:00",
+  "overall": "pending",
+  "observed_page_count": 43,
+  "accepted_page_count": 0,
+  "current_blocker": "最终版本补拍至 04 时 Mac 再次锁屏；等待手动解锁。第 43 页还需要用户展开真实状态栏菜单。",
+  "pages": [
+    {
+      "id": "01-home",
+      "title": "首页 · 首次使用",
+      "status": "pending",
+      "observed": true,
+      "observation": "首页主内容 430 宽、录音设置与导入/系统声音入口、未就绪提示完整。",
+      "checks": [
+        "开始录音入口",
+        "导入音频入口",
+        "系统声音入口",
+        "模型未就绪提示"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/01-home.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "02-library",
+      "title": "会议详情 · 正文与摘要",
+      "status": "pending",
+      "observed": true,
+      "observation": "280/310 三栏，26 号标题、16 号逐字稿、独立时间列、真实音频波形和播放定位已核对。",
+      "checks": [
+        "三栏布局",
+        "真实波形",
+        "逐段定位",
+        "摘要与行动项",
+        "本地附件"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/02-library.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "03-starred",
+      "title": "星标录音",
+      "status": "pending",
+      "observed": true,
+      "observation": "星标筛选仅显示真实匹配记录；取消星标后的空状态和恢复星标已实际点击。",
+      "checks": [
+        "星标持久化",
+        "星标筛选",
+        "取消星标"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/03-starred.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "04-search",
+      "title": "搜索 · 无结果",
+      "status": "pending",
+      "observed": true,
+      "observation": "空结果与清除入口完整；实际清除后恢复会议选择与列表。",
+      "checks": [
+        "正文和标题检索",
+        "清除检索",
+        "保留选择"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/04-search.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "05-trash",
+      "title": "回收站",
+      "status": "pending",
+      "observed": true,
+      "observation": "卡片标题误删已修复；恢复动作在隔离库实际执行，音频和附件保全另有回归。",
+      "checks": [
+        "本项目删除记录",
+        "恢复录音",
+        "原音频随记录恢复"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/05-trash.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "06-recording",
+      "title": "录音中 · 实时转写",
+      "status": "pending",
+      "observed": true,
+      "observation": "录音时标、历史波形、暂停/停止、底部录音条完整；实时历史移入段落菜单保留。",
+      "checks": [
+        "计时与电平",
+        "实时草稿标识",
+        "暂停",
+        "停止保存",
+        "切换 mini"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/06-recording.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "07-paused",
+      "title": "录音已暂停",
+      "status": "pending",
+      "observed": true,
+      "observation": "暂停保留已采集波形，主按钮切换为继续，独立 mini 呈静音线，计时保留。",
+      "checks": [
+        "暂停状态",
+        "继续录音",
+        "停止保存"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/07-paused.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "08-background",
+      "title": "后台录音 · 精简视图",
+      "status": "pending",
+      "observed": true,
+      "observation": "精简正文说明、展开入口和底部录音条存在；后台 ASR 保持由状态回归验证。",
+      "checks": [
+        "后台 ASR 保持",
+        "展开正文",
+        "菜单栏控制"
+      ],
+      "outstanding_visual_differences": [
+        "精简说明卡片顶部约比设计稿高 23 个逻辑像素，待最终对齐。"
+      ],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/08-background.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "09-no-microphone",
+      "title": "无麦克风",
+      "status": "pending",
+      "observed": true,
+      "observation": "无设备时禁用开始/继续；系统声音与声音设置入口保留，侧栏高度溢出已修复。",
+      "checks": [
+        "开始按钮不可重复触发",
+        "选择系统声音",
+        "打开声音设置",
+        "保留已有资料"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/09-no-microphone.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "10-device-lost",
+      "title": "设备断开 · 可重试",
+      "status": "pending",
+      "observed": true,
+      "observation": "告警位于全文顶部；当前无麦克风时重试保持禁用，不冒充设备恢复；停止保全入口完整。",
+      "checks": [
+        "自动暂停",
+        "重试继续",
+        "原轨保全",
+        "停止保存"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/10-device-lost.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "11-transcribing",
+      "title": "转录进行中",
+      "status": "pending",
+      "observed": true,
+      "observation": "全宽阶段提示、取消分析、音频保全说明完整；已实际点击取消。",
+      "checks": [
+        "阶段进度",
+        "取消保留音频",
+        "分人与对齐进度"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/11-transcribing.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "12-mini",
+      "title": "mini · 录音中",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实独立 660×76 窗口，停止/暂停/展开/置顶/拖动入口核对，早前实际拖动和置顶切换。",
+      "checks": [
+        "拖动",
+        "计时",
+        "暂停",
+        "停止",
+        "展开",
+        "置顶"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/12-mini.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "13-mini-paused",
+      "title": "mini · 暂停",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实暂停 mini，已实际继续并展开，计时和暂停状态保留。",
+      "checks": [
+        "继续",
+        "停止",
+        "主窗口恢复"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/13-mini-paused.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "14-mini-error",
+      "title": "mini · 设备异常",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实 660×168 异常 mini，原因可读，当前无设备重试禁用，停止/展开入口保留。",
+      "checks": [
+        "错误展开",
+        "重试",
+        "保存已有录音"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/14-mini-error.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "15-model-setup",
+      "title": "模型 · 首次下载",
+      "status": "pending",
+      "observed": true,
+      "observation": "四组模型、4.22 GB 实际清单大小、开始下载与关闭入口核对；下载状态来自夹具。",
+      "checks": [
+        "模型列表",
+        "下载总量",
+        "下载入口",
+        "关闭不误取消"
+      ],
+      "outstanding_visual_differences": [
+        "实际弹窗高度约 528，设计约 565；包含实际下载总量，间距仍待最终确认。"
+      ],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/15-model-setup.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "16-model-progress",
+      "title": "模型 · 下载与校验",
+      "status": "pending",
+      "observed": true,
+      "observation": "62% 和已下载大小、校验状态、取消/后台继续完整；实际点击过取消。",
+      "checks": [
+        "进度",
+        "已下载大小",
+        "文件校验",
+        "取消"
+      ],
+      "outstanding_visual_differences": [
+        "实际高度约 692，设计约 711；下载百分比与字节布局仍待最终确认。"
+      ],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/16-model-progress.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "17-model-error",
+      "title": "模型 · 失败与重试",
+      "status": "pending",
+      "observed": true,
+      "observation": "网络错误、缓存保留和重试入口核对；实际点击重试，文件校验由临时文件回归验证。",
+      "checks": [
+        "失败原因",
+        "重试",
+        "缓存复用"
+      ],
+      "outstanding_visual_differences": [
+        "实际高度约 528，设计约 541；间距仍待最终确认。"
+      ],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/17-model-error.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "18-settings-recording",
+      "title": "设置 · 录音与转录",
+      "status": "pending",
+      "observed": true,
+      "observation": "920×632 设置框、四种选择器和锁定说明核对；下拉框样式与左对齐已修复。",
+      "checks": [
+        "音源",
+        "会话类型",
+        "语言",
+        "录音模式",
+        "录音期间禁改"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/18-settings-recording.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "19-settings-models",
+      "title": "设置 · 本地助手模型",
+      "status": "pending",
+      "observed": true,
+      "observation": "模型名、下载量/内存、条款、下载与关闭完整可见；次要管理移入独立弹出面板，尚未代用户接受条款。",
+      "checks": [
+        "模型选择",
+        "资源要求",
+        "条款由用户确认",
+        "取消下载",
+        "启用与关闭"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/19-settings-models.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "20-account-dingtalk",
+      "title": "账号 · 钉钉",
+      "status": "pending",
+      "observed": true,
+      "observation": "钉钉卡片、本人提醒、连接入口核对；仅隔离账号夹具，无真实授权或发文。",
+      "checks": [
+        "连接状态",
+        "本人提醒选项",
+        "多账号选择",
+        "断开"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/20-account-dingtalk.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "21-account-feishu",
+      "title": "账号 · 飞书",
+      "status": "pending",
+      "observed": true,
+      "observation": "查询入口与未连接状态核对；续旧 device-code、不重复申请由真实本地假 CLI 测试验证。",
+      "checks": [
+        "查询授权",
+        "继续上次授权",
+        "重新申请确认"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/21-account-feishu.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "22-account-notion",
+      "title": "账号 · Notion",
+      "status": "pending",
+      "observed": true,
+      "observation": "未连接卡片和固定官方入口核对；取消/重开/state 校验与个人页面协议由隔离契约测试覆盖。",
+      "checks": [
+        "连接与取消等待",
+        "重开授权页",
+        "断开"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/22-account-notion.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "23-account-connected",
+      "title": "账号 · 已连接",
+      "status": "pending",
+      "observed": true,
+      "observation": "绿色状态、账号身份、检查连接与解除关联完整；身份为明确标注的隔离演示账号。",
+      "checks": [
+        "当前账号",
+        "连接状态",
+        "断开确认与结果"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/23-account-connected.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "24-settings-data",
+      "title": "设置 · Agent 与本机资料",
+      "status": "pending",
+      "observed": true,
+      "observation": "两个资料区、实际存储路径、复制/打开/重新发布入口核对；复制已执行，白名单和发布失败保全有回归。",
+      "checks": [
+        "数据目录",
+        "复制接入说明",
+        "重新发布快照",
+        "模型与用户资料边界"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/24-settings-data.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "25-delivery",
+      "title": "导出与交付",
+      "status": "pending",
+      "observed": true,
+      "observation": "复制和五种导出入口、同步预览、本机 Agent 区完整；正文复制和真实 Markdown 保存均已执行。",
+      "checks": [
+        "复制",
+        "TXT Markdown JSON SRT",
+        "音频导出",
+        "同步预览入口"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/25-delivery.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "26-sync-preview",
+      "title": "同步 · 内容预览",
+      "status": "pending",
+      "observed": true,
+      "observation": "发送范围集中于账号卡片，正文滚动区与账号/提交入口完整，原始音频不在载荷中。",
+      "checks": [
+        "目的账号",
+        "发送范围",
+        "正文预览",
+        "未连接禁止发送"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/26-sync-preview.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "27-sync-progress",
+      "title": "同步 · 进行中",
+      "status": "pending",
+      "observed": true,
+      "observation": "重复提交、关闭与目的地禁用；进度主按钮保持蓝色，状态可读。",
+      "checks": [
+        "禁重复提交",
+        "阶段状态",
+        "不误关正在进行的任务"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/27-sync-progress.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "28-sync-result",
+      "title": "同步 · 成功与失败",
+      "status": "pending",
+      "observed": true,
+      "observation": "绿色结果与远端链接同一行，回执收进详情；演示地址不代表真实远端写入。",
+      "checks": [
+        "远端链接",
+        "失败可重试",
+        "本地原件保留"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/28-sync-result.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "29-recovery",
+      "title": "恢复 · 可恢复片段",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实临时 CAF 扫描到 20 秒片段，恢复后原文/原轨保留；非覆盖与去重有回归。",
+      "checks": [
+        "扫描",
+        "时长与质量提示",
+        "恢复不覆盖",
+        "取消"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/29-recovery.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "30-recovery-empty",
+      "title": "恢复 · 无未登记片段",
+      "status": "pending",
+      "observed": true,
+      "observation": "空状态、重新检查、打开原轨入口核对；实际重新检查仍无未登记片段。",
+      "checks": [
+        "空状态",
+        "重新检查",
+        "打开原轨目录"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/30-recovery-empty.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "31-execution",
+      "title": "执行追踪",
+      "status": "pending",
+      "observed": true,
+      "observation": "六阶段来自 AppState 真实状态字段；当前示例处于已保存/空闲，不伪造正在推理。",
+      "checks": [
+        "采集实时状态",
+        "ASR 队列",
+        "定稿与分人",
+        "Agent 发布"
+      ],
+      "outstanding_visual_differences": [
+        "需补充与设计稿相同的处理阶段夹具截图，当前实际状态为空闲/已保存。"
+      ],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/31-execution.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "32-paragraph-edit",
+      "title": "编辑逐字稿段落",
+      "status": "pending",
+      "observed": true,
+      "observation": "720×446 编辑框、时间/发言人、取消和保存完整，实际取消不修改原文，保留时间由回归验证。",
+      "checks": [
+        "取消不写入",
+        "保存保留时标",
+        "文字更新"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/32-paragraph-edit.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "33-speaker",
+      "title": "发言人 · 改名与合并",
+      "status": "pending",
+      "observed": true,
+      "observation": "名称输入、合并选择、取消和保存完整；早前实际空名禁用与改名保存，合并/恢复有回归。",
+      "checks": [
+        "名称校验",
+        "合并",
+        "恢复独立标签",
+        "段落归属"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/33-speaker.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "34-action-item",
+      "title": "行动项 · 添加与编辑",
+      "status": "pending",
+      "observed": true,
+      "observation": "事项、负责人、可选日期和完成状态完整；完成行高度已按稿收紧，保存失败保留草稿有回归。",
+      "checks": [
+        "标题",
+        "负责人",
+        "截止日",
+        "完成状态",
+        "保存失败保留输入"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/34-action-item.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "35-delete-confirm",
+      "title": "移入回收站确认",
+      "status": "pending",
+      "observed": true,
+      "observation": "470 宽确认框、完整保全文案、取消/移入回收站核对；实际取消，删除保全有回归。",
+      "checks": [
+        "取消",
+        "移入回收站",
+        "源文件保留"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/35-delete-confirm.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "36-quit-confirm",
+      "title": "录音中退出确认",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实异步原生退出 sheet；返回和 Escape 已实际关闭并保留录音，成功保存才退出由回归覆盖。",
+      "checks": [
+        "返回录音",
+        "保存后退出",
+        "保存失败不退出"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/36-quit-confirm.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "37-notes",
+      "title": "笔记与本地助手",
+      "status": "pending",
+      "observed": true,
+      "observation": "720×569 笔记框、原稿编辑、查看来源完整；来源弹出已实际打开，手写与 AI 独立持久化有回归。",
+      "checks": [
+        "手写笔记保存",
+        "AI 内容分开",
+        "生成取消",
+        "来源引用"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/37-notes.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "38-assistant",
+      "title": "助手 · 对话与 Live Q&A",
+      "status": "pending",
+      "observed": true,
+      "observation": "720×488 对话与引用完整；引用实际展开，当前未启用 Gemma 时提问禁用，不冒充推理。",
+      "checks": [
+        "提问",
+        "实时来源标识",
+        "引用",
+        "空状态与模型缺失"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/38-assistant.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "39-narrow",
+      "title": "窄窗口 · 摘要抽屉",
+      "status": "pending",
+      "observed": true,
+      "observation": "1040×900 下侧栏 260，摘要隐藏但可从更多菜单打开真实摘要抽屉；已实际打开。",
+      "checks": [
+        "三栏收敛",
+        "摘要可访问",
+        "工具栏不截断"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/39-narrow.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "40-dark",
+      "title": "深色模式",
+      "status": "pending",
+      "observed": true,
+      "observation": "深色表面、选中项、正文和剩余波形对比、浅色头像核对；主按钮保持钴蓝白字。",
+      "checks": [
+        "文字对比",
+        "状态色",
+        "选中态",
+        "键盘焦点"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/40-dark.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "41-import",
+      "title": "导入音频 · 系统文件选择器",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实 NSOpenPanel，仅音频可选；已导入 2 秒隔离 WAV 并保留源文件，最终版本亦验证取消。",
+      "checks": [
+        "音频格式过滤",
+        "取消",
+        "复制源音频"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/41-import.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "42-export",
+      "title": "导出 · 系统保存面板",
+      "status": "pending",
+      "observed": true,
+      "observation": "真实 NSSavePanel，已以指定名称保存 Markdown 并核对 1234 秒、正文/发言人，不含手写/AI内容。",
+      "checks": [
+        "文件名",
+        "格式",
+        "取消",
+        "已存在文件覆盖由系统确认"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/42-export.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "43-menu-bar",
+      "title": "菜单栏录音控制",
+      "status": "pending",
+      "observed": false,
+      "observation": "系统状态图标无法通过现有界面工具定位，未拿替代弹窗充当证据；等待用户展开真实菜单。",
+      "checks": [
+        "恢复窗口",
+        "mini",
+        "暂停继续",
+        "停止保存"
+      ],
+      "outstanding_visual_differences": [
+        "缺真实菜单展开截图与点击证据。"
+      ],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": null,
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    },
+    {
+      "id": "44-errors",
+      "title": "通用错误与授权等待",
+      "status": "pending",
+      "observed": true,
+      "observation": "具体原因、返回与显式重试核对；实际点击重试回调，导入失败后的真正重试另有回归。",
+      "checks": [
+        "具体原因",
+        "关闭可返回",
+        "外部授权不自动确认"
+      ],
+      "outstanding_visual_differences": [],
+      "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+      "actual_screenshot": "Docs/design-v2/validation/final/44-errors.jpg",
+      "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+    }
+  ]
+}

@@ -24,7 +24,7 @@ struct PlaybackWaveformView: View {
     @State private var issue: String?
     @State private var loading = true
     @FocusState private var seeking: Bool
-    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
+    private let accent = RecordAITheme.accent
     private var duration: Double { max(0.001, state.playbackDuration > 0 ? state.playbackDuration : waveform?.duration ?? 0.001) }
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -41,18 +41,23 @@ struct PlaybackWaveformView: View {
                             let rect = CGRect(x: CGFloat(index) * step, y: (size.height - height) / 2,
                                               width: max(1, step - 2), height: height)
                             context.fill(Path(roundedRect: rect, cornerRadius: 2),
-                                with: .color(Double(index) / Double(count) < state.playbackTime / duration ? accent : accent.opacity(0.25)))
+                                with: .color(Double(index) / Double(count) < state.playbackTime / duration ? RecordAITheme.primaryFill : RecordAITheme.waveformRest))
                         }
                     }.accessibilityHidden(true)
                     Rectangle().fill(accent).frame(width: 2)
                         .offset(x: max(0, min(geometry.size.width - 2, geometry.size.width * state.playbackTime / duration)))
+                        .accessibilityHidden(true)
+                    Text(clock(state.playbackTime)).font(.system(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(RecordAITheme.primaryFill, in: RoundedRectangle(cornerRadius: 4))
+                        .position(x: max(23, min(geometry.size.width - 23, geometry.size.width * state.playbackTime / duration)), y: -16)
                         .accessibilityHidden(true)
                     Slider(value: Binding(get: { min(duration, max(0, state.playbackTime)) }, set: { state.seek($0) }), in: 0...duration)
                         .labelsHidden().focused($seeking).opacity(0.015).accessibilityLabel("音频波形播放进度")
                         .accessibilityValue("\(Int(state.playbackTime)) 秒，共 \(Int(duration)) 秒")
                         .disabled(state.recording || state.preparing)
                 }
-            }.frame(height: 44).overlay(RoundedRectangle(cornerRadius: 6).stroke(seeking ? accent : .clear, lineWidth: 2))
+            }.frame(height: 78).overlay(RoundedRectangle(cornerRadius: 6).stroke(seeking ? accent : .clear, lineWidth: 2))
             if loading { Text("声波正在生成，可直接播放").font(AppTypography.secondary).foregroundStyle(.secondary) }
             if let issue { Text(issue).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(2) }
         }
@@ -67,5 +72,9 @@ struct PlaybackWaveformView: View {
             catch { issue = "声波暂不可用，仍可回放或拖动定位" }
             loading = false
         }
+    }
+    private func clock(_ seconds: Double) -> String {
+        let value = Int(max(0, seconds))
+        return String(format: "%02d:%02d", value / 60, value % 60)
     }
 }

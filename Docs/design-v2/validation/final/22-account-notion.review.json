@@ -1,0 +1,16 @@
+{
+  "id": "22-account-notion",
+  "title": "账号 · Notion",
+  "status": "pending",
+  "observed": true,
+  "observation": "未连接卡片和固定官方入口核对；取消/重开/state 校验与个人页面协议由隔离契约测试覆盖。",
+  "checks": [
+    "连接与取消等待",
+    "重开授权页",
+    "断开"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/22-account-notion.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

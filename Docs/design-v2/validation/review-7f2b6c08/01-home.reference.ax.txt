@@ -1,0 +1,34 @@
+- main:
+  - generic: RecordAI
+  - complementary:
+    - img "RecordAI 图标"
+    - strong: RecordAI
+    - generic: 本地录音 · AI 转写
+    - button "♩ 开始新录音"
+    - text: ♧ 全部会议
+    - emphasis: "0"
+    - text: ☆ 星标
+    - emphasis: "0"
+    - text: ♲ 回收站
+    - emphasis: "0"
+    - generic: ⌕ 搜索会议名称或内容…
+    - generic: 最近的会议
+    - generic: ⚙ 设置
+    - generic: ↗ 执行追踪
+  - main:
+    - generic: ≋
+    - heading "开始你的第一段录音" [level=1]
+    - paragraph:
+      - text: 会议、访谈、课程、灵感…
+      - text: RecordAI 帮你录音、转写和整理，
+      - text: 让重要的内容不再遗漏。
+    - button "♩ 开始录音 ⌄"
+    - generic: ▧
+    - text: 导入音频
+    - text: 支持 MP3、M4A、WAV
+    - text: 常用音频格式
+    - generic: ▣
+    - text: 录制系统声音
+    - text: 录制线上会议、视频
+    - text: 或电脑播放的声音
+    - generic: 首次使用需要下载语音模型 下载模型 ↗

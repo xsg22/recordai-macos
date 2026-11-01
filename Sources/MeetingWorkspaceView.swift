@@ -3,65 +3,47 @@ import SwiftUI
 /// Handwritten notes remain independent from every generated artifact.
 struct MeetingWorkspaceView: View {
     @ObservedObject var state: AppState
-    @State private var tab = "转写"
+    @State private var tab = "我的笔记"
+    private let close: (() -> Void)?
     @State private var question = ""
-    @State private var showLiveHistory = false
-    @State private var narrowPane = "助手"
-    @State private var transcriptNotesRatio: CGFloat = 0.32
-    @State private var notesRatio: CGFloat = 0.65
-    @State private var dividerDragStart: CGFloat?
-    private let accent = Color(red: 0.08, green: 0.35, blue: 0.95)
+    @State private var showingNoteSources = false
+    private let accent = RecordAITheme.accent
+    init(state: AppState, initialTab: String = "我的笔记", close: (() -> Void)? = nil) {
+        self.state = state; self.close = close; _tab = State(initialValue: initialTab)
+    }
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 12) {
-                if geometry.size.width >= 760 {
-                    let usableWidth = geometry.size.width - 8
-                    let notesWidth = min(max(350, usableWidth * (tab == "转写" ? transcriptNotesRatio : notesRatio)), usableWidth - 330)
-                    HStack(spacing: 0) {
-                        notesPanel.frame(width: notesWidth).frame(maxHeight: .infinity)
-                        Rectangle().fill(Color(nsColor: .separatorColor))
-                            .frame(width: 1).frame(maxHeight: .infinity)
-                            .frame(width: 8).contentShape(Rectangle())
-                            .gesture(DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    if dividerDragStart == nil { dividerDragStart = notesWidth }
-                                    let width = min(max(350, (dividerDragStart ?? notesWidth) + value.translation.width), usableWidth - 330)
-                                    if tab == "转写" { transcriptNotesRatio = width / usableWidth }
-                                    else { notesRatio = width / usableWidth }
-                                }
-                                .onEnded { _ in dividerDragStart = nil })
-                            .accessibilityLabel("调整笔记与助手宽度")
-                        assistantPanel.frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                } else {
-                    Picker("工作区", selection: $narrowPane) {
-                        Text("我的笔记").tag("笔记"); Text("会议助手").tag("助手")
-                    }.pickerStyle(.segmented)
-                    if narrowPane == "笔记" { notesPanel.frame(maxHeight: .infinity) }
-                    else { assistantPanel.frame(maxHeight: .infinity) }
+        VStack(alignment: .leading, spacing: 20) {
+            RecordAIPageHeader(title: tab == "我的笔记" ? "笔记与本地助手" : "会议助手", subtitle: state.current?.title ?? "") { if let close { Button("完成", action: close).keyboardShortcut(.cancelAction) } }
+            HStack(spacing: 4) {
+                ForEach(["我的笔记", "摘要", "对话", "Live Q&A"], id: \.self) { item in
+                    Button { tab = item } label: {
+                        Text(item).font(AppTypography.secondary.weight(tab == item ? .semibold : .regular))
+                            .frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .foregroundStyle(tab == item ? RecordAITheme.accent : .secondary)
+                            .background(tab == item ? RecordAITheme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
+                    }.buttonStyle(.plain).accessibilityAddTraits(tab == item ? .isSelected : [])
                 }
-                if (tab != "转写" || (geometry.size.width < 760 && narrowPane == "笔记")) && (state.recording || state.preparing || (state.busy && !state.liveText.isEmpty)) {
-                    livePanel.frame(height: min(120, max(88, geometry.size.height * 0.18)))
-                }
+            }.padding(4).background(RecordAITheme.tabs, in: RoundedRectangle(cornerRadius: 10))
+            if tab == "我的笔记" { notesPanel.frame(maxHeight: .infinity) }
+            else { assistantPanel.frame(maxHeight: .infinity) }
+            if state.recording || state.preparing || (state.busy && !state.liveText.isEmpty) {
+                DisclosureGroup("实时来源 · 未定稿") { livePanel.frame(height: 130) }
             }
         }
+        .frame(height: tab == "我的笔记" ? 513 : 432)
+        .buttonStyle(RecordAISecondaryButtonStyle())
         .onAppear { state.refreshAssistantAvailability() }
         .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in state.refreshAssistantAvailability() }
         .onChange(of: state.selection) { question = "" }
-        .onChange(of: state.recording) { if state.recording { tab = "转写"; narrowPane = "助手" } }
-        .onChange(of: state.busy) { if state.busy { tab = "转写"; narrowPane = "助手" } }
     }
 
     private var notesPanel: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label("我的笔记", systemImage: "square.and.pencil").font(AppTypography.heading)
-                Spacer()
-                Button("增强笔记") { state.enhanceMeetingNotes() }.disabled(!state.assistantModelAvailable || state.assistantBusy || (state.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.liveText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
-            }
+        VStack(alignment: .leading, spacing: 22) {
             Text("随手记录想法，原稿始终保留。Gemma 结果单独保存。").font(AppTypography.secondary).foregroundStyle(.secondary)
             TextEditor(text: $state.notes).font(AppTypography.body).lineSpacing(6)
                 .scrollContentBackground(.hidden).onChange(of: state.notes) { state.scheduleSave() }
+                .padding(12).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(RecordAITheme.border, lineWidth: 1))
             if !state.enhancedNotes.isEmpty {
                 DisclosureGroup("AI 增强笔记 · 请核对") {
                     ScrollView { Text(state.enhancedNotes).font(AppTypography.body).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 100)
@@ -69,22 +51,22 @@ struct MeetingWorkspaceView: View {
                     citationView(state.current?.enhancedNotesCitations ?? [])
                 }
             }
-        }.padding(14).background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+            HStack {
+                Button("查看来源") { showingNoteSources = true }.disabled(state.text.isEmpty && state.liveText.isEmpty)
+                    .popover(isPresented: $showingNoteSources) {
+                        VStack(alignment: .leading, spacing: 16) {
+                            RecordAIPageHeader(title: "会议来源", subtitle: state.text.isEmpty ? "实时文字 · 未定稿" : "转录正文") { Button("完成") { showingNoteSources = false } }
+                            ScrollView { Text(state.text.isEmpty ? state.liveText : state.text).font(AppTypography.body).lineSpacing(6).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                        }.padding(24).frame(width: 520, height: 360)
+                    }
+                Spacer()
+                Button("增强笔记") { state.enhanceMeetingNotes() }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(!state.assistantModelAvailable || state.assistantBusy || (state.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && state.liveText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+            }.padding(.top, 12)
+        }.background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var assistantPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label(tab == "转写" ? "会议转写" : "本地会议助手", systemImage: tab == "转写" ? "waveform" : "sparkles").font(AppTypography.heading)
-                Spacer()
-                if tab != "转写" { Text("Gemma").font(AppTypography.secondary).foregroundStyle(accent) }
-            }
-            Picker("助手", selection: $tab) {
-                Text("对话").tag("对话")
-                Text("Live Q&A").tag("Live Q&A")
-                Text("摘要").tag("摘要")
-                Text("转写").tag("转写")
-            }.pickerStyle(.segmented).labelsHidden().controlSize(.regular)
             if !state.assistantModelAvailable && tab != "转写" {
                 HStack {
                     Text("下载并启用 Gemma 后，可离线整理笔记和问答。").font(AppTypography.secondary).foregroundStyle(.secondary)
@@ -110,7 +92,7 @@ struct MeetingWorkspaceView: View {
             } else if !state.assistantStatus.isEmpty {
                 Text(state.assistantStatus).font(AppTypography.secondary).foregroundStyle(.secondary)
             }
-        }.padding(14).background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+        }.background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var summaryPanel: some View {
@@ -157,14 +139,15 @@ struct MeetingWorkspaceView: View {
                             Text(entry.created, format: .dateTime.hour().minute()).font(AppTypography.secondary).foregroundStyle(.secondary)
                             citationView(entry.citations)
                             if entry.contextWasTruncated { Text("仅基于选取片段，未覆盖整场。").font(AppTypography.secondary).foregroundStyle(.secondary) }
-                        }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+                        }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 12))
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }.frame(maxHeight: .infinity)
+            RecordAIInfo(text: "依据会议文字回答。实时 Q&A 的结果属于草稿，需在定稿后核对。")
             HStack {
                 TextField(live || (state.text.isEmpty && !state.liveText.isEmpty) ? "问当前讨论（未定稿）…" : "问这场会议…", text: $question).textFieldStyle(.roundedBorder)
                     .onSubmit { sendQuestion(live: live) }
-                Button("提问") { sendQuestion(live: live) }
+                Button("提问") { sendQuestion(live: live) }.buttonStyle(RecordAIPrimaryButtonStyle())
                     .disabled(!state.assistantModelAvailable || state.assistantBusy || question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || (live ? state.liveText.isEmpty : (state.text.isEmpty && state.liveText.isEmpty)))
             }.fixedSize(horizontal: false, vertical: true)
         }

@@ -1,0 +1,16 @@
+{
+  "id": "07-paused",
+  "title": "录音已暂停",
+  "status": "pending",
+  "observed": true,
+  "observation": "暂停保留已采集波形，主按钮切换为继续，独立 mini 呈静音线，计时保留。",
+  "checks": [
+    "暂停状态",
+    "继续录音",
+    "停止保存"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/07-paused.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

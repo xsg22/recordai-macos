@@ -1,0 +1,19 @@
+Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#19-settings-models".
+The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 55-59
+~1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#19-settings-models
+~		53 heading 本地模型, Value: 2
+~			54 text 本地模型
++		55 text 语音与辅助模型分别管理。
++		56 heading 语音识别, Value: 3
++			57 text 语音识别
++		58 text 实时转写与最终转录 ✓ 已就绪
++		59 button 查看语音模型
++		60 heading 本地会议助手, Value: 3
++			61 text 本地会议助手
++		62 text 模型 Gemma · 较小版本　⌄
++		63 text 整理摘要、增强笔记和问答。选择前可查看下载量与内存建议。
++		64 text □ 我已阅读并同意 Gemma 使用条款
++		65 button 选择并下载
++		66 button 关闭辅助模型
+The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#19-settings-models

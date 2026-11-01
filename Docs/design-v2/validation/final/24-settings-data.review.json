@@ -1,0 +1,17 @@
+{
+  "id": "24-settings-data",
+  "title": "设置 · Agent 与本机资料",
+  "status": "pending",
+  "observed": true,
+  "observation": "两个资料区、实际存储路径、复制/打开/重新发布入口核对；复制已执行，白名单和发布失败保全有回归。",
+  "checks": [
+    "数据目录",
+    "复制接入说明",
+    "重新发布快照",
+    "模型与用户资料边界"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/24-settings-data.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

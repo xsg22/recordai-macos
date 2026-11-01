@@ -1,0 +1,16 @@
+{
+  "id": "44-errors",
+  "title": "通用错误与授权等待",
+  "status": "pending",
+  "observed": true,
+  "observation": "具体原因、返回与显式重试核对；实际点击重试回调，导入失败后的真正重试另有回归。",
+  "checks": [
+    "具体原因",
+    "关闭可返回",
+    "外部授权不自动确认"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/44-errors.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}

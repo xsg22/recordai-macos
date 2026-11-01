@@ -1,0 +1,36 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 设置
+		3 button 录音与转录
+		4 button (selected) 本地模型
+		5 button 同步账号
+		6 button Agent 与数据
+		7 text 本机存储
+		8 scroll area Secondary Actions: Scroll Up, Scroll Down
+			9 text 本地模型 语音识别与辅助模型分别管理。 语音识别 实时转写与最终转录 已就绪
+			10 button 查看语音模型
+			11 text 本地会议助手 模型
+			12 menu button Gemma 3 4B · 文本与图片, Description: go down, ID: chevron.down
+			13 text 整理摘要、增强笔记和问答。原始转录和手写笔记始终保留。 约 4 GB，实际大小以下载清单为准 · 建议 16 GB 内存；本机 16 GB。
+			14 checkbox Description: 我已阅读并同意 Gemma 使用条款, Value: 0
+			15 link Description: 查看条款 ↗, Value: ai.google.dev/gemma/terms
+			16 button (disabled) 选择并下载
+			17 button (disabled) 关闭辅助模型
+			18 disclosure triangle Description: 模型来源与管理, Value: off
+			19 scroll bar (settable, float) 0
+				20 value indicator (settable, float) 0
+				21 increment arrow button
+				22 decrement arrow button
+				23 increment page button
+				24 decrement page button
+25 menu bar
+	26 RecordAI 界面预览
+	27 File
+	28 Edit
+	29 View
+	30 逐页验收
+	31 Window
+	32 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

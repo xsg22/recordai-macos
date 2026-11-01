@@ -17,7 +17,7 @@ struct RecordAIExecutionView: View {
             ("片段队列", state.activeRecordingSessionMode == .continuous ? "已启用" : "未启用", state.activeRecordingSessionMode == .continuous ? "已完成 \(state.continuousProcessingCount) · 待处理 \(state.continuousQueuedCount) · 失败 \(state.continuousFailedCount)" : "会议模式保留完整音频", state.activeRecordingSessionMode == .continuous ? .green : .secondary),
             ("最终转录", final, finalDetail, state.continuousProcessing || state.busy ? .blue : .secondary),
             ("发言人 / 对齐", state.continuousProcessing || state.transcriptPhase == .diarizing || state.transcriptPhase == .aligning ? "处理中" : "按需执行", phaseDetail, .secondary),
-            ("Agent 发布", state.current == nil ? "等待录音" : "本机快照", "AgentData / CLI / MCP", .green)
+            ("Agent 发布", state.current == nil ? "等待录音" : state.agentPublicationError == nil ? "本机快照" : "待修复", state.agentPublicationError ?? "AgentData / CLI / MCP", state.current == nil ? .secondary : state.agentPublicationError == nil ? .green : .orange)
         ]
     }
 
@@ -43,16 +43,8 @@ struct RecordAIExecutionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("执行追踪").font(.system(size: 24, weight: .semibold))
-                    Text("RecordAI 当前真实运行状态；未启用的阶段会明确标记。")
-                        .font(.system(size: 13)).foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button("完成") { dismiss() }
-            }
-            GroupBox {
+            RecordAIPageHeader(title: "执行追踪", subtitle: "当前会话的真实处理阶段。") { Button("完成") { dismiss() } }
+            RecordAICard(quiet: true) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack { Text("当前会话").font(.headline); Spacer(); Text(state.current?.title ?? "无").foregroundStyle(.secondary).lineLimit(1) }
                     HStack { Text("总状态"); Spacer(); Text(state.status).foregroundStyle(.secondary).lineLimit(1) }
@@ -64,19 +56,20 @@ struct RecordAIExecutionView: View {
                     HStack(alignment: .top, spacing: 12) {
                         VStack(spacing: 0) {
                             Circle().fill(stage.3).frame(width: 10, height: 10).padding(.top, 5)
-                            if index < stages.count - 1 { Rectangle().fill(Color.secondary.opacity(0.2)).frame(width: 1, height: 36) }
                         }.frame(width: 12)
                         VStack(alignment: .leading, spacing: 3) {
-                            HStack { Text(stage.0).font(.system(size: 14, weight: .medium)); Spacer(); Text(stage.1).font(.system(size: 13)).foregroundStyle(stage.3) }
+                            HStack { Text(stage.0).font(.system(size: 14, weight: .medium)); Spacer(); Text(stage.1).font(.system(size: 13)).foregroundStyle(stage.3).padding(.horizontal, 8).padding(.vertical, 6).background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 6)) }
                             Text(stage.2).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(2)
-                        }.padding(.bottom, 12)
+                        }.padding(.bottom, 22)
                     }
                 }
-            }.padding(14).background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
+            }.padding(20).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(RecordAITheme.border, lineWidth: 1))
             Text("片段关闭后依次定稿并区分发言人；录音继续。音频与已保存文字通过 AgentData、CLI 和 MCP 读取。")
                 .font(.system(size: 12)).foregroundStyle(.secondary)
             Spacer()
-        }.padding(26).frame(width: 620, height: 680).font(AppTypography.body).controlSize(.large)
+        }.padding(28).frame(width: 720, height: 780).font(AppTypography.body)
+            .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)
     }
 
     private func clock(_ seconds: Int) -> String { String(format: "%02d:%02d:%02d", seconds / 3600, (seconds / 60) % 60, seconds % 60) }

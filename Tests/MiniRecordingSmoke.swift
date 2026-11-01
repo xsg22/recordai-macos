@@ -40,10 +40,10 @@ import Foundation
         precondition(state.liveEnabled && state.activeRecordingProfile == .backgroundRealtime, "切换窗口不关闭实时模型")
         state.recordingIssue = "测试：输入设备已断开，录音已暂停"
         try await Task.sleep(nanoseconds: 100_000_000)
-        precondition(controller.panel?.frame.height == 204, "异常展开且保留处理空间")
+        precondition(controller.panel?.frame.height == 168, "异常展开且保留处理空间")
         state.recordingIssue = nil
         try await Task.sleep(nanoseconds: 100_000_000)
-        precondition(controller.panel?.frame.height == 112)
+        precondition(controller.panel?.frame.height == 76)
         let pinned = controller.pinned; controller.togglePinned()
         precondition(controller.pinned != pinned && defaults.bool(forKey: "miniRecorder.pinned.v1") == !pinned)
         let visible = NSRect(x: -1600, y: 0, width: 1600, height: 900)

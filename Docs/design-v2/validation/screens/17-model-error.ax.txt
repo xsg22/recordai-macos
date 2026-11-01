@@ -1,0 +1,27 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 下载语音模型
+		3 button 完成
+		4 text 完成一次下载后，即可在本机离线转录。
+		5 image Description: 音频波形, ID: waveform
+		6 text Paraformer 本地运行 中英双语实时转写
+		7 image Description: 左对齐, ID: text.alignleft
+		8 text Qwen3-ASR 本地运行 会后定稿
+		9 image Description: 波形, ID: waveform.path
+		10 text Silero VAD 本地运行 语音检测
+		11 image Description: 两个人, ID: person.2
+		12 text Sortformer / 逐词对齐 本地运行 发言人与时间对齐
+		13 image Description: 警告, ID: exclamationmark.triangle
+		14 text 网络连接已中断。 已完成文件会保留，可重试继续下载。 下载大小：4.22 GB 保存在本机数据目录，升级后继续复用。
+		15 button 重试下载
+16 menu bar
+	17 RecordAI 界面预览
+	18 File
+	19 Edit
+	20 View
+	21 逐页验收
+	22 Window
+	23 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

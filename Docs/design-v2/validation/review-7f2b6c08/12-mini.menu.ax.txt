@@ -1,0 +1,24 @@
+Window: "mini 录音条", App: RecordAI 界面预览.
+0 system dialog mini 录音条, Secondary Actions: Raise
+	1 container
+		2 button Description: 停止并保存, ID: stop.fill
+		3 button Description: 暂停录音, ID: pause.fill
+		4 text Help: 拖动此处移动录音条, Value: 正在录音 00:02:02
+		5 unknown Description: 录音声波, Details: 检测到声音
+		6 text 麦克风 产品周会
+		7 button Description: 展开录音窗口, ID: arrow.up.right
+		8 menu button 更多录音操作, Description: More
+			9 menu Secondary Actions: Cancel
+				10 显示完整录音, ID: menuAction:
+				11 取消置顶, ID: menuAction:
+				12 收起到菜单栏（继续运行）, ID: menuAction:
+13 menu bar
+	14 RecordAI 界面预览
+	15 File
+	16 Edit
+	17 View
+	18 逐页验收
+	19 Window
+	20 Help
+
+The focused UI element is 0 system dialog mini 录音条, Secondary Actions: Raise

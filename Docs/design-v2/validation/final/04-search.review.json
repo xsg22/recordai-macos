@@ -1,0 +1,16 @@
+{
+  "id": "04-search",
+  "title": "搜索 · 无结果",
+  "status": "pending",
+  "observed": true,
+  "observation": "空结果与清除入口完整；实际清除后恢复会议选择与列表。",
+  "checks": [
+    "正文和标题检索",
+    "清除检索",
+    "保留选择"
+  ],
+  "outstanding_visual_differences": [],
+  "next_step": "解锁后完成最终源码截图和交互签核；不将主体布局已核对等同于 100% 像素还原。",
+  "actual_screenshot": "Docs/design-v2/validation/final/04-search.jpg",
+  "scope": "隔离原生客户端与演示资料，系统/授权界面沿用平台；真实语音引擎另行验收。"
+}
