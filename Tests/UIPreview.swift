@@ -21,7 +21,8 @@ import CryptoKit
             let paragraphs = [
                 "大家好，我们开始今天的产品周会。主要讨论三个议题：上周进展、下个迭代的重点，以及用户反馈的处理情况。",
                 "我先同步一下设计侧的进展。新版首页的视觉方案已经完成评审，目前正在进行细节设计，预计本周五可以交付给开发。",
-                "后端这边，用户体系的重构已经完成80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。"
+                "后端这边，用户体系的重构已经完成 80%，预计下周可以进入测试。另外，我们已经检查了数据迁移的方案。",
+                "好的。接下来看看用户反馈的情况，重点关注离线使用和文件管理的体验。"
             ]
             var record = MeetingRecord(id: demoID, title: "产品周会", text: paragraphs.joined(separator: "\n"), duration: 1234, status: .completed)
             record.summary = "本次产品周会同步了设计、开发和用户反馈的进展。团队确认新版首页方案，本周完成交付；下个迭代将重点优化离线使用和文件管理体验。\n\n## 关键要点\n- 新版首页方案已通过评审\n- 用户体系重构完成80%\n- 优先解决离线体验与文件管理问题"
@@ -35,10 +36,16 @@ import CryptoKit
             let format = AVAudioFormat(standardFormatWithSampleRate: 16000, channels: 1)!
             let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 19_744_000)!
             buffer.frameLength = 19_744_000
-            for i in 0..<Int(buffer.frameLength) { buffer.floatChannelData![0][i] = Float(sin(Double(i) * 0.12) * (0.05 + abs(sin(Double(i) / 18000)) * 0.3)) }
+            for i in 0..<Int(buffer.frameLength) {
+                // Real sample amplitudes vary at the scale of the displayed waveform bins.
+                let bucket = Double(i * 150 / Int(buffer.frameLength))
+                let amplitude = 0.03 + abs(sin(bucket * 1.31) * cos(bucket * 0.21)) * 0.32
+                buffer.floatChannelData![0][i] = Float(sin(Double(i) * 0.12) * amplitude)
+            }
             if let writer = try? AVAudioFile(forWriting: url, settings: format.settings) { try? writer.write(from: buffer) }
             record.audioFiles = [file]; record.audioDurations = [file: 1234]
-            record.transcriptParagraphs = [TranscriptParagraph(text: paragraphs[0], start: 0, end: 28, audioFile: file, speakerIDs: ["1"], localStart: 0), TranscriptParagraph(text: paragraphs[1], separator: "\n", start: 28, end: 54, audioFile: file, speakerIDs: ["2"], localStart: 28), TranscriptParagraph(text: paragraphs[2], separator: "\n", start: 72, end: 104, audioFile: file, speakerIDs: ["3"], localStart: 72)]
+            record.transcriptParagraphs = [TranscriptParagraph(text: paragraphs[0], start: 0, end: 28, audioFile: file, speakerIDs: ["1"], localStart: 0), TranscriptParagraph(text: paragraphs[1], separator: "\n", start: 28, end: 54, audioFile: file, speakerIDs: ["2"], localStart: 28), TranscriptParagraph(text: paragraphs[2], separator: "\n", start: 72, end: 104, audioFile: file, speakerIDs: ["3"], localStart: 72), TranscriptParagraph(text: paragraphs[3], separator: "\n", start: 155, end: 185, audioFile: file, speakerIDs: ["1"], localStart: 155)]
+            record.subtitles = "1\n00:00:00,000 --> 00:00:28,000\n" + paragraphs[0] + "\n\n2\n00:00:28,000 --> 00:00:54,000\n" + paragraphs[1] + "\n\n3\n00:01:12,000 --> 00:01:44,000\n" + paragraphs[2] + "\n\n4\n00:02:35,000 --> 00:03:05,000\n" + paragraphs[3] + "\n"
             record.speakerNames = ["1": "发言人 1", "2": "发言人 2", "3": "发言人 3"]; _ = try? library.save(record)
             record.liveUtterances = [LiveUtterance(text: "隔离演示：大家好，我们开始今天的产品周会。", start: 0, end: 5)]
             _ = try? library.save(record)
@@ -49,16 +56,20 @@ import CryptoKit
                 let other = MeetingRecord(title: title, created: record.created.addingTimeInterval(Double([-68400, -345600, -432000][index])), text: "隔离预览资料", duration: [2880, 3780, 2220][index], status: .completed)
                 _ = try? library.save(other)
             }
-            let discarded = MeetingRecord(title: "产品方案讨论", text: "可恢复的演示资料", duration: 2040)
+            let discarded = MeetingRecord(title: "产品方案讨论", created: record.created.addingTimeInterval(-604800), text: "可恢复的演示资料", duration: 2040)
             _ = try? library.save(discarded); try? library.trash(discarded.id)
+            let discardedCourse = MeetingRecord(title: "课程录音", created: record.created.addingTimeInterval(-691200), text: "可恢复的隔离演示课程", duration: 2520)
+            _ = try? library.save(discardedCourse); try? library.trash(discardedCourse.id)
             let recovery = MeetingRecord(id: recoveryID, title: "待恢复录音", created: record.created.addingTimeInterval(-864000), text: "中断前已保存的文字", status: .interrupted)
             _ = try? library.save(recovery)
             let capture = library.directory(for: recoveryID).appendingPathComponent("Capture/" + UUID().uuidString)
             try? FileManager.default.createDirectory(at: capture, withIntermediateDirectories: true)
             let mic = capture.appendingPathComponent("microphone.caf")
-            buffer.frameLength = 320000
+            buffer.frameLength = 2_112_000
             if let writer = try? AVAudioFile(forWriting: mic, settings: format.settings) { try? writer.write(from: buffer) }
-            let tracks = [MeetingAudioTrack(kind: .microphone, url: mic, offset: 0)]
+            let system = capture.appendingPathComponent("system.caf")
+            if let writer = try? AVAudioFile(forWriting: system, settings: format.settings) { try? writer.write(from: buffer) }
+            let tracks = [MeetingAudioTrack(kind: .microphone, url: mic, offset: 0), MeetingAudioTrack(kind: .system, url: system, offset: 0)]
             try? JSONEncoder().encode(tracks).write(to: capture.appendingPathComponent("recording.json"))
         }
         let namespace = "recordai-ui-preview-" + UUID().uuidString
@@ -93,13 +104,26 @@ import CryptoKit
         """
         try? Data(stub.utf8).write(to: accountStub)
         try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: accountStub.path)
+        let feishuStub = root.appendingPathComponent("preview-feishu-account")
+        let feishuScript = """
+        #!/bin/sh
+        if [ "$4" = "status" ]; then
+          echo '{"appId":"isolated-preview-app","identities":{"user":{"available":false}}}'
+        else
+          echo '{"ok":false,"error":{"type":"network","message":"隔离预览不会打开授权或连接外部服务"}}'
+          exit 1
+        fi
+        """
+        try? Data(feishuScript.utf8).write(to: feishuStub)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: feishuStub.path)
         defaults.set(true, forKey: "personalDingTalk.detached")
         optionalModels = OptionalModelStore(root: root.appendingPathComponent("AssistantModels"), defaults: defaults)
         let notionStore = MCPConnectionStore(namespace: namespace + "notion")
         let previewState = AppState(storageURL: root, connectionNamespace: namespace,
             speechModelStore: modelStore,
             dingTalkConnection: DingTalkAccountConnection(defaults: defaults, executable: accountStub),
-            feishuConnection: FeishuAccountConnection(executable: nil, pendingAccount: namespace),
+            feishuConnection: FeishuAccountConnection(executable: feishuStub, pendingAccount: namespace,
+                pendingCredentialReader: { MCPCredential(accessToken: "isolated-preview-device-code", expiresAt: Date().addingTimeInterval(600)) }),
             notionConnection: NotionAccountConnection(store: notionStore, defaults: defaults, metadataNamespace: namespace))
         previewState.select(demoID)
         previewState.playbackVolume = 0
@@ -182,7 +206,11 @@ import CryptoKit
         state.expandedRealtime = false; state.editingTranscript = false
         state.elapsed = 0; state.level = 0; state.liveLevels = []
         state.seek([2, 3, 39, 40].contains(number) ? 496 : 0)
-        state.mainWindow?.setContentSize(NSSize(width: number == 39 ? 1040 : 1440, height: 900))
+        if let window = state.mainWindow {
+            // The reference dimensions include window chrome. setContentSize adds the
+            // toolbar height and can put the last navigation row outside the display.
+            window.setFrame(NSRect(origin: window.frame.origin, size: NSSize(width: number == 39 ? 1040 : 1440, height: 900)), display: true)
+        }
         if number == 1 {
             try? FileManager.default.removeItem(at: state.speechModels.root.appendingPathComponent(".verified"))
         } else { try? state.speechModels.manifest?.saveReceipt(at: state.speechModels.root) }

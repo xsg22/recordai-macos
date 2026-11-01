@@ -69,7 +69,7 @@ struct RecordingAppConfigurationView: View {
             }.disabled(state.locked)
             RecordAICard(quiet: true) {
                 Text(state.recordingProfile.title).font(AppTypography.heading)
-                Text(state.recordingProfile.detail).font(AppTypography.secondary).foregroundStyle(.secondary)
+                Text(state.recordingProfile.detail).font(AppTypography.secondary).foregroundStyle(.secondary).lineSpacing(7)
             }
             RecordAIInfo(text: "录音过程中设置会锁定，修改只影响下一次录音。隐藏窗口或切换 mini 不会停止采集。")
         }
@@ -78,7 +78,7 @@ struct RecordingAppConfigurationView: View {
     private var models: some View {
         Group {
             RecordAIPageHeader(title: "本地模型", subtitle: "语音识别与辅助模型分别管理。") { EmptyView() }
-            RecordAICard {
+            RecordAICard(spacing: 20) {
                 Text("语音识别").font(AppTypography.heading)
                 HStack {
                     Text("实时转写与最终转录").font(AppTypography.body)

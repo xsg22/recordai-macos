@@ -4,8 +4,12 @@ struct RecordingTrashView: View {
     @ObservedObject var state: AppState
     let restored: () -> Void
     var body: some View {
-        VStack(alignment: .leading, spacing: 44) {
-            RecordAIPageHeader(title: "回收站", subtitle: "恢复后，录音、文字和附件会一同回到录音库。") { EmptyView() }
+        VStack(alignment: .leading, spacing: 36) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("回收站").font(.system(size: 26, weight: .semibold))
+                Text("恢复后，录音、文字和附件会一同回到录音库。")
+                    .font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
+            }.padding(.bottom, 8)
             if state.trashedHistory.isEmpty {
                 VStack(spacing: 14) {
                     Image(systemName: "trash").font(.system(size: 40)).foregroundStyle(.secondary)
@@ -18,11 +22,11 @@ struct RecordingTrashView: View {
                         ForEach(state.trashedHistory) { record in
                             RecordAICard {
                                 HStack(spacing: 20) {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text(record.title).font(AppTypography.heading)
-                                                                    Text(record.created, format: .dateTime.year().month().day().hour().minute())
-                                            .font(AppTypography.secondary).foregroundStyle(.secondary)
-                                    }
+                                    VStack(alignment: .leading, spacing: 14) {
+                                        Text(record.title).font(.system(size: 14, weight: .semibold))
+                                        (Text(record.created, format: .dateTime.month().day()) + Text(" · " + recordingDurationText(record.duration)))
+                                            .font(AppTypography.secondary).foregroundStyle(RecordAITheme.ink)
+                                    }.padding(.top, 12).frame(height: 92, alignment: .topLeading)
                                     Spacer()
                                     Button("恢复录音") { if state.restoreTrash(record.id) { restored() } }
                                         .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked)

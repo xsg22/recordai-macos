@@ -87,7 +87,6 @@ struct MainView: View {
     private var emptyFilter: Bool { filter != "回收站" && (!state.search.isEmpty || filter == "星标") && visibleHistory.isEmpty }
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            GeometryReader { sidebarGeometry in
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 10) {
                     RecordAILogo()
@@ -132,7 +131,9 @@ struct MainView: View {
                     let current = visibleHistory.firstIndex(where: { $0.id == state.selection }) ?? -1
                     if direction == .down { state.select(visibleHistory[min(visibleHistory.count - 1, current + 1)].id) }
                     if direction == .up { state.select(visibleHistory[max(0, current - 1)].id) }
-                }.disabled(state.recording || state.preparing || state.recoveryBusy)
+                }.frame(minHeight: 0, maxHeight: .infinity).layoutPriority(-1)
+                    .disabled(state.recording || state.preparing || state.recoveryBusy)
+                VStack(spacing: 16) {
                 SettingsLink {
                     HStack(spacing: 10) {
                         Image(systemName: "gearshape")
@@ -145,10 +146,11 @@ struct MainView: View {
                     HStack(spacing: 10) { Image(systemName: "point.3.connected.trianglepath.dotted"); Text("执行追踪"); Spacer(); Image(systemName: "chevron.right").font(AppTypography.secondary) }
                         .font(AppTypography.body).frame(minHeight: 36).contentShape(Rectangle())
                 }.buttonStyle(.plain).help("查看采集、ASR、转录和Agent发布状态")
+                }.fixedSize(horizontal: false, vertical: true)
 
-            }.padding(20).frame(width: sidebarGeometry.size.width, height: sidebarGeometry.size.height, alignment: .top)
+            }.padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(RecordAITheme.sidebar)
-            }.navigationSplitViewColumnWidth(windowWidth <= 1100 ? 260 : 280)
+                .navigationSplitViewColumnWidth(windowWidth <= 1100 ? 260 : 280)
         } detail: {
             VStack(alignment: .leading, spacing: 12) {
                 if filter == "回收站" {
@@ -346,25 +348,19 @@ struct MainView: View {
                             Text("· 录音中")
                         } else {
                             (Text(record.created, format: .dateTime.hour().minute()) + Text("—") + Text(record.created.addingTimeInterval(record.duration), format: .dateTime.hour().minute()))
-                            Text("· " + readableDuration(record.duration))
+                            Text("· " + recordingDurationText(record.duration))
                         }
                     }.font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
-    private func readableDuration(_ seconds: Double) -> String {
-        guard seconds.isFinite, seconds > 0 else { return "0 秒" }
-        if seconds < 60 { return "\(Int(seconds)) 秒" }
-        let minutes = Int(min(seconds / 60, Double(Int.max / 2)))
-        return minutes >= 60 ? "\(minutes / 60)小时\(minutes % 60)分钟" : "\(minutes) 分钟"
-    }
     private func libraryMetadata(_ record: MeetingRecord) -> String {
         let formatter = DateFormatter()
         if Calendar.current.isDateInToday(record.created) { formatter.dateFormat = "今天 HH:mm" }
         else if Calendar.current.isDateInYesterday(record.created) { formatter.dateFormat = "昨天 HH:mm" }
         else { formatter.dateFormat = "M月d日" }
-        return formatter.string(from: record.created) + (record.duration > 0 ? " · " + readableDuration(record.duration) : "")
+        return formatter.string(from: record.created) + (record.duration > 0 ? " · " + recordingDurationText(record.duration) : "")
     }
     private var meetingActions: some View {
         HStack(spacing: 8) {
@@ -506,7 +502,7 @@ struct ConnectionsView: View {
             RecordAIPageHeader(title: "同步账号", subtitle: "连接个人账号，转录完成后预览并同步。") { Button("完成") { dismiss() }.keyboardShortcut(.cancelAction) }
             RecordAISegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination)
             AccountConnectionPanel(state: state)
-            RecordAIInfo(text: "只在你点击同步后发送选定文字。原始音频保留在本机。")
+            RecordAIInfo(text: state.syncDestination == .feishu && state.feishuAccount.hasPendingAuthorization ? "已有待处理授权时优先继续，不重复申请。重新申请前需确认旧申请已失效。" : "只在你点击同步后发送选定文字。原始音频保留在本机。")
             Spacer()
         }.padding(28).frame(width: 720, height: state.syncDestination == .dingtalk ? 530 : 494).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle()).controlSize(.extraLarge)
     }

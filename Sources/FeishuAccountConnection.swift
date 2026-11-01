@@ -14,12 +14,15 @@ final class FeishuAccountConnection: ObservableObject {
     private let profile = "cohear-meetings"
     private var identity: String?
     private let pendingAccount: String
+    private let readPendingCredential: () throws -> MCPCredential?
     @Published private(set) var hasPendingAuthorization = false
+    @Published private(set) var pendingAuthorizationExpired = false
 
-    init(executable: URL? = Bundle.main.url(forResource: "lark-cli", withExtension: nil, subdirectory: "Integrations"), pendingAccount: String = "feishu-device-authorization.cohear-meetings") {
+    init(executable: URL? = Bundle.main.url(forResource: "lark-cli", withExtension: nil, subdirectory: "Integrations"), pendingAccount: String = "feishu-device-authorization.cohear-meetings", pendingCredentialReader: (() throws -> MCPCredential?)? = nil) {
         self.executable = executable
         self.pendingAccount = pendingAccount
-        hasPendingAuthorization = false // connect时查询待处理授权，不在App启动时阻塞钥匙串。
+        self.readPendingCredential = pendingCredentialReader ?? { try MCPKeychain.read(account: pendingAccount) }
+        hasPendingAuthorization = false // 打开授权页后再读取，不在App初始化时阻塞钥匙串。
     }
 
     func restore() async {
@@ -35,9 +38,15 @@ final class FeishuAccountConnection: ObservableObject {
         do {
             _ = try await queryStatus()
             if connected { clearPending() }
-            else { status = hasPendingAuthorization ? "已有授权申请，请完成浏览器授权后继续检查" : "尚未完成个人授权，可连接飞书" }
+            else {
+                let pending = try readPendingCredential()
+                applyPendingState(pending)
+                status = pendingAuthorizationExpired ? "上次申请已过期，请先检查已有授权，需要时重新申请" : hasPendingAuthorization ? "已有授权申请，请完成浏览器授权后继续检查" : "尚未完成个人授权，可连接飞书"
+            }
         } catch AccountCommandFailure.notConfigured {
-            connected = false; status = "尚未连接飞书，可点击连接开始官方引导"
+            connected = false
+            do { applyPendingState(try readPendingCredential()) } catch { /* Preserve the last known pending state if Keychain is unavailable. */ }
+            status = hasPendingAuthorization ? "已有授权申请，但本机应用配置不可用；请先检查，勿重复申请" : "尚未连接飞书，可点击连接开始官方引导"
         } catch {
             status = "授权状态查询暂未完成；没有发起新申请，请稍后再检查"
         }
@@ -63,23 +72,29 @@ final class FeishuAccountConnection: ObservableObject {
             catch AccountCommandFailure.notConfigured { hasApp = false }
             // 网络/CLI错误直接退出，不能推断为无应用并创建新申请。
             if connected { clearPending(); return }
+            let pending = try readPendingCredential()
+            applyPendingState(pending)
+            if let pending {
+                guard !pendingAuthorizationExpired else {
+                    status = "上次申请已过期；需要重新授权时请明确点击重新申请"
+                    error = "上次授权申请已过期。先检查已有授权；若仍未授权，再选择重新申请。"
+                    return
+                }
+                guard hasApp else {
+                    status = "已有授权申请，但本机应用配置不可用"
+                    error = "请先检查应用配置和已有授权；需要重新开始时，再明确选择重新申请。"
+                    return
+                }
+                status = "正在继续获取上一次授权结果，不会创建新申请…"
+                try await poll(code: pending.accessToken, executable: executable)
+                return
+            }
             if !hasApp {
                 status = "第 1 步：请在浏览器完成飞书应用授权；组织可能要求管理员批准"
                 try await FeishuBrowserSetup.run(executable: executable,
                     arguments: ["config", "init", "--new", "--brand", "feishu", "--lang", "zh", "--name", profile])
                 _ = try await queryStatus()
                 if connected { clearPending(); return }
-            }
-            if let pending = try MCPKeychain.read(account: pendingAccount) {
-                guard pending.expiresAt.map({ $0 > Date() }) ?? false else {
-                    status = "上次申请已过期；需要重新授权时请明确点击重新申请"
-                    error = "上次授权申请已过期。先检查已有授权；若仍未授权，再选择重新申请。"
-                    return
-                }
-                hasPendingAuthorization = true
-                status = "正在继续获取上一次授权结果，不会创建新申请…"
-                try await poll(code: pending.accessToken, executable: executable)
-                return
             }
             status = "第 2 步：请在浏览器授权个人云文档访问"
             let started = try await AccountCommandRunner.run(executable: executable,
@@ -89,6 +104,7 @@ final class FeishuAccountConnection: ObservableObject {
             try MCPKeychain.save(MCPCredential(accessToken: authorization.code,
                 expiresAt: Date().addingTimeInterval(expires)), account: pendingAccount)
             hasPendingAuthorization = true
+            pendingAuthorizationExpired = false
             guard NSWorkspace.shared.open(authorization.url) else { throw MCPError.message("无法打开浏览器。申请已保存，可继续检查。") }
             try await poll(code: authorization.code, executable: executable)
         } catch {
@@ -116,8 +132,13 @@ final class FeishuAccountConnection: ObservableObject {
         await connect()
     }
     private func clearPending() {
-        do { try MCPKeychain.delete(account: pendingAccount); hasPendingAuthorization = false }
+        do { try MCPKeychain.delete(account: pendingAccount); hasPendingAuthorization = false; pendingAuthorizationExpired = false }
         catch { /* 旧code仍留在钥匙串，已有有效身份优先使用，不会重复申请。 */ }
+    }
+
+    private func applyPendingState(_ credential: MCPCredential?) {
+        hasPendingAuthorization = credential != nil
+        pendingAuthorizationExpired = credential.map { $0.expiresAt.map { $0 <= Date() } ?? true } ?? false
     }
 
     func sync(title: String, text: String) async throws -> MCPSyncReceipt {

@@ -105,7 +105,7 @@ struct FeishuConnectionCard: View {
                         .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(account.busy)
                     if !account.connected {
                         Button(account.hasPendingAuthorization ? "继续上次授权" : "连接飞书账号") { Task { await account.connect() } }
-                            .disabled(account.busy)
+                            .disabled(account.busy || account.pendingAuthorizationExpired)
                         if account.hasPendingAuthorization {
                             Button("重新申请…") { confirmNewAuthorization = true }.disabled(account.busy)
                         }

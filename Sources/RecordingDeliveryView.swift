@@ -34,14 +34,16 @@ struct RecordingDeliveryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var reviewingSync = false
     @State private var copied = false
+    @State private var showingAgentScope = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             RecordAIPageHeader(title: "导出与交付", subtitle: state.title + (state.text.isEmpty ? "" : " · 转录已保存")) {
                 Button("完成") { dismiss() }.keyboardShortcut(.cancelAction)
             }
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 16) {
                     RecordAICard {
+                        VStack(alignment: .leading, spacing: 16) {
                         Text("文字与音频").font(AppTypography.heading)
                         VStack(alignment: .leading, spacing: 14) {
                             HStack {
@@ -58,8 +60,10 @@ struct RecordingDeliveryView: View {
                             Text("JSON包含时间、分段、发言人及本机音频路径；原始SRT保留识别时的文字，人工校正不会改写它。")
                                 .font(AppTypography.secondary).foregroundStyle(.secondary)
                         }.frame(maxWidth: .infinity, alignment: .leading)
+                        }.frame(maxWidth: .infinity, minHeight: 186, alignment: .topLeading)
                     }
                     RecordAICard {
+                        VStack(alignment: .leading, spacing: 16) {
                         Text("同步到个人工作区").font(AppTypography.heading)
                         VStack(alignment: .leading, spacing: 12) {
                             Text("钉钉 · 飞书 · Notion。预览内容后保存到已连接账号，音频保留在本机。")
@@ -68,21 +72,36 @@ struct RecordingDeliveryView: View {
                             if !state.syncStatus.isEmpty { Text(state.syncStatus).font(AppTypography.secondary) }
                             if let url = state.remoteURL { Link("打开同步结果", destination: url) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
+                        }.frame(maxWidth: .infinity, minHeight: 122, alignment: .topLeading)
                     }
                     RecordAICard(quiet: true) {
-                        Text("交给本机 Agent").font(AppTypography.heading)
+                        VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("交给本机 Agent").font(AppTypography.heading)
+                            Spacer()
+                            Button { showingAgentScope = true } label: { Image(systemName: "info.circle") }
+                                .buttonStyle(.plain).foregroundStyle(RecordAITheme.muted)
+                                .accessibilityLabel("数据目录与读取范围")
+                                .popover(isPresented: $showingAgentScope) {
+                                    VStack(alignment: .leading, spacing: 16) {
+                                        Text("数据目录与读取范围").font(AppTypography.heading)
+                                        Text(state.agentDataURL.path).font(AppTypography.secondary).textSelection(.enabled)
+                                        Text("只读接入，无需登录。默认读取定稿；实时草稿须显式请求。外部工具可以自行总结、问答或处理音频。")
+                                            .font(AppTypography.secondary).foregroundStyle(.secondary)
+                                    }.padding(20).frame(width: 420)
+                                        .onExitCommand { showingAgentScope = false }
+                                }
+                        }
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("直接读文件，或通过只读 CLI / MCP 接入。无需登录。")
+                            Text("直接读文件，或通过 CLI / MCP 读取定稿与录音信息。")
+                                .font(AppTypography.secondary).foregroundStyle(.secondary)
                             HStack {
-                                Button("打开数据目录") { state.revealAgentData() }
                                 Button("复制接入说明") { copy(state.agentInstructions) }
+                                Button("打开数据目录") { state.revealAgentData() }
                             }
-                            DisclosureGroup("数据目录与读取范围") {
-                                Text(state.agentDataURL.path).textSelection(.enabled)
-                                Text("默认读取定稿；实时草稿须显式请求。外部工具可以自行总结、问答或处理音频。")
-                            }.font(AppTypography.secondary).foregroundStyle(.secondary)
                             if let issue = state.agentPublicationError { Text(issue).foregroundStyle(.orange) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
+                        }.frame(maxWidth: .infinity, minHeight: 115, alignment: .topLeading)
                     }
                 }
             }

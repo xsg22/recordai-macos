@@ -7,8 +7,10 @@ struct MeetingActionList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("行动项", systemImage: "checklist").font(AppTypography.heading)
-                Text("\(state.current?.actionItems.count ?? 0)").font(AppTypography.secondary).foregroundStyle(.secondary)
+                Label("行动项", systemImage: "checklist").font(.system(size: 17, weight: .semibold))
+                Text("\(state.current?.actionItems.count ?? 0)").font(.system(size: 11)).foregroundStyle(RecordAITheme.muted)
+                    .padding(.horizontal, 6).padding(.vertical, 3)
+                    .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 6))
                 Spacer()
                 Button("添加") { edit(MeetingActionItem(title: "")) }.buttonStyle(.plain).foregroundStyle(RecordAITheme.accent).disabled(state.locked)
             }
@@ -18,16 +20,20 @@ struct MeetingActionList: View {
                         state.updateActionItems { items in
                             if let i = items.firstIndex(where: { $0.id == item.id }) { items[i].isDone.toggle() }
                         }
-                    } label: { Image(systemName: item.isDone ? "checkmark.square.fill" : "square") }
+                    } label: { Image(systemName: item.isDone ? "checkmark.square.fill" : "square").font(.system(size: 16)).frame(width: 16, height: 16).padding(.top, 3) }
                         .buttonStyle(.plain).foregroundStyle(item.isDone ? RecordAITheme.accent : .secondary)
                         .accessibilityLabel((item.isDone ? "标记未完成：" : "标记完成：") + item.title)
                     VStack(alignment: .leading, spacing: 5) {
                         Button { edit(item) } label: { Text(item.title).strikethrough(item.isDone).multilineTextAlignment(.leading) }.buttonStyle(.plain)
                         if !item.assignee.isEmpty || item.dueDate != nil {
-                            HStack {
-                                if !item.assignee.isEmpty { Text(item.assignee) }
-                                if let date = item.dueDate { Text(date, format: .dateTime.month().day()) }
-                            }.font(.system(size: 11)).foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                if !item.assignee.isEmpty {
+                                    Text(item.assignee).font(.system(size: 11))
+                                        .padding(.horizontal, 6).padding(.vertical, 3)
+                                        .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 6))
+                                }
+                                if let date = item.dueDate { Text(date, format: .dateTime.month().day()).font(.system(size: 12)) }
+                            }.foregroundStyle(RecordAITheme.muted)
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                     Menu {

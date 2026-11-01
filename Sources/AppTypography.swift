@@ -10,6 +10,14 @@ enum AppTypography {
     static let sidebar = Font.system(size: 15, weight: .medium)
 }
 
+/// Shared meeting metadata for the library and recovery views.
+func recordingDurationText(_ seconds: Double) -> String {
+    guard seconds.isFinite, seconds > 0 else { return "0 秒" }
+    if seconds < 60 { return "\(Int(seconds)) 秒" }
+    let minutes = Int(min(seconds / 60, Double(Int.max / 2)))
+    return minutes >= 60 ? "\(minutes / 60)小时\(minutes % 60)分钟" : "\(minutes) 分钟"
+}
+
 struct RecordAIPrimaryButtonStyle: ButtonStyle {
     var showsProgress = false
     @Environment(\.isEnabled) private var enabled

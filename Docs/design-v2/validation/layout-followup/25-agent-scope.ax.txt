@@ -1,0 +1,35 @@
+Window: "", App: RecordAI 界面预览.
+0 sheet Secondary Actions: Raise
+	1 container
+		2 text 导出与交付
+		3 button 完成
+		4 text 产品周会 · 转录已保存
+		5 scroll area
+			6 text 文字与音频
+			7 button 复制正文
+			8 button 复制 Markdown
+			9 button TXT
+			10 button Markdown
+			11 button JSON
+			12 button 原始 SRT
+			13 button 全部音频
+			14 text JSON包含时间、分段、发言人及本机音频路径；原始SRT保留识别时的文字，人工校正不会改写它。 同步到个人工作区 钉钉 · 飞书 · Notion。预览内容后保存到已连接账号，音频保留在本机。
+			15 button 预览并同步…
+			16 text 交给本机 Agent
+			17 button Description: 数据目录与读取范围, ID: info.circle
+			18 text 直接读文件，或通过 CLI / MCP 读取定稿与录音信息。
+			19 button 复制接入说明
+			20 button 打开数据目录
+			21 popover Secondary Actions: Cancel
+				22 container
+					23 text 数据目录与读取范围 /var/folders/7q/hmc6ctqj0qdf7mnc0p7g_j6m0000gn/T/recordai-ui-preview-8AC0E828-5187-4480-965D-6D2617FF9499/AgentData 只读接入，无需登录。默认读取定稿；实时草稿须显式请求。外部工具可以自行总结、问答或处理音频。
+24 menu bar
+	25 RecordAI 界面预览
+	26 File
+	27 Edit
+	28 View
+	29 逐页验收
+	30 Window
+	31 Help
+
+The focused UI element is 0 sheet Secondary Actions: Raise

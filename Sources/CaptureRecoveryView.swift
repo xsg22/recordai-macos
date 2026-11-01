@@ -23,18 +23,20 @@ struct CaptureRecoveryView: View {
                             Text("已有音频可直接回放或继续转录。").font(AppTypography.secondary).foregroundStyle(.secondary)
                         }.frame(maxWidth: .infinity).padding(.vertical, 50)
                     }
-                    ForEach(state.recoveryCandidates) { candidate in
+                    ForEach(Array(state.recoveryCandidates.enumerated()), id: \.element.id) { index, candidate in
                         RecordAICard {
-                            Text("录音片段 · \(candidate.id.uuidString.prefix(8))").font(AppTypography.heading)
-                            Text("可恢复约 \(Int(candidate.duration)) 秒 · \(candidate.existingMix != nil ? "已有完整混音" : "原始音轨合成")")
+                            Text(String(format: "录音片段 · %02d", index + 1)).font(AppTypography.heading)
+                            Text("可恢复约 \(durationText(candidate.duration)) · \(candidate.existingMix != nil ? "已有完整混音" : "原始音轨合成")")
                                 .font(AppTypography.secondary).foregroundStyle(.secondary)
-                            ForEach(Array(candidate.tracks.enumerated()), id: \.offset) { _, track in
+                            VStack(spacing: 0) {
+                            ForEach(Array(candidate.tracks.enumerated()), id: \.offset) { trackIndex, track in
+                                if trackIndex > 0 { Divider() }
                                 HStack {
                                     Text(track.kind == .microphone ? "麦克风原轨" : "系统声音原轨")
                                     Spacer()
                                     Text("可读取").font(AppTypography.secondary).foregroundStyle(.green)
-                                }.padding(.vertical, 7)
-                                Divider()
+                                }.padding(.vertical, 11)
+                            }
                             }
                             ForEach(candidate.warnings, id: \.self) { Text($0).font(AppTypography.secondary).foregroundStyle(.orange) }
                             Button(candidate.warnings.isEmpty ? "恢复并保存此片段" : "仅恢复可读取的音轨") { state.recoverCapture(candidate) }
@@ -53,5 +55,10 @@ struct CaptureRecoveryView: View {
         }.padding(28).frame(width: 720, height: !state.recoveryBusy && state.recoveryCandidates.isEmpty ? 418 : 524).font(AppTypography.body)
             .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)
             .task { state.findRecoverableAudio() }
+    }
+
+    private func durationText(_ duration: Double) -> String {
+        let seconds = Int(duration.isFinite ? max(0, min(duration, Double(Int.max / 2))) : 0)
+        return seconds >= 60 ? "\(seconds / 60) 分 \(seconds % 60) 秒" : "\(seconds) 秒"
     }
 }
