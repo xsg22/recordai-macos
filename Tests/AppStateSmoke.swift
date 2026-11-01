@@ -11,6 +11,7 @@ struct AppStateSmoke {
         try JSONEncoder().encode([original]).write(to: root.appendingPathComponent("history.json"))
         let state = AppState(storageURL: root, connectionNamespace: "smoke-" + UUID().uuidString)
         state.select(original.id)
+        verifyExecutionTrace(state)
         precondition(!state.updateSummary("错误会议", meetingID: UUID()))
         precondition(state.updateSummary("会议摘要\n## 讨论要点\n- 已完成评审\n- 周五交付", meetingID: original.id))
         let outline = MeetingSummaryOutline(state.summary)
@@ -100,6 +101,42 @@ struct AppStateSmoke {
         precondition(state.title == unchangedTitle && state.errorRetry == nil && state.error?.contains("会议已改变") == true)
         state.select(importedID)
         print("PASS: AppState旧库迁移/笔记保存/空标题保护/新转录不被旧编辑覆盖/全文搜索/会议导出，仅临时数据。")
+    }
+
+    @MainActor private static func verifyExecutionTrace(_ state: AppState) {
+        let history = state.history
+        let phase = state.transcriptPhase
+        defer {
+            state.history = history; state.transcriptPhase = phase
+            state.busy = false; state.recording = false; state.paused = false
+        }
+        func stage(_ title: String) -> (String, String, String) {
+            RecordAIExecutionView(state: state).stages.first { $0.0 == title }!
+        }
+        state.history[0].status = .failed
+        state.transcriptPhase = .failed
+        precondition(!state.current!.text.isEmpty)
+        precondition(stage("最终转录").1 == "失败", "旧正文不能掩盖本次转录失败")
+        precondition(stage("最终转录").2.contains("已有正文已保留"))
+        precondition(RecordAIExecutionView(state: state).sessionStatus == "待重试")
+        state.transcriptPhase = .idle
+        precondition(stage("最终转录").1 == "失败", "重新选中失败记录后仍须显示失败")
+        state.history[0].status = .completed
+        state.busy = true; state.transcriptPhase = .recognizing
+        precondition(stage("最终转录").1 == "处理中" && stage("发言人 / 对齐").1 == "等待")
+        state.transcriptPhase = .diarizing
+        precondition(stage("最终转录").1 == "已保存" && stage("发言人 / 对齐").1 == "处理中")
+        state.busy = false; state.transcriptPhase = .completed
+        for (status, title) in [(SpeakerAnalysisStatus.completed, "已完成"), (.partial, "部分完成"), (.failed, "待重试"), (.cancelled, "已取消")] {
+            state.history[0].speakerAnalysisStatus = status
+            state.history[0].speakerAnalysisMessage = "正文已保存，分析结果需要核对。"
+            precondition(stage("发言人 / 对齐").1 == title)
+            precondition(stage("发言人 / 对齐").2 == state.current?.speakerAnalysisMessage)
+            precondition(stage("最终转录").1 == "已保存", "分析失败或取消不应丢失已保存的转录")
+        }
+        state.recording = true; state.paused = true
+        precondition(stage("音频采集").1 == "已暂停" && stage("实时 ASR").1 == "已暂停")
+        print("PASS: 执行追踪失败不被旧正文掩盖、重开失败记录、识别与分人阶段分离、分析结果与暂停状态。无硬件采集。")
     }
 
     static func librarySummary(_ root: URL, _ id: UUID) throws -> String {
