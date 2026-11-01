@@ -1,0 +1,21 @@
+{
+  "recorded_at": "2026-11-01T18:37:18.759087+08:00",
+  "verifiedSourceCommit": "19c613ce2628ddafa6680fc2d34ec129273c8311",
+  "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
+  "runtimeInputs": [
+    "Native/AgentCLI/main.swift",
+    "Native/QwenRuntime/requirements.lock",
+    "Native/QwenRuntime/speaker_attribution.py",
+    "Native/QwenRuntime/worker.py",
+    "Native/paraformer-live.cpp",
+    "Native/whisper-live.cpp",
+    "Scripts/build-qwen-runtime.py",
+    "Scripts/build.zsh",
+    "Scripts/prepare-account-components.zsh",
+    "Scripts/prepare-asr-runtime.py",
+    "Scripts/qwen-runtime.spec"
+  ],
+  "runtimeInputDigest": "f1d547feba10459d211a2eb19dcdfc58ad0e003c8786a79c40605c884a3fdf56",
+  "embeddedAsrSha256": "86c513d8f3fede8fd5f118be9c7cc6d1ecf9565094ee033ae9379a2d9e01c15c",
+  "releasePolicy": "用户明确允许主功能验证通过后先发布一版；本通道仅创建功能验证 prerelease，不将 UI 验收标为通过。"
+}

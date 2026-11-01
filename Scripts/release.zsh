@@ -16,6 +16,6 @@ releaseVersion="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' 
 export RECORD_AI_BUILD_APP_PATH="${RECORD_AI_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/RecordAI.app}"
 COHEAR_STAGE_ONLY=1 zsh Scripts/build.zsh
 zsh Scripts/verify-release.zsh
-if (( candidate )); then print '仅完成本地候选包校验；未通过全部 UI 验收前不得发布。'
+if (( candidate )); then print '仅完成本地候选包校验，不触发发布。功能验证版须另走主功能门禁和 functional 标签流程。'
 else print '本地交付包已校验。GitHub 发布请运行 Build macOS release assets 并启用 publish_release。'
 fi

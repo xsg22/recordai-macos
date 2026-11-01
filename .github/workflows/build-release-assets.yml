@@ -1,6 +1,9 @@
 name: Build macOS release assets
 
 'on':
+  push:
+    tags:
+      - 'v*-functional.*'
   workflow_dispatch:
     inputs:
       publish_release:
@@ -17,6 +20,7 @@ jobs:
     timeout-minutes: 120
     outputs:
       version: ${{ steps.version.outputs.version }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v6
@@ -24,11 +28,25 @@ jobs:
           python-version: '3.12'
           architecture: arm64
       - name: Require complete UI acceptance before publishing
-        if: ${{ inputs.publish_release }}
+        if: ${{ github.event_name != 'push' && inputs.publish_release }}
         run: python3 Scripts/check-ui-acceptance.py
+      - name: Require current functional acceptance for a functional tag
+        if: ${{ github.event_name == 'push' }}
+        run: python3 Scripts/check-functional-acceptance.py
       - name: Read release version
         id: version
-        run: echo "version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)" >> "$GITHUB_OUTPUT"
+        run: |
+          version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
+          releaseTag="v$version"
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            releaseTag="$GITHUB_REF_NAME"
+            python3 - "$version" "$releaseTag" <<'PY'
+          import re, sys
+          assert re.fullmatch(r'v' + re.escape(sys.argv[1]) + r'-functional\.[1-9][0-9]*', sys.argv[2])
+          PY
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$releaseTag" >> "$GITHUB_OUTPUT"
       - name: Check build host
         run: |
           test "$(uname -m)" = arm64
@@ -64,12 +82,13 @@ jobs:
           retention-days: 7
 
   publish:
-    if: ${{ inputs.publish_release }}
+    if: ${{ github.event_name == 'push' || inputs.publish_release }}
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: RecordAI-${{ needs.build.outputs.version }}-arm64
@@ -81,7 +100,12 @@ jobs:
       - name: Publish GitHub prerelease
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.build.outputs.release_tag }}
+          RELEASE_VERSION: ${{ needs.build.outputs.version }}
         run: |
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            cp Docs/releases/functional-preview.md release-notes.md
+          else
           cat > release-notes.md <<'EOF'
           RecordAI ${{ needs.build.outputs.version }} for Apple Silicon and macOS 14 or later.
 
@@ -91,13 +115,14 @@ jobs:
 
           Both packages passed the repository's regression and build checks. SHA-256 files are attached for download verification.
           EOF
-          gh release create v${{ needs.build.outputs.version }} \
+          fi
+          gh release create "$RELEASE_TAG" \
             dist/RecordAI-${{ needs.build.outputs.version }}-arm64.dmg \
             dist/RecordAI-${{ needs.build.outputs.version }}-arm64.dmg.sha256 \
             dist/RecordAI-${{ needs.build.outputs.version }}-arm64.pkg \
             dist/RecordAI-${{ needs.build.outputs.version }}-arm64.pkg.sha256 \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title 'RecordAI ${{ needs.build.outputs.version }}' \
+            --title "RecordAI $RELEASE_VERSION · $([[ "$GITHUB_EVENT_NAME" == push ]] && echo 功能验证版 || echo 预发布)" \
             --notes-file release-notes.md \
             --prerelease

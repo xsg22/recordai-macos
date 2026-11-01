@@ -2,7 +2,7 @@
 
 RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
-以下为原生客户端的实际截图，使用隔离演示资料。0.16.0 界面仍在逐页验收，尚未发布。
+以下为原生客户端的实际截图，使用隔离演示资料。0.16.0 功能验证版优先交付已验证的本地转录主流程，完整 UI 逐页验收仍在进行，未宣称 100% 还原。
 
 ![RecordAI 首页](Docs/images/recordai-home.jpg)
 
@@ -56,5 +56,7 @@ zsh Scripts/release.zsh
 ```
 
 该命令及 GitHub 发布工作流会要求全部 UI 验收通过。仅准备本地候选包可运行 `zsh Scripts/release.zsh --candidate`；它不会发布。
+
+明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.0-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
 
 详见[发布流程](Docs/发布流程.md)。Python 3.12 和语音引擎随安装包提供，最终用户无需另外安装 Python。
