@@ -20,7 +20,8 @@ cp .vendor/lark-cli/LICENSE "$app/Contents/Resources/Licenses/lark-cli.txt"
 xcrun swiftc -O -swift-version 5 -parse-as-library -target arm64-apple-macosx14.0 \
     -o "$app/Contents/MacOS/RecordAIApp" Sources/*.swift
 xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx14.0 \
-    Sources/AgentSchema.swift Sources/RecordAIControl.swift Native/AgentCLI/main.swift -o "$app/Contents/MacOS/recordai"
+    Sources/AgentSchema.swift Sources/RecordAIControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$app/Contents/MacOS/recordai"
+ditto Resources/AgentSkill "$app/Contents/Resources/AgentSkill"
 cp Resources/Info.plist "$app/Contents/Info.plist"
 mkdir -p "$app/Contents/Resources/Engine/ASR"
 ditto .build/qwen-runtime/qwen-asr "$app/Contents/Resources/Engine/ASR"

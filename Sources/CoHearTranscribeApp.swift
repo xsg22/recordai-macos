@@ -173,6 +173,9 @@ struct MainView: View {
                     missingMicrophoneView
                 } else if state.current != nil {
                     meetingToolbar
+                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution && !showingSummary {
+                        RecordAICard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
+                    }
                     if let issue = state.recordingIssue {
                         HStack(spacing: 16) {
                             Label(issue, systemImage: "exclamationmark.triangle")
@@ -230,7 +233,7 @@ struct MainView: View {
                 }.font(AppTypography.secondary).foregroundStyle(.secondary)
                 }
                 }
-            }.padding(28).background(RecordAITheme.surface)
+            }.padding(28).frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity).background(RecordAITheme.surface)
         }
         .overlay(alignment: .bottom) {
             if state.recording && !state.miniMode && !missingMicrophone, let controller = state.miniController {

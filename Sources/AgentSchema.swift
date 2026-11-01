@@ -86,6 +86,7 @@ struct AgentReadStore {
         return record
     }
     func list() throws -> [AgentRecording] {
+        if !FileManager.default.fileExists(atPath: root.appendingPathComponent("recordings").path) { return [] }
         let directories = try FileManager.default.contentsOfDirectory(at: root.appendingPathComponent("recordings"), includingPropertiesForKeys: nil)
         return try directories.compactMap { directory -> AgentRecording? in
             guard let id = UUID(uuidString: directory.lastPathComponent) else { return nil }

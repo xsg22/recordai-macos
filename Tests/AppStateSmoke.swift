@@ -12,6 +12,7 @@ struct AppStateSmoke {
         let state = AppState(storageURL: root, connectionNamespace: "smoke-" + UUID().uuidString)
         state.select(original.id)
         verifyExecutionTrace(state)
+        try verifyAgentOnboarding(root.appendingPathComponent("Onboarding"))
         precondition(!state.updateSummary("错误会议", meetingID: UUID()))
         precondition(state.updateSummary("会议摘要\n## 讨论要点\n- 已完成评审\n- 周五交付", meetingID: original.id))
         let outline = MeetingSummaryOutline(state.summary)
@@ -101,6 +102,58 @@ struct AppStateSmoke {
         precondition(state.title == unchangedTitle && state.errorRetry == nil && state.error?.contains("会议已改变") == true)
         state.select(importedID)
         print("PASS: AppState旧库迁移/笔记保存/空标题保护/新转录不被旧编辑覆盖/全文搜索/会议导出，仅临时数据。")
+    }
+
+    @MainActor private static func verifyAgentOnboarding(_ root: URL) throws {
+        let policy = AgentOnboarding(storage: root)
+        var record = MeetingRecord(title: "First transcript", text: "", audioFiles: ["fixture.wav"], status: .recorded)
+        precondition(!policy.eligible(record))
+        record.previewText = "实时草稿"; precondition(!policy.eligible(record))
+        record.status = .completed; record.text = " \n "; precondition(!policy.eligible(record))
+        record.text = "已落盘的非空定稿"; precondition(policy.eligible(record))
+        record.pendingAudioFiles = ["pending.wav"]; precondition(!policy.eligible(record))
+        record.pendingAudioFiles = []; record.status = .failed; precondition(!policy.eligible(record))
+        record.status = .completed
+        let library = try MeetingLibrary(root: root); _ = try library.save(record)
+        let state = AppState(storageURL: root, connectionNamespace: "agent-onboarding-" + UUID().uuidString,
+            speechModelStore: ASRModelStore(root: root.appendingPathComponent("AbsentModels")))
+        state.select(record.id)
+        precondition(state.canShowAgentOnboarding)
+        state.busy = true; precondition(!state.canShowAgentOnboarding); state.busy = false
+        state.recording = true; precondition(!state.canShowAgentOnboarding); state.recording = false
+        state.syncing = true; precondition(!state.canShowAgentOnboarding); state.syncing = false
+        state.showModelDownload = true; precondition(!state.canShowAgentOnboarding); state.showModelDownload = false
+        let second = MeetingRecord(title: "New recording", audioFiles: ["second.wav"], status: .recorded)
+        _ = try library.save(second)
+        state.history = try library.list(); state.select(second.id)
+        precondition(!state.canShowAgentOnboarding)
+        let secondIndex = state.history.firstIndex { $0.id == second.id }!
+        state.history[secondIndex].status = .completed; state.text = "Second final transcript"
+        precondition(state.saveEdits())
+        precondition(state.agentOnboardingRecordingID == second.id && state.canShowAgentOnboarding,
+                     "已有旧定稿不能挡住当前新录音完成后的首次引导")
+        state.agentOnboardingDidAppear()
+        precondition(AgentOnboarding(storage: root).seen && !AgentOnboarding(storage: root).eligible(record))
+        precondition(state.canShowAgentOnboarding, "记录已展示不应让引导立即闪退")
+        state.dismissAgentOnboarding(); precondition(!state.canShowAgentOnboarding)
+        state.saveEdits(); precondition(!state.canShowAgentOnboarding)
+        let reopened = AppState(storageURL: root, connectionNamespace: "agent-reopen-" + UUID().uuidString)
+        reopened.select(record.id); precondition(!reopened.canShowAgentOnboarding)
+        let guide = try String(contentsOf: root.appendingPathComponent("AgentData/SETUP.md"), encoding: .utf8)
+        precondition(guide.contains("setup --json") && guide.contains("get_agent_setup"))
+        let publicRoot = root.appendingPathComponent("AgentData")
+        let start = try RecordAIControlQueue.enqueue(action: "start_recording", root: publicRoot)
+        state.processRecordAICommands()
+        let startResult = try JSONSerialization.jsonObject(with: RecordAIControlQueue.result(start.id, root: publicRoot)) as! [String: String]
+        precondition(startResult["status"] == "rejected" && !state.recording && !state.preparing, "缺模型不得把启动回执记为成功")
+        let stale = RecordAIControlCommand(id: UUID(), action: "pause_recording", createdAt: Date().addingTimeInterval(-60))
+        let staleURL = publicRoot.appendingPathComponent("Control/commands/\(stale.id.uuidString).json")
+        try AgentCodec.encoder().encode(stale).write(to: staleURL)
+        state.processRecordAICommands()
+        let staleResult = try JSONSerialization.jsonObject(with: RecordAIControlQueue.result(stale.id, root: publicRoot)) as! [String: String]
+        precondition(staleResult["status"] == "rejected" && staleResult["result"]?.contains("过期") == true)
+        precondition(RecordAIControlQueue.pending(root: publicRoot).isEmpty)
+        print("PASS: 首次非空定稿引导、失败与草稿排除、忙碌不打扰、展示持久化、稍后/重启不重弹、本地安装说明。")
     }
 
     @MainActor private static func verifyExecutionTrace(_ state: AppState) {

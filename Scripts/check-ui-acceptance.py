@@ -43,7 +43,7 @@ def main():
     parser.add_argument("--report", action="store_true", help="report pending work without failing")
     parser.add_argument("--digests", action="store_true", help="print current review version hashes")
     args = parser.parse_args()
-    source_hash = digest(list((ROOT / "Sources").glob("*.swift")) + [p for p in (ROOT / "Resources").glob("*") if p.is_file()])
+    source_hash = digest(list((ROOT / "Sources").glob("*.swift")) + [p for p in (ROOT / "Resources").rglob("*") if p.is_file()])
     design_hash = digest([ROOT / "Docs/design-v2" / p for p in ["manifest.json", "design.js", "index.html", "logo.png"]])
     if args.digests:
         print(json.dumps({"sourceDigest": source_hash, "designDigest": design_hash}, indent=2))

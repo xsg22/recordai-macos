@@ -15,6 +15,8 @@ final class AgentDataPublisher {
             let url = root.appendingPathComponent(filename)
             if !manager.fileExists(atPath: url.path) { try Data(content.utf8).write(to: url, options: .atomic) }
         }
+        let setup = AgentSetup(appURL: Bundle.main.bundleURL, dataRoot: root)
+        try Data(setup.guide.utf8).write(to: root.appendingPathComponent("SETUP.md"), options: .atomic)
     }
     static func markdown(_ record: MeetingRecord) -> String {
         let title = record.title.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")
@@ -125,7 +127,7 @@ final class AgentDataPublisher {
     }
     static let instructions = """
     # RecordAI · 本机 Agent 接口 v1
-    用App包内 Contents/MacOS/cohear 执行 list、read UUID --format json|md|txt|srt、audio UUID、changes --since N 或 mcp。
+    用App包内 Contents/MacOS/recordai 执行 setup --json 获取 Skill 和安装说明，或执行 list、read UUID --format json|md|txt|srt、audio UUID、changes --since N 或 mcp。文件接入说明见 SETUP.md。
     MCP配置：command为该可执行文件的绝对路径，args为["mcp"]；不需要账号、不开放端口。
     默认只返回最终正文；read可显式增加--include-preview读取未定稿草稿。草稿不得视为最终转录。
     record.json为单文件原子快照；跨文件可能处于不同版本，优先读取它。schemaVersion=1；revision为单条版本，contentDigest标记内容变化。

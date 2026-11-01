@@ -63,6 +63,7 @@ jobs:
           mkdir -p .build
           python3 Scripts/test-recording-entry.py
           python3 Scripts/test-ui-contracts.py
+          python3 Scripts/test-agent-setup.py
       - name: Build and sign application packages
         run: |
           COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" \

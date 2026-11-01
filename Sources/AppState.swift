@@ -56,6 +56,9 @@ final class AppState: ObservableObject {
     @Published var showSettings = false
     @Published var showExecutionTrace = false
     @Published var showModelDownload = false
+    @Published private(set) var agentOnboardingRecordingID: UUID?
+    @Published private(set) var agentSetupIssue: String?
+    private let agentOnboarding: AgentOnboarding
     let speechModels: ASRModelStore
     @Published var syncDestination: PersonalDestination = .dingtalk
     @Published var syncing = false
@@ -169,6 +172,7 @@ final class AppState: ObservableObject {
          notionConnection: NotionAccountConnection? = nil) {
         storage = storageURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("CoHearTranscribe", isDirectory: true)
+        agentOnboarding = AgentOnboarding(storage: storage)
         speechModels = speechModelStore ?? ASRModelStore()
         dingTalk = MCPConnectionStore(namespace: connectionNamespace + "dingtalk")
         feishu = MCPConnectionStore(namespace: connectionNamespace + "feishu")
@@ -190,6 +194,7 @@ final class AppState: ObservableObject {
         do {
             library = try MeetingLibrary(root: storage)
             history = try library?.list() ?? []
+            agentOnboardingRecordingID = history.first(where: { agentOnboarding.eligible($0) })?.id
             trashedHistory = try library?.listTrashed() ?? []
             if let warnings = library?.warnings, !warnings.isEmpty { error = warnings.joined(separator: "\n") }
         } catch { self.error = "读取会议库失败：\(error.localizedDescription)" }
@@ -206,16 +211,39 @@ final class AppState: ObservableObject {
             self?.status = "录音已暂停。请处理提示后重试，或停止并保存。"
         }
         recordAIControlTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.processRecordAICommands() }
+            Task { @MainActor in self?.processRecordAICommands(); self?.publishRecordingStatus() }
         }
+        publishRecordingStatus()
     }
 
-    private func processRecordAICommands() {
+    private func publishRecordingStatus() {
+        let snapshot = RecordAIRuntimeStatus(recording: recording, paused: paused, preparing: preparing, busy: busy,
+            recordingID: recordingID ?? selection, status: status, issue: recordingIssue)
+        guard let data = try? AgentCodec.encoder().encode(snapshot) else { return }
+        let url = agentDataURL.appendingPathComponent("runtime.json")
+        guard (try? RecordAIControlQueue.requireContained(url, root: agentDataURL)) != nil else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    func processRecordAICommands() {
         for (url, command) in RecordAIControlQueue.pending(root: storage.appendingPathComponent("AgentData")) {
             var result = ""
+            var accepted = true
+            if Date().timeIntervalSince(command.createdAt) > 30 || command.createdAt.timeIntervalSinceNow > 5 {
+                RecordAIControlQueue.finish(url, root: agentDataURL, result: "命令已过期，请查询状态后重新发起。", accepted: false)
+                continue
+            }
+            if preparing || busy || recoveryBusy || quitting || syncing ||
+                (continuousProcessing && !recording && ["start_recording", "retry_transcription"].contains(command.action)) {
+                RecordAIControlQueue.finish(url, root: agentDataURL, result: "当前任务忙碌，请稍后重试。", accepted: false)
+                continue
+            }
             switch command.action {
             case "start_recording":
-                if !recording { toggleRecording(); result = "录音启动请求已接受" } else { result = "已经在录音" }
+                if !recording {
+                    toggleRecording(); accepted = preparing || recording
+                    result = accepted ? "录音启动请求已接受，请查询实际状态" : error ?? (showModelDownload ? "请先完成语音模型下载。" : "录音未能开始。")
+                } else { result = "已经在录音" }
             case "stop_recording":
                 if recording { toggleRecording(); result = "录音停止请求已接受" } else { result = "当前没有录音" }
             case "pause_recording":
@@ -224,9 +252,9 @@ final class AppState: ObservableObject {
                 if recording && paused { pauseRecording(); result = "录音继续请求已接受" } else { result = "当前不需要继续录音" }
             case "retry_transcription":
                 if let current, !recording, current.audioFiles.isEmpty == false { transcribe(); result = "转录重试请求已接受" } else { result = "当前没有可重试音频" }
-            default: result = "未识别控制动作"
+            default: result = "未识别控制动作"; accepted = false
             }
-            RecordAIControlQueue.finish(url, root: storage.appendingPathComponent("AgentData"), result: result)
+            RecordAIControlQueue.finish(url, root: storage.appendingPathComponent("AgentData"), result: result, accepted: accepted)
         }
     }
 
@@ -239,6 +267,10 @@ final class AppState: ObservableObject {
     private func publishStoredRecord(_ saved: MeetingRecord) {
         if let index = history.firstIndex(where: { $0.id == saved.id }) { history[index] = saved }
         else { history.insert(saved, at: 0) }
+        if !agentOnboarding.seen && ((saved.id == selection && agentOnboarding.eligible(saved)) ||
+            !history.contains(where: { $0.id == agentOnboardingRecordingID && agentOnboarding.eligible($0) })) {
+            agentOnboardingRecordingID = agentOnboarding.eligible(saved) ? saved.id : nil
+        }
     }
 
     func toggleStar() {
@@ -322,6 +354,7 @@ final class AppState: ObservableObject {
         if id != selection { cancelAssistant() }
         stopPlayback()
         selection = id
+        if let current, agentOnboarding.eligible(current) { agentOnboardingRecordingID = current.id }
         title = current?.title ?? ""; text = current?.text ?? ""
         notes = current?.notes ?? ""; summary = current?.summary ?? ""
         liveText = current?.previewText ?? ""
@@ -1069,9 +1102,28 @@ final class AppState: ObservableObject {
 
     var agentDataURL: URL { storage.appendingPathComponent("AgentData") }
     var agentPublicationError: String? { library?.publicationError }
-    var agentCLIURL: URL { Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/cohear") }
+    var agentCLIURL: URL { agentSetup.cliURL }
+    var agentSetup: AgentSetup { AgentSetup(appURL: Bundle.main.bundleURL, dataRoot: agentDataURL) }
+    var canShowAgentOnboarding: Bool {
+        !locked && !syncing && error == nil && !showSettings && !showModelDownload && !showExecutionTrace && deletionRequest == nil &&
+        current?.id == agentOnboardingRecordingID && current.map { $0.status == .completed && !$0.audioFiles.isEmpty && $0.pendingAudioFiles.isEmpty && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } == true
+    }
+    func agentOnboardingDidAppear() {
+        do { try agentOnboarding.markSeen() }
+        catch { agentSetupIssue = "引导状态暂未保存，下次启动可能再次提示。" }
+    }
+    func dismissAgentOnboarding() { agentOnboardingDidAppear(); agentOnboardingRecordingID = nil }
+    @discardableResult func copyAgentPrompt() -> Bool {
+        NSPasteboard.general.clearContents()
+        guard NSPasteboard.general.setString(agentSetup.prompt, forType: .string) else {
+            agentSetupIssue = "未能写入剪贴板，请重试。"; return false
+        }
+        agentSetupIssue = nil
+        agentOnboardingDidAppear()
+        return true
+    }
     var agentInstructions: String {
-        let config: [String: Any] = ["mcpServers": ["cohear": ["command": agentCLIURL.path, "args": ["mcp"]]]]
+        let config: [String: Any] = ["mcpServers": ["recordai": agentSetup.mcpConfiguration]]
         let json = (try? JSONSerialization.data(withJSONObject: config, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])).map { String(decoding: $0, as: UTF8.self) } ?? ""
         return AgentDataPublisher.instructions + "\n\nMCP配置示例：\n" + json + "\n\n数据目录：" + agentDataURL.path
     }

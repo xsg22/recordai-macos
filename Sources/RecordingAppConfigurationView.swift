@@ -104,6 +104,7 @@ struct RecordingAppConfigurationView: View {
     private var data: some View {
         Group {
             RecordAIPageHeader(title: "Agent 与本机资料", subtitle: "管理录音存储和其他本机工具的读取入口。") { EmptyView() }
+            RecordAICard(quiet: true) { AgentConnectionView(state: state) }
             RecordAICard {
                 Label("本机 Agent", systemImage: "externaldrive").font(AppTypography.heading)
                 Text(state.agentDataURL.path).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
@@ -131,7 +132,6 @@ struct RecordingAppConfigurationView: View {
     }
     @ViewBuilder private var agentActions: some View {
         Button("打开数据目录") { state.revealAgentData() }
-        Button("复制接入说明") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(state.agentInstructions, forType: .string) }
         Button("重新发布快照") { state.republishAgentData() }.disabled(state.locked)
     }
 }

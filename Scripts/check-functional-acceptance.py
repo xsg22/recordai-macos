@@ -51,7 +51,7 @@ def main():
     evidence = ROOT / "Docs/design-v2/validation"
     read = lambda name: json.loads((evidence / (name + ".json")).read_text())
     binding = read("functional-release-binding")
-    source_hash = digest(list((ROOT / "Sources").glob("*.swift")) + [p for p in (ROOT / "Resources").glob("*") if p.is_file()])
+    source_hash = digest(list((ROOT / "Sources").glob("*.swift")) + [p for p in (ROOT / "Resources").rglob("*") if p.is_file()])
     runtime_paths = [ROOT / name for name in binding["runtimeInputs"]]
     version = plistlib.loads((ROOT / "Resources/Info.plist").read_bytes())["CFBundleShortVersionString"]
     issues = validate(read("import-e2e/result"), read("data-regression"), read("ui-contracts"), read("candidate-package"), binding, source_hash, digest(runtime_paths), version)

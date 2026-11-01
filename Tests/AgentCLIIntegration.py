@@ -6,7 +6,7 @@ id = '11111111-2222-3333-4444-555555555555'
 metadata = root / 'Meetings' / id / 'meeting.json'
 before = hashlib.sha256(metadata.read_bytes()).hexdigest()
 def run(*args):
-    return subprocess.check_output([cli, '--root', str(root / 'AgentData'), *args], text=True)
+    return subprocess.check_output([cli, '--root', str(root / 'AgentData'), *args], text=True, timeout=15)
 rows = json.loads(run('list')); assert rows[0]['id'] == id and rows[0]['ready']
 record = json.loads(run('read', id)); assert record['finalText'] == '你好，世界！' and 'livePreview' not in record
 assert '旧笔记' not in run('read', id) and '旧总结' not in run('read', id)
@@ -21,16 +21,17 @@ requests = [
  {'jsonrpc':'2.0','id':2,'method':'tools/list'},
  {'jsonrpc':'2.0','id':3,'method':'tools/call','params':{'name':'get_recording','arguments':{'id':id}}},
  {'jsonrpc':'2.0','id':4,'method':'tools/call','params':{'name':'get_transcript','arguments':{'id':id,'includePreview':True}}},
- {'jsonrpc':'2.0','id':5,'method':'resources/read','params':{'uri':f'cohear://recordings/{id}'}},
+ {'jsonrpc':'2.0','id':5,'method':'resources/read','params':{'uri':f'recordai://recordings/{id}'}},
  {'jsonrpc':'2.0','id':6,'method':'tools/call','params':{'name':'get_recording','arguments':{'id':'../../private'}}},
  {'jsonrpc':'2.0','id':7,'method':'tools/call','params':{'name':'get_changes','arguments':{'since':999}}},
  {'jsonrpc':'2.0','id':8,'method':'delete_recording'},
 ]
-p = subprocess.run([cli, '--root', str(root/'AgentData'), 'mcp'],input='\n'.join(map(json.dumps, requests))+'\n',text=True,capture_output=True,check=True)
+p = subprocess.run([cli, '--root', str(root/'AgentData'), 'mcp'],input='\n'.join(map(json.dumps, requests))+'\n',text=True,capture_output=True,check=True,timeout=15)
 responses = {x['id']:x for x in map(json.loads,p.stdout.splitlines())}
 assert len(responses)==8 and not p.stderr
 assert responses[1]['result']['protocolVersion']=='2025-03-26'
-assert all(x['annotations']['readOnlyHint'] for x in responses[2]['result']['tools'])
+assert all(x['annotations']['readOnlyHint'] == (x['name'] != 'control_recording') for x in responses[2]['result']['tools'])
+assert json.loads(responses[5]['result']['contents'][0]['text'])['finalText'] == record['finalText']
 assert 'livePreview' not in json.loads(responses[3]['result']['content'][0]['text'])
 assert json.loads(responses[4]['result']['content'][0]['text'])['previewIsFinal'] is False
 assert responses[6]['result']['isError'] is True

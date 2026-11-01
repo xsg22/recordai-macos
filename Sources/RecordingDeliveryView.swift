@@ -34,6 +34,7 @@ struct RecordingDeliveryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var reviewingSync = false
     @State private var copied = false
+    @State private var agentPromptCopied = false
     @State private var showingAgentScope = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -101,10 +102,11 @@ struct RecordingDeliveryView: View {
                             Text("直接读文件，或通过 CLI / MCP 读取定稿与录音信息。")
                                 .font(AppTypography.secondary).foregroundStyle(.secondary)
                             HStack {
-                                Button("复制接入说明") { copy(state.agentInstructions) }
+                                Button(agentPromptCopied ? "已复制接入提示词" : "复制接入提示词") { agentPromptCopied = state.copyAgentPrompt() }
                                 Button("打开数据目录") { state.revealAgentData() }
                             }
                             if let issue = state.agentPublicationError { Text(issue).foregroundStyle(.orange) }
+                            if let issue = state.agentSetupIssue { Text(issue).foregroundStyle(.orange) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         }.frame(maxWidth: .infinity, minHeight: 115, alignment: .topLeading)
                     }

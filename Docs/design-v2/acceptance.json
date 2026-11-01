@@ -519,7 +519,8 @@
         "数据目录",
         "复制接入说明",
         "重新发布快照",
-        "模型与用户资料边界"
+        "模型与用户资料边界",
+        "复制统一接入提示词"
       ],
       "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
@@ -956,6 +957,20 @@
       ],
       "sourceDigest": "2db3d707c4c0a1bf4932ca37d7bc01713b8372395260081f2bac906fe5444a31",
       "designDigest": "a50939415faf9bd3db5bcb08f31c1c1dd7a5685bb09d6878f4c3f80d147a9b23"
+    },
+    {
+      "id": "45-agent-onboarding",
+      "title": "首次转录 · 连接 AI 助手",
+      "design": "Docs/design-v2/index.html#45-agent-onboarding",
+      "implementation": "Sources/AgentConnectionView.swift",
+      "status": "pending",
+      "checks": [
+        "非空定稿后一次引导",
+        "复制统一接入提示词",
+        "稍后与重启不重弹",
+        "不自动安装或录音"
+      ],
+      "interactionEvidence": []
     }
   ]
 }

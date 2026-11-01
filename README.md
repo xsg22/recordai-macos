@@ -62,3 +62,9 @@ zsh Scripts/release.zsh
 明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.0-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
 
 详见[发布流程](Docs/发布流程.md)。Python 3.12 和语音引擎随安装包提供，最终用户无需另外安装 Python。
+
+## 开发分支：统一 Agent 接入（尚未发布）
+
+首次获得已保存的非空转录时提示一次；在设置的“Agent 与数据”和交付页也可复制同一份接入提示词。粘贴给本地 Agent 后，由它获取当前版本 Skill 并按自己的环境安装。RecordAI 不要求选择 Agent，也不直接修改 Agent 配置。
+
+CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。当前 GitHub 安装包不包含本节新增功能。

@@ -6,7 +6,7 @@ import CryptoKit
     private let coldState: AppState
     private let optionalModels: OptionalModelStore
     @State private var modelPreview: String?
-    @State private var page = 2
+    @State private var page = 45
     @State private var presented = 0
     private let mini: MiniRecordingController
     private let demoID: UUID
@@ -138,7 +138,7 @@ import CryptoKit
         _state = StateObject(wrappedValue: previewState)
     }
     var body: some Scene {
-        WindowGroup("RecordAI") {
+        WindowGroup("RecordAI · Agent 接入验收") {
             MainView(state: page == 1 ? coldState : state, initialFilter: page == 3 ? "星标" : page == 5 ? "回收站" : "全部")
                 .id(page).background(RecordingWindowObserver(state: page == 1 ? coldState : state).frame(width: 0, height: 0)).frame(minWidth: 1040, minHeight: 760).font(AppTypography.body).controlSize(.extraLarge)
                 .preferredColorScheme(page == 40 ? .dark : .light)
