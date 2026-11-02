@@ -2,6 +2,8 @@
 
 RecordAI 是 macOS 本地录音与转录应用。支持简体中文与 English 界面，界面语言与中文、英语、中英自动转录分别设置。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
+[个人主页](http://47.117.186.93/)
+
 **[下载 0.17.0 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.17.0-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.17.0-functional.1/RecordAI-0.17.0-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.17.0-functional.1/RecordAI-0.17.0-arm64.pkg)
 
 以下为 0.17.0 原生客户端的实际截图，使用合成英文与中英混合语音及隔离演示资料。本版聚焦录音、转录与分组，分析交给外部 Agent；完整 UI 设计稿的逐页验收尚未全部完成。
@@ -87,3 +89,11 @@ python3 -m unittest discover -s Tests/reporting -v
 ```zsh
 zsh Scripts/test-library-management.zsh
 ```
+
+## 联系方式
+
+邮箱：[xsgnzb1@gmail.com](mailto:xsgnzb1@gmail.com)
+
+微信公众号：**李昂的数字之旅**，使用微信扫码关注。
+
+<img src="Docs/images/wechat-qr.png" alt="李昂的数字之旅公众号二维码" width="240">
