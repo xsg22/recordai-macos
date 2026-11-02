@@ -56,3 +56,15 @@ zsh Scripts/preview-ui.zsh --build-only
 新增协议测试实际编译一个临时 App 包内的 CLI，复制正式 Skill 资源，执行 CLI/MCP 安装说明、工具、资源、转录查询及错误分支，再在隔离的 Agent 目录写入返回文件并查询转录。不访问个人技能配置，不启动真实录音。首次引导的失败/草稿排除、忙碌延迟、持久化、稍后/重开由 AppState 回归覆盖。
 
 原生 UI 及剪贴板回读证据位于 `Docs/validation/agent-onboarding/final`。这些证据不表示真实各品牌 Agent 已加载 Skill，也不表示真实硬件录音、系统授权、所有页面或新安装包均已验收。
+
+## 开发中的资料管理扩展
+
+`list` 增加 `--query TEXT`、`--group UUID` 与 `--ungrouped`。MCP `list_recordings` 对应可选的 `query`、`groupId`、`ungrouped`。搜索覆盖标题、正文和分组名。
+
+`read.organization` 为兼容旧版本的可选字段，包含 `group` 与独立 `revision`。整理改动发布 `kind=metadata` 事件和 `metadataRevision`，正文 `revision` 与 `contentDigest` 不变；内容变化仍发布 updated。客户端收到 metadata 时刷新分组，不必重新生成相同正文的分析。
+
+移除分组只解除关联，原音与正文保留。查询接口仍只读，不包含历史 AI 总结、笔记或凭据，也不启动采集。该扩展尚未发布，现有 0.16.1 安装包不具备这些筛选参数。
+
+标签功能已从当前开发范围移除；旧开发参数 `--tag` / `tagIds` 会被拒绝，公开快照不再返回 tags 字段。旧数据读取时忽略多余字段，原音、分组、正文保留。
+
+时间点功能也已撤回；当前公开快照不再返回 bookmarks 字段，也不检索时间点名称或备注。旧字段只作兼容忽略，正文自带时间戳和音轨引用不变。

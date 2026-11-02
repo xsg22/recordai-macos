@@ -49,6 +49,15 @@ import Foundation
         try await Task.sleep(nanoseconds: 300_000_000)
         precondition(state.playing && state.playbackTime > 0.8 && state.playingParagraphID == nil, "手动拖动退出单句模式")
         state.stopPlayback()
+        var fragments = record
+        fragments.text = "页面"
+        fragments.transcriptParagraphs = [TranscriptParagraph(text: "页", start: 0.1, end: 0.2, audioFile: record.audioFiles[0], localStart: 0.1), TranscriptParagraph(text: "面", start: 0.2, end: 0.3, audioFile: record.audioFiles[0], localStart: 0.2)]
+        state.history = [fragments]; state.select(record.id, saveCurrent: false)
+        state.playReadingGroup(fragments.transcriptParagraphs[0].id)
+        precondition(state.playing)
+        for _ in 0..<100 where state.playing { try await Task.sleep(nanoseconds: 20_000_000) }
+        precondition(abs(state.playbackTime - 0.3) < 0.001, "合并阅读段播到完整段尾")
+        state.history = [record]; state.select(record.id, saveCurrent: false)
         var invalid = first; invalid.end = nil
         precondition(!state.canPlayTranscriptParagraph(invalid))
         invalid.end = .nan

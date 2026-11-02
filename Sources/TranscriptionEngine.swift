@@ -139,13 +139,14 @@ final class TranscriptionEngine: @unchecked Sendable {
         guard response.paragraphs.map({ $0.separator + $0.text }).joined() == transcript.text else {
             throw TranscriptionError.message("发言人分段与正文不一致，已保留正文。")
         }
-        return try response.paragraphs.map { row in
+        let rows = try response.paragraphs.map { row in
             guard row.start.isFinite, row.end.isFinite, row.start >= 0, row.end >= row.start,
                   row.speakerIDs.count <= 4, row.speakerIDs.allSatisfy({ ["0", "1", "2", "3"].contains($0) }) else {
                 throw TranscriptionError.message("发言人时间或编号无效。")
             }
             return TranscriptParagraph(text: row.text, separator: row.separator, start: row.start, end: row.end, speakerIDs: row.speakerIDs)
         }
+        return TranscriptReadability.groups(rows).map(\.combined)
     }
 
     private struct QwenOutput: Decodable {

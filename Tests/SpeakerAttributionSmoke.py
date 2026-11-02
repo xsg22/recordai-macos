@@ -14,3 +14,21 @@ assert unknown[0]['speakerIDs']==[]
 try:attribute('不可丢字',items,[],0,2);raise AssertionError('必须拒绝不完整对齐')
 except ValueError:pass
 print('PASS: 中文英文标点空格完整保留、两人切换、重叠与未知、对齐不完整拒绝。')
+
+# Rapid attribution jitter inside a sentence must not create single-character rows.
+from speaker_attribution import coalesce_fragments
+jitter = [dict(text=t, start=i*.18, end=(i+1)*.18, speakerIDs=([str(i%2)] if i%3 else []), separator='') for i,t in enumerate('页面点击不能让他选中复制。')]
+compact = coalesce_fragments(jitter)
+assert ''.join(r['text'] for r in compact) == ''.join(r['text'] for r in jitter)
+assert sum(len(r['text']) == 1 for r in compact) < sum(len(r['text']) == 1 for r in jitter)
+assert all(not r['speakerIDs'] for r in compact), 'Do not invent a stable or overlapping speaker from jitter'
+answers = [dict(text='嗯。',start=0,end=.2,speakerIDs=['0'],separator=''),dict(text='好。',start=.2,end=.4,speakerIDs=['1'],separator='')]
+assert coalesce_fragments(answers) == answers
+paused = [dict(text='页',start=0,end=.2,speakerIDs=[],separator=''),dict(text='面',start=2,end=2.2,speakerIDs=[],separator='')]
+assert coalesce_fragments(paused) == paused
+assert coalesce_fragments(compact) == compact, 'Compaction should be idempotent'
+print('PASS: 连续短碎段合并、正文与时间边界保全、未知归属不冒充重叠、完整短答及静音分界保留。')
+
+english = [dict(text='OK.',start=0,end=.2,speakerIDs=['0'],separator=''),dict(text='Yes.',start=.2,end=.4,speakerIDs=['1'],separator='')]
+assert coalesce_fragments(english) == english
+print('PASS: 英文句末短答边界保留。')

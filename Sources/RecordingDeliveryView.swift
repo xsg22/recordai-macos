@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-/// 转录阅读面；笔记、摘要、增强笔记与对话通过独立工作台访问。
+/// Recording and final-transcript reading surface.
 struct RecordingCanvasView: View {
     @ObservedObject var state: AppState
     var body: some View {

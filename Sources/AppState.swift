@@ -18,10 +18,11 @@ final class AppState: ObservableObject {
     @Published var deletionRequest: MeetingRecord?
     @Published var selection: UUID?
     @Published var text = ""
-    @Published var notes = ""
-    @Published var summary = ""
     @Published var title = ""
     @Published var search = ""
+    @Published private(set) var organization = LibraryOrganization()
+    @Published private(set) var organizationIssue: String?
+    @Published var groupFilter = ""
     @Published var editingTranscript = false
     @Published var audio: URL?
     @Published var playbackSegment = 0
@@ -88,30 +89,12 @@ final class AppState: ObservableObject {
     private var lastLivePresentation = Date.distantPast
     private var lastLiveSave = Date.distantPast
     @Published var liveEnabled = true
-    @Published var liveQAEnabled = false {
-        didSet {
-            if liveQAEnabled { liveQALastRun = Date(); liveQACommitCursor = liveCommitted.count }
-            else if assistantAutomatic { cancelAssistant() }
-        }
-    }
-    private var liveQALastRun = Date()
-    private var liveQACommitCursor = 0
-    private var assistantAutomatic = false
-    private var lastAutomaticAnswer = ""
     @Published var liveText = ""
     @Published var livePartial = ""
     @Published var transcriptPhase: TranscriptPhase = .idle
     private var transcriptionGeneration: UUID?
     private var liveSegmentOffset: Double = 0
     @Published var liveStatus = ""
-    @Published var enhancedNotes = ""
-    @Published var assistantBusy = false
-    @Published var assistantDraft = ""
-    @Published var assistantStatus = ""
-    @Published var assistantModelAvailable = false
-    @Published var assistantOperation = ""
-    private var assistantTask: Task<Void, Never>?
-    private var assistantGeneration: UUID?
     let dingTalkAccount: DingTalkAccountConnection
     let notionAccount: NotionAccountConnection
     let feishuAccount: FeishuAccountConnection
@@ -150,8 +133,12 @@ final class AppState: ObservableObject {
         switch syncDestination { case .dingtalk: return dingTalk; case .feishu: return feishu; case .notion: return notion }
     }
     var filteredHistory: [MeetingRecord] {
-        guard !search.isEmpty else { return history }
-        return history.filter { [$0.title, $0.text].joined(separator: "\n").localizedStandardContains(search) }
+        history.filter { record in
+            let group = organization.group(record.groupID)
+            guard groupFilter.isEmpty || (groupFilter == "ungrouped" ? group == nil : group?.id.uuidString == groupFilter) else { return false }
+            let searchable = [record.title, record.text, group?.name ?? ""]
+            return search.isEmpty || searchable.joined(separator: "\n").localizedStandardContains(search)
+        }
     }
     var locked: Bool { busy || recording || preparing || quitting || recoveryBusy || continuousWorker != nil }
     var canRetryMicrophone: Bool { recording && paused && recorder.canRetryMicrophone }
@@ -162,8 +149,7 @@ final class AppState: ObservableObject {
         guard var current else { return "" }
         let editedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !editedTitle.isEmpty { current.title = editedTitle }
-        current.text = text; current.notes = notes; current.summary = summary.isEmpty ? nil : summary
-        current.enhancedNotes = enhancedNotes
+        current.text = text
         return AgentDataPublisher.markdown(current)
     }
 
@@ -193,6 +179,7 @@ final class AppState: ObservableObject {
         if notion.configuration.name == "个人工作区" { notion.configuration.name = "个人 Notion" }
         do {
             library = try MeetingLibrary(root: storage)
+            organization = try library?.organization() ?? LibraryOrganization()
             history = try library?.list() ?? []
             agentOnboardingRecordingID = history.first(where: { agentOnboarding.eligible($0) })?.id
             trashedHistory = try library?.listTrashed() ?? []
@@ -206,7 +193,6 @@ final class AppState: ObservableObject {
             if self.recording && !self.paused { self.liveLevels.append(level); self.liveLevels = Array(self.liveLevels.suffix(72)) }
         }
         recorder.onError = { [weak self] error in
-            self?.liveQAEnabled = false
             self?.paused = true; self?.recordingIssue = error.localizedDescription
             self?.status = "录音已暂停。请处理提示后重试，或停止并保存。"
         }
@@ -281,15 +267,6 @@ final class AppState: ObservableObject {
         do { try update(record) } catch { self.error = "保存星标失败：\(error.localizedDescription)" }
     }
 
-    @discardableResult func updateActionItems(_ change: (inout [MeetingActionItem]) -> Void) -> Bool {
-        guard !locked, current != nil else { return false }
-        guard saveEdits() else { return false }
-        guard var record = current else { return false }
-        change(&record.actionItems)
-        do { try update(record); return true }
-        catch { self.error = "保存行动项失败：\(error.localizedDescription)"; return false }
-    }
-
     func chooseAttachment() {
         guard !locked, current != nil else { return }
         let panel = NSOpenPanel()
@@ -334,34 +311,20 @@ final class AppState: ObservableObject {
         guard var current else { return true }
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let savedTitle = cleanTitle.isEmpty ? current.title : cleanTitle
-        guard current.title != savedTitle || current.text != text || current.notes != notes || (current.summary ?? "") != summary || current.enhancedNotes != enhancedNotes else { return true }
-        if (current.summary ?? "") != summary { current.summaryCitations = []; current.summaryContextWasTruncated = false }
-        current.title = savedTitle; current.text = text; current.notes = notes; current.summary = summary.isEmpty ? nil : summary
-        current.enhancedNotes = enhancedNotes
+        guard current.title != savedTitle || current.text != text else { return true }
+        current.title = savedTitle; current.text = text
         do { try update(current); return true } catch { self.error = "保存失败：\(error.localizedDescription)"; return false }
-    }
-
-    @discardableResult func updateSummary(_ value: String, meetingID: UUID) -> Bool {
-        guard !locked, !assistantBusy, selection == meetingID, saveEdits(), var record = current else { return false }
-        record.summary = value.isEmpty ? nil : value
-        record.summaryCitations = []; record.summaryContextWasTruncated = false
-        do { try update(record); summary = value; return true }
-        catch { self.error = "保存摘要失败：\(error.localizedDescription)"; return false }
     }
 
     func select(_ id: UUID?, saveCurrent: Bool = true) {
         if saveCurrent && !saveEdits() { return }
-        if id != selection { cancelAssistant() }
         stopPlayback()
         selection = id
         if let current, agentOnboarding.eligible(current) { agentOnboardingRecordingID = current.id }
         title = current?.title ?? ""; text = current?.text ?? ""
-        notes = current?.notes ?? ""; summary = current?.summary ?? ""
         liveText = current?.previewText ?? ""
-        enhancedNotes = current?.enhancedNotes ?? ""
         if !recording { livePartial = "" }
         if !busy && !recording { transcriptPhase = current?.status == .completed ? .completed : .idle }
-        assistantDraft = ""
         if !liveText.isEmpty && !recording { liveStatus = "录音时实时结果 · 未定稿，仅供回顾" }
         playbackSegment = max(0, (current?.audioFiles.count ?? 1) - 1)
         selectPlaybackSegment(playbackSegment)
@@ -439,7 +402,6 @@ final class AppState: ObservableObject {
         } catch { self.error = error.localizedDescription; return }
         record.status = .transcribing; record.recoveryMessage = nil
         do { try update(record) } catch { self.error = error.localizedDescription; return }
-        cancelAssistant()
         busy = true; elapsed = 0; transcriptPhase = .recognizing
         let generation = UUID(); transcriptionGeneration = generation
         status = "正在本地识别，音频不会上传…"
@@ -452,7 +414,7 @@ final class AppState: ObservableObject {
             let start = Date()
             var textCommitted = false
             do {
-                // 录音入口仅运行语音模型，不启动或预热Gemma。
+                // 录音入口仅运行语音识别模型。
                 try Task.checkCancellation()
                 var outputs: [TranscriptionOutput] = []
                 var durations: [Double] = []
@@ -521,9 +483,7 @@ final class AppState: ObservableObject {
                 try update(analyzed)
                 transcriptPhase = .completed
                 status = "\(appending && latest.audioFiles.count > 1 ? "续录转写已追加" : "转录完成") · 用时 \(Int(analyzed.seconds)) 秒 · 已保存到本机"
-                if appending && latest.audioFiles.count > 1 && latest.summary != nil {
-                    assistantStatus = "已追加新录音；已有摘要保留，请重新生成以覆盖新增讨论。"
-                }
+
             } catch is CancellationError {
                 if textCommitted {
                     saveEdits()
@@ -608,8 +568,7 @@ final class AppState: ObservableObject {
         continuousSegments = []
         continuousProcessingCount = 0
         recordingIssue = nil; liveLevels = [Float](repeating: 0, count: 72)
-        liveQALastRun = Date(); liveQACommitCursor = 0; lastAutomaticAnswer = ""
-        cancelAssistant(); saveEdits(); stopPlayback(); preparing = true
+        saveEdits(); stopPlayback(); preparing = true
         Task { [self] in
             var record = continuing ? current! : MeetingRecord(title: "会议 " + Date().formatted(date: .numeric, time: .shortened), language: language, status: .recording)
             let original = record
@@ -637,7 +596,6 @@ final class AppState: ObservableObject {
                 recording = true; paused = false; elapsed = 0
                 status = liveEnabled ? "正在录音并实时转录 · 停止后自动生成定稿" : "正在录制\(recordingMode.title) · 停止后自动转录"
             } catch {
-                liveQAEnabled = false
                 liveSession?.cancel(); liveSession = nil; liveGeneration = nil; recorder.onAudio = nil
                 record = original
                 if !continuing { record.status = .failed; record.recoveryMessage = "录音未能正常开始。" }
@@ -716,7 +674,6 @@ final class AppState: ObservableObject {
     }
 
     private func finishRecording(finalize: Bool = true, onSaved: (() -> Void)? = nil) {
-        liveQAEnabled = false
         preparing = true; transcriptPhase = .saving
         Task {
             var shouldFinalize = false
@@ -985,7 +942,7 @@ final class AppState: ObservableObject {
                 do { try update(record) } catch { self.error = "保存实时预览失败：\(error.localizedDescription)" }
             }
             // 实时提交仅用于转录，不再触发自动问答。
-        case "error": liveQAEnabled = false; liveStatus = "实时识别异常：" + event.text
+        case "error": liveStatus = "实时识别异常：" + event.text
         case "done": flushLivePresentation(); livePartial = ""; liveStatus = "实时预览已结束"
         default: break
         }
@@ -1222,102 +1179,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    func refreshAssistantAvailability() {
-        assistantModelAvailable = GemmaRuntime.configurationAvailable()
-    }
-
-    func generateSummary() { runAssistant(operation: "摘要") }
-    func enhanceMeetingNotes() { runAssistant(operation: "增强笔记") }
-    func askAssistant(_ question: String, live: Bool) { runAssistant(operation: live ? "Live Q&A" : "对话", question: question, live: live) }
-    func findLiveQuestions() { runAssistant(operation: "Live Q&A", question: "从当前讨论中识别问题", live: true, discover: true) }
-
-    func cancelAssistant() {
-        let wasBusy = assistantBusy
-        assistantTask?.cancel(); assistantTask = nil; assistantGeneration = nil
-        if wasBusy { Task { await GemmaRuntime.shared.cancel() } }
-        assistantBusy = false; assistantAutomatic = false; assistantDraft = ""; assistantStatus = wasBusy ? "已取消，已有内容保留" : ""
-    }
-
-    private func scheduleLiveQuestions() {
-        refreshAssistantAvailability()
-        let pending = liveCommitted.dropFirst(min(liveQACommitCursor, liveCommitted.count)).joined(separator: "\n")
-        let now = Date()
-        guard LiveQASchedule.shouldRun(now: now, lastRun: liveQALastRun, enabled: liveQAEnabled,
-            recording: recording, paused: paused, preparing: preparing, assistantBusy: assistantBusy,
-            modelReady: assistantModelAvailable, pendingText: pending) else { return }
-        liveQALastRun = now; liveQACommitCursor = liveCommitted.count
-        runAssistant(operation: "Live Q&A", question: "自动发现讨论中的问题", live: true, discover: true,
-                     automatic: true, materialOverride: String(pending.suffix(3000)))
-    }
-
-    private func runAssistant(operation: String, question: String = "", live: Bool = false, discover: Bool = false,
-                              automatic: Bool = false, materialOverride: String? = nil) {
-        refreshAssistantAvailability()
-        guard !busy else { assistantStatus = "正在生成语音定稿，完成后可使用会议助手。"; return }
-        guard assistantModelAvailable else { error = "请先在设置 → 辅助模型中下载并启用 Gemma。"; return }
-        guard !assistantBusy, let meetingID = current?.id else { return }
-        saveEdits()
-        let fallbackToLive = !live && operation != "摘要" && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !liveText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let sourceIsLive = live || fallbackToLive
-        let material = materialOverride ?? (sourceIsLive ? liveText : text)
-        let input = MeetingIntelligenceInput(title: title, transcript: material, notes: automatic ? "" : notes, isLive: sourceIsLive)
-        let generation = UUID(); assistantGeneration = generation
-        assistantAutomatic = automatic
-        assistantBusy = true; assistantDraft = ""; assistantOperation = operation; assistantStatus = "正在加载本地 Gemma 并生成…"
-        let service = MeetingIntelligence { system, prompt, onToken in
-            try await GemmaRuntime.shared.generate(system: system, prompt: prompt, onToken: onToken)
-        }
-        assistantTask = Task { [weak self] in
-            guard let self else { return }
-            let onToken: @Sendable (String) -> Void = { [weak self] token in
-                Task { @MainActor in
-                    guard let self, self.assistantGeneration == generation, self.selection == meetingID else { return }
-                    self.assistantDraft += token
-                }
-            }
-            do {
-                let result: MeetingIntelligenceResult
-                if operation == "摘要" {
-                    result = try await service.summarize(input, onToken: onToken, onProgress: { [weak self] progress in
-                        Task { @MainActor in
-                            guard let self, self.assistantGeneration == generation, self.selection == meetingID else { return }
-                            self.assistantStatus = "Gemma · " + progress
-                        }
-                    })
-                }
-                else if operation == "增强笔记" { result = try await service.enhanceNotes(input, onToken: onToken) }
-                else if discover { result = try await service.liveQuestions(input, onToken: onToken) }
-                else { result = try await service.answer(question: question, input: input, onToken: onToken) }
-                try Task.checkCancellation()
-                guard self.assistantGeneration == generation, self.selection == meetingID else { return }
-                if automatic {
-                    let answer = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if answer.contains("当前片段未发现明确问题") || answer == self.lastAutomaticAnswer {
-                        self.assistantStatus = "当前片段未发现新问题 · 自动检查已完成"
-                        self.assistantDraft = ""; self.assistantBusy = false; self.assistantAutomatic = false
-                        self.assistantGeneration = nil; self.assistantTask = nil
-                        return
-                    }
-                    self.lastAutomaticAnswer = answer
-                }
-                self.saveEdits()
-                guard var record = self.current else { return }
-                let cited = result.citedSources.map {
-                    MeetingCitation(id: $0.id, kind: $0.kind.rawValue, text: $0.text)
-                }
-                if operation == "摘要" { record.summary = result.text; record.summaryCitations = cited; record.summaryContextWasTruncated = result.contextWasTruncated; self.summary = result.text }
-                else if operation == "增强笔记" { record.enhancedNotes = sourceIsLive ? "【实时文字 · 未定稿】\n" + result.text : result.text; record.enhancedNotesCitations = cited; record.enhancedNotesContextWasTruncated = result.contextWasTruncated; self.enhancedNotes = record.enhancedNotes }
-                else { record.assistantEntries.append(MeetingAssistantEntry(question: fallbackToLive ? "【实时文字 · 未定稿】" + question : question, answer: result.text, isLive: live, citations: cited, contextWasTruncated: result.contextWasTruncated)) }
-                try self.update(record)
-                self.assistantStatus = !result.unsupportedCitationIDs.isEmpty ? "已保存 · 部分引用编号无有效来源，请核对" : result.contextWasTruncated ? "已保存 · 仅基于选取片段，未覆盖整场" : "已保存 · 请核对 AI 内容与出处"
-                self.assistantDraft = ""
-            } catch is CancellationError { if self.assistantGeneration == generation { self.assistantStatus = "已取消，已有内容保留" } }
-            catch { if self.assistantGeneration == generation { self.error = error.localizedDescription; self.assistantStatus = "本地助手生成失败" } }
-            if self.assistantGeneration == generation { self.assistantAutomatic = false; self.assistantBusy = false; self.assistantGeneration = nil; self.assistantTask = nil }
-        }
-    }
-
     @discardableResult func renameSpeaker(_ id: String, name: String, mergeInto target: String? = nil) -> Bool {
         let name = String(name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(60))
         guard !locked, !name.isEmpty, saveEdits(), var current else { return false }
@@ -1383,9 +1244,16 @@ final class AppState: ObservableObject {
             && current.flatMap { TranscriptPlaybackRange(paragraph: paragraph, record: $0) } != nil
     }
     func playTranscriptParagraph(_ paragraph: TranscriptParagraph) {
-        guard canPlayTranscriptParagraph(paragraph), let record = current,
-              let latest = record.transcriptParagraphs.first(where: { $0.id == paragraph.id }),
-              let file = latest.audioFile, let index = record.audioFiles.firstIndex(of: file) else { return }
+        guard let record = current, let latest = record.transcriptParagraphs.first(where: { $0.id == paragraph.id }) else { return }
+        playParagraphRange(latest, record: record)
+    }
+    func playReadingGroup(_ id: UUID) {
+        guard let record = current, record.hasCurrentParagraphs,
+              let group = TranscriptReadability.groups(record.transcriptParagraphs).first(where: { $0.id == id }) else { return }
+        playParagraphRange(group.combined, record: record)
+    }
+    private func playParagraphRange(_ latest: TranscriptParagraph, record: MeetingRecord) {
+        guard canPlayTranscriptParagraph(latest), let file = latest.audioFile, let index = record.audioFiles.firstIndex(of: file) else { return }
         selectPlaybackSegment(index)
         guard let audio else { return }
         do {
@@ -1407,8 +1275,7 @@ final class AppState: ObservableObject {
         saveEdits()
         guard let current else { return true }
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return (cleanTitle.isEmpty || current.title == cleanTitle) && current.text == text && current.notes == notes
-            && (current.summary ?? "") == summary && current.enhancedNotes == enhancedNotes
+        return (cleanTitle.isEmpty || current.title == cleanTitle) && current.text == text
     }
 
     /// 等待真正的取消处理收尾，避免退出时留下推理子进程或未保存的正文。
@@ -1420,7 +1287,6 @@ final class AppState: ObservableObject {
         pending?.cancel()
         continuousWorker?.cancel()
         continuousWorkerEngine?.cancel()
-        cancelAssistant()
         if let pending { await pending.value }
         if let continuousWorker { await continuousWorker.value }
         guard !busy, continuousWorker == nil else { return false }
@@ -1431,7 +1297,7 @@ final class AppState: ObservableObject {
     func prepareToQuit() -> Bool {
         if quitting || quitPromptVisible { return false }
         let activity = QuitActivity.resolve(recording: recording, preparing: preparing, transcribing: busy || continuousWorker != nil, recovering: recoveryBusy,
-            externalTask: syncing || dingTalkAccount.busy || notionAccount.busy || feishuAccount.busy || assistantBusy)
+            externalTask: syncing || dingTalkAccount.busy || notionAccount.busy || feishuAccount.busy)
         if activity == .idle { stopPlayback(); return saveBeforeQuit() }
         quitPromptVisible = true
         showRecordingWindow()
@@ -1451,5 +1317,47 @@ final class AppState: ObservableObject {
             }
         }
         return false
+    }
+}
+
+// 分类操作与正文保存分开；分组删除只影响关联，不删除录音。
+extension AppState {
+    @discardableResult func saveCollection(name: String, id: UUID? = nil, inlineErrors: Bool = false) -> Bool {
+        organizationIssue = nil
+        guard !locked, let library, saveEdits() else { return false }
+        do {
+            var next = organization
+            _ = try next.setName(name, id: id)
+            try library.saveOrganization(next)
+            organization = next; history = try library.list()
+            return true
+        } catch { organizationIssue = "保存分类失败：\(error.localizedDescription)"; if !inlineErrors { self.error = organizationIssue }; return false }
+    }
+    @discardableResult func removeCollection(_ id: UUID) -> Bool {
+        guard !locked, let library, saveEdits() else { return false }
+        do {
+            var next = organization
+            next.groups.removeAll { $0.id == id }
+            // 原子写目录；旧记录的已删除关联在读取时归为未分组，回收站恢复同样适用。
+            try library.saveOrganization(next)
+            organization = next; history = try library.list(); trashedHistory = try library.listTrashed()
+            if groupFilter == id.uuidString { groupFilter = "" }
+            return true
+        } catch { self.error = "移除分类失败：\(error.localizedDescription)"; return false }
+    }
+    @discardableResult func setGroup(_ id: UUID?, recordIDs: Set<UUID>) -> Bool {
+        guard id == nil || organization.group(id) != nil else { return false }
+        return changeOrganization(recordIDs) { $0.groupID = id }
+    }
+    private func changeOrganization(_ ids: Set<UUID>, change: (inout MeetingRecord) -> Void) -> Bool {
+        guard !locked, !ids.isEmpty, ids.isSubset(of: Set(history.map(\.id))), saveEdits() else { return false }
+        var saved = 0
+        do {
+            for id in ids.sorted(by: { $0.uuidString < $1.uuidString }) {
+                guard var record = history.first(where: { $0.id == id }) else { continue }
+                change(&record); try update(record); saved += 1
+            }
+            status = "已整理 \(saved) 条录音"; return true
+        } catch { self.error = "已保存 \(saved)/\(ids.count) 条，其他录音未修改：\(error.localizedDescription)"; return false }
     }
 }

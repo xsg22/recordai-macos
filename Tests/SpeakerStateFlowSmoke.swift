@@ -13,15 +13,15 @@ import Foundation
         let deadline = Date().addingTimeInterval(180)
         while state.busy && Date() < deadline {
             if !edited && state.transcriptPhase == .diarizing {
-                state.notes = "分析期间追加的手稿";state.scheduleSave();edited = true
+                state.title = "分析期间修改的标题";state.scheduleSave();edited = true
             }
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         precondition(!state.busy && state.current?.status == .completed)
         precondition(state.current?.speakerAnalysisStatus == .completed, state.current?.speakerAnalysisMessage ?? "")
         precondition(state.current?.hasCurrentParagraphs == true && state.current?.speakerNames.count == 2)
-        precondition(state.notes == "分析期间追加的手稿" && state.current?.notes == state.notes)
-        print("PASS: 真实AppState完成定稿→分人→对齐，分析期间新增手稿保留。")
+        precondition(edited && state.title == "分析期间修改的标题" && state.current?.title == state.title)
+        print("PASS: 真实AppState完成定稿→分人→对齐，分析期间标题修改保留。")
         fflush(stdout)
         state.transcribe()
         var cancelled = false

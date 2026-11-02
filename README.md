@@ -2,22 +2,15 @@
 
 RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
-**[下载 0.16.1 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.1-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.1-functional.1/RecordAI-0.16.1-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.1-functional.1/RecordAI-0.16.1-arm64.pkg)
+**[下载 0.16.2 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.2-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.pkg)
 
-以下为原生客户端的实际截图，使用隔离演示资料。0.16.1 功能验证版优先交付已验证的本地转录主流程，完整 UI 逐页验收仍在进行，未宣称 100% 还原。
+以下为 0.16.2 原生客户端的实际截图，使用双人合成语音及隔离演示资料。本版聚焦录音、转录与分组，分析交给外部 Agent；完整 UI 设计稿的逐页验收尚未全部完成。
 
-![RecordAI 首页](Docs/images/recordai-home.jpg)
+![RecordAI 录音与导入](Docs/images/recordai-home-0162.jpg)
 
-![会议正文、摘要与行动项](Docs/images/recordai-library.jpg)
+![紧凑转录、逐段回听与录音分组](Docs/images/recordai-library-0162.jpg)
 
-![独立 mini 录音条](Docs/images/recordai-mini.jpg)
-
-<details>
-<summary>查看深色模式</summary>
-
-![RecordAI 深色模式](Docs/images/recordai-dark.jpg)
-
-</details>
+![分组管理](Docs/images/recordai-groups-0162.jpg)
 
 [完整设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [下载安装包](https://github.com/xsg22/recordai-macos/releases)
 
@@ -70,3 +63,27 @@ zsh Scripts/release.zsh
 CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。该功能随 0.16.1 功能验证版提供；真实各品牌 Agent 的加载兼容性尚未全部联测。
 
 ![首次转录后的 Agent 接入引导（合成音频验收资料）](Docs/validation/release-0.16.1/02-transcribed.jpg)
+
+## 开发预览：自适应分析报告
+
+已实现可复用的 JSON 契约与离线 HTML 渲染器，并用刚才的实际转录生成[首份 HTML 报告](Docs/examples/adaptive-report/output/report.html)和[结构化 JSON](Docs/examples/adaptive-report/output/report.json)。内容块和重点由分析决定，支持行动、知识、观点、对比等不同编排；不强制填满固定会议模板。
+
+本轮分析来源为当前 Codex，尚未接入 App 自动总结或手机默认页，未发布新安装包。实现、重复生成命令与验证边界见[自适应分析报告](Docs/自适应分析报告.md)。
+
+```sh
+python3 -m unittest discover -s Tests/reporting -v
+```
+
+## 录音资料管理
+
+桌面主流程收敛为录音、转录、回听、分组与 Agent 接入。主阅读页直接展示转录正文，移除时间点、重复的时间线，以及内置笔记、摘要、问答、Live Q&A 和行动项的全部操作入口。转录采用时间、发言人、正文同一行的紧凑布局；右侧仅保留录音分组。设置仅管理语音识别模型，不再提供辅助总结模型入口。旧版保存的历史内容继续保存在磁盘上，分析由外部 Agent 按需处理。
+
+- 一层分组，支持创建、重命名、移除、筛选与批量移动；已按最新范围移除标签功能，压缩侧栏控件，为录音列表留出更多空间。
+- 旧转录在阅读层合并短碎段并保留原始引用；新转录在发言人对齐后抑制连续短碎段，不强行合并完整短答。
+- CLI/MCP 可按分组、录音标题和正文查找，整理信息使用独立版本，不使正文引用失效。
+
+上述功能随 0.16.2 功能验证版交付。详细契约、兼容规则与验证命令见[资料管理说明](Docs/产品定位与资料管理.md)，当前候选包证据见[本版验证记录](Docs/validation/release-0.16.2/README.md)。私人音频和截图不作为公开示例提交。
+
+```zsh
+zsh Scripts/test-library-management.zsh
+```

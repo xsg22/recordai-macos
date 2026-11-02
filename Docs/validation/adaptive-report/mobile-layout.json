@@ -1,0 +1,28 @@
+{
+  "blocks": [
+    {
+      "height": 541.25,
+      "type": "report-block actions primary",
+      "width": 350,
+      "x": 20,
+      "y": 580.5625
+    },
+    {
+      "height": 241.640625,
+      "type": "report-block key_points secondary",
+      "width": 350,
+      "x": 20,
+      "y": 1137.8125
+    },
+    {
+      "height": 182.640625,
+      "type": "report-block questions secondary",
+      "width": 350,
+      "x": 20,
+      "y": 1395.453125
+    }
+  ],
+  "bodyClass": "layout-action composition-action-triad",
+  "scrollWidth": 390,
+  "width": 390
+}

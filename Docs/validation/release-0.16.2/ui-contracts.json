@@ -1,0 +1,16 @@
+{
+  "recorded_at": "2026-11-02T07:50:30.636402+00:00",
+  "sourceDigest": "90e98c7ca220fcc1e7cb441125ee828fa11cb20fa534f99d4a4118ed1d35666e",
+  "exit_code": 0,
+  "tests": [
+    "BrowserAuthorizationSmoke",
+    "NotionConnectionSmoke",
+    "DingTalkNotificationSmoke",
+    "DingTalkSyncStagesSmoke",
+    "FeishuAuthorizationRecoverySmoke",
+    "OptionalModelSmoke",
+    "OptionalModelFallbackSmoke",
+    "IntelligenceSmoke"
+  ],
+  "scope": "隔离夹具验证授权、账号、共用模型下载及旧工具类契约；不表示内置助手入口仍存在。"
+}

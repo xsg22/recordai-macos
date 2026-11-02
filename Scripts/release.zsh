@@ -12,6 +12,7 @@ mkdir -p .build
 python3 Scripts/test-recording-entry.py
 python3 Scripts/test-ui-contracts.py
 python3 Scripts/test-agent-setup.py
+zsh Scripts/test-library-management.zsh
 if [[ ! -x .vendor/dws/dws || ! -x .vendor/lark-cli/lark-cli ]]; then zsh Scripts/prepare-account-components.zsh; fi
 releaseVersion="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
 export RECORD_AI_BUILD_APP_PATH="${RECORD_AI_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/RecordAI.app}"

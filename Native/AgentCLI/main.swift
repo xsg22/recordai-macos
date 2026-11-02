@@ -5,9 +5,13 @@ func output(_ value: Any) throws {
     let data = try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys, .fragmentsAllowed, .withoutEscapingSlashes])
     FileHandle.standardOutput.write(data); FileHandle.standardOutput.write(Data("\n".utf8))
 }
-func summaries(_ store: AgentReadStore) throws -> [[String: Any]] {
-    try store.list().map { ["id": $0.id.uuidString, "title": $0.title, "status": $0.status, "revision": $0.revision,
-        "transcriptionReady": $0.transcriptionReady, "ready": $0.ready, "speakerAnalysisStatus": $0.speakerAnalysisStatus] }
+func summaries(_ store: AgentReadStore, query: String = "", groupID: UUID? = nil, ungrouped: Bool = false) throws -> [[String: Any]] {
+    try store.list().filter { $0.matches(query: query, groupID: groupID, ungrouped: ungrouped) }.map { record in
+        var row: [String: Any] = ["id": record.id.uuidString, "title": record.title, "status": record.status, "revision": record.revision,
+            "transcriptionReady": record.transcriptionReady, "ready": record.ready, "speakerAnalysisStatus": record.speakerAnalysisStatus]
+        if let organization = record.organization { row["organization"] = try jsonValue(organization) }
+        return row
+    }
 }
 func uuid(_ value: String?) throws -> UUID {
     guard let value, let id = UUID(uuidString: value) else { throw CLIError.message("需要有效的录音UUID。") }; return id
@@ -55,9 +59,9 @@ func mcp(_ store: AgentReadStore) {
             case "ping": result = [:] as [String: String]
             case "tools/list":
                 result = ["tools": toolNames.map { name -> [String: Any] in
-                    let noArguments = ["get_agent_setup", "list_recordings", "get_recording_status"].contains(name)
-                    let properties: [String: Any] = name == "get_changes" ? ["since": ["type": "integer", "minimum": 0]] : noArguments ? [:] : name == "get_command_result" ? ["commandId": ["type": "string", "format": "uuid"]] : name == "control_recording" ? ["action": ["type": "string", "enum": RecordAIControlQueue.actions], "launch": ["type": "boolean", "default": false]] : ["id": ["type": "string", "format": "uuid"], "includePreview": ["type": "boolean", "default": false]]
-                    let required: [String] = name == "get_changes" ? ["since"] : noArguments ? [] : name == "get_command_result" ? ["commandId"] : name == "control_recording" ? ["action"] : ["id"]
+                    let noArguments = ["get_agent_setup", "get_recording_status"].contains(name)
+                    let properties: [String: Any] = name == "list_recordings" ? ["query": ["type": "string"], "groupId": ["type": "string", "format": "uuid"], "ungrouped": ["type": "boolean"]] : name == "get_changes" ? ["since": ["type": "integer", "minimum": 0]] : noArguments ? [:] : name == "get_command_result" ? ["commandId": ["type": "string", "format": "uuid"]] : name == "control_recording" ? ["action": ["type": "string", "enum": RecordAIControlQueue.actions], "launch": ["type": "boolean", "default": false]] : ["id": ["type": "string", "format": "uuid"], "includePreview": ["type": "boolean", "default": false]]
+                    let required: [String] = name == "list_recordings" ? [] : name == "get_changes" ? ["since"] : noArguments ? [] : name == "get_command_result" ? ["commandId"] : name == "control_recording" ? ["action"] : ["id"]
                     let description = name == "get_agent_setup" ? "只读获取 RecordAI Skill 完整文件、当前连接路径和安装验证说明。不安装、不录音。" : name == "get_recording_status" ? "读取实际采集状态；available=false时不能宣称录音状态已确认。" : name == "get_command_result" ? "读取控制命令回执；accepted仅代表请求已接受，录音状态须另查。" : name == "control_recording" ? "明确要求时控制录音；可用launch=true冷启动。排队成功不是录音成功。" : name == "get_changes" ? "只读变更游标；resyncRequired时重新list" : "只读本机录音与转录。默认不返回未定稿预览。"
                     return ["name": name, "description": description, "inputSchema": ["type": "object", "properties": properties, "required": required, "additionalProperties": false], "annotations": ["readOnlyHint": name != "control_recording", "destructiveHint": false, "idempotentHint": name != "control_recording", "openWorldHint": false]]
                 }]
@@ -71,7 +75,13 @@ func mcp(_ store: AgentReadStore) {
                     case "get_agent_setup": value = try setup(store.root).descriptor()
                     case "get_recording_status": value = try runtime(store.root)
                     case "get_command_result": value = try JSONSerialization.jsonObject(with: RecordAIControlQueue.result(uuid(args["commandId"] as? String), root: store.root))
-                    case "list_recordings": value = try summaries(store)
+                    case "list_recordings":
+                        guard Set(args.keys).isSubset(of: ["query", "groupId", "ungrouped"]),
+                              args["query"] == nil || args["query"] is String,
+                              args["groupId"] == nil || args["groupId"] is String,
+                              args["ungrouped"] == nil || args["ungrouped"] is Bool else { throw CLIError.message("录音筛选参数类型无效。") }
+                        let group = try (args["groupId"] as? String).map { try uuid($0) }
+                        value = try summaries(store, query: args["query"] as? String ?? "", groupID: group, ungrouped: args["ungrouped"] as? Bool ?? false)
                     case "control_recording":
                         guard let action = args["action"] as? String else { throw CLIError.message("control_recording需要action") }
                         guard RecordAIControlQueue.actions.contains(action) else { throw CLIError.message("不支持的录音控制动作。") }
@@ -130,7 +140,18 @@ do {
         else { print(setup(root).guide) }
     case "status": try output(runtime(root))
     case "result": try output(JSONSerialization.jsonObject(with: RecordAIControlQueue.result(uuid(arguments.count > 1 ? arguments[1] : nil), root: root)))
-    case "list": try output(summaries(store))
+    case "list":
+        var query = "", group: UUID?, ungrouped = false
+        var index = 1
+        while index < arguments.count {
+            let flag = arguments[index]
+            if flag == "--ungrouped" { ungrouped = true; index += 1; continue }
+            guard ["--query", "--group"].contains(flag), arguments.indices.contains(index + 1), !arguments[index + 1].hasPrefix("--") else { throw CLIError.message("不支持的筛选参数或缺少值：\(flag)") }
+            if flag == "--query" { query = arguments[index + 1] } else { group = try uuid(arguments[index + 1]) }
+            index += 2
+        }
+        guard !ungrouped || group == nil else { throw CLIError.message("分组和未分组筛选不能同时指定。") }
+        try output(summaries(store, query: query, groupID: group, ungrouped: ungrouped))
     case "control":
         guard arguments.count > 1 else { throw CLIError.message("control需要动作名") }
         guard RecordAIControlQueue.actions.contains(arguments[1]) else { throw CLIError.message("不支持的录音控制动作。") }

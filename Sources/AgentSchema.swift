@@ -23,8 +23,17 @@ struct AgentParagraph: Codable, Equatable {
     var speakers: [String]
     var speakerIDs: [String]
 }
+struct AgentCollection: Codable, Equatable {
+    var id: UUID
+    var name: String
+}
+struct AgentOrganization: Codable, Equatable {
+    var revision = 0
+    var group: AgentCollection?
+}
 struct AgentRecording: Codable, Equatable {
     var schemaVersion = 1
+    var organization: AgentOrganization? = nil
     var id: UUID
     var title: String
     var createdAt: Date
@@ -51,6 +60,7 @@ struct AgentRecording: Codable, Equatable {
     var legacyContentAvailable: Bool
 }
 struct AgentChange: Codable {
+    var metadataRevision: Int? = nil
     var sequence: Int
     var id: UUID
     var revision: Int
@@ -104,4 +114,13 @@ struct AgentReadStore {
 enum AgentReadError: LocalizedError {
     case unsafePath, invalidRecord
     var errorDescription: String? { "本机转录快照无效或路径不安全，请在App设置中重新发布。" }
+}
+
+extension AgentRecording {
+    func matches(query: String = "", groupID: UUID? = nil, ungrouped: Bool = false) -> Bool {
+        if let groupID, organization?.group?.id != groupID { return false }
+        if ungrouped && organization?.group != nil { return false }
+        let searchable = [title, finalText, organization?.group?.name ?? ""]
+        return query.isEmpty || searchable.joined(separator: "\n").localizedStandardContains(query)
+    }
 }

@@ -4,7 +4,6 @@ import CryptoKit
 @main struct PreviewApp: App {
     @StateObject private var state: AppState
     private let coldState: AppState
-    private let optionalModels: OptionalModelStore
     @State private var modelPreview: String?
     @State private var page = 45
     @State private var presented = 0
@@ -119,7 +118,6 @@ import CryptoKit
         try? Data(feishuScript.utf8).write(to: feishuStub)
         try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: feishuStub.path)
         defaults.set(true, forKey: "personalDingTalk.detached")
-        optionalModels = OptionalModelStore(root: root.appendingPathComponent("AssistantModels"), defaults: defaults)
         let notionStore = MCPConnectionStore(namespace: namespace + "notion")
         let previewState = AppState(storageURL: root, connectionNamespace: namespace,
             speechModelStore: modelStore,
@@ -153,7 +151,7 @@ import CryptoKit
             }
         }
         MenuBarExtra("录音预览", systemImage: "waveform") { RecordingMenuBarView(state: state) }
-        Settings { RecordingAppConfigurationView(state: state, optionalModels: optionalModels).preferredColorScheme(page == 40 ? .dark : .light) }
+        Settings { RecordingAppConfigurationView(state: state).preferredColorScheme(page == 40 ? .dark : .light) }
     }
 
     /// Preview-only geometry evidence; never included in the shipping app.
@@ -187,7 +185,7 @@ import CryptoKit
             }.padding(28).frame(width: 720).buttonStyle(RecordAISecondaryButtonStyle())
         case 20...23: ConnectionsView(state: state)
         case 18...19, 24:
-            RecordingAppConfigurationView(state: state, optionalModels: optionalModels,
+            RecordingAppConfigurationView(state: state,
                 initialSection: presented == 18 ? "recording" : presented == 19 ? "models" : presented == 24 ? "data" : "accounts")
         case 25: RecordingDeliveryView(state: state)
         case 26...28: SyncReviewView(state: state) { presented = 0 }
@@ -207,14 +205,11 @@ import CryptoKit
                     if success { presented = 0 }; return success
                 }
             }
-        case 34:
-            MeetingActionEditor(item: state.current?.actionItems.first ?? MeetingActionItem(title: ""), cancel: { presented = 0 }) { item in
-                let success = state.updateActionItems { items in
-                    if let i = items.firstIndex(where: { $0.id == item.id }) { items[i] = item } else { items.append(item) }
-                }
-                if success { presented = 0 }; return success
-            }
-        case 37...38: MeetingWorkspaceView(state: state, initialTab: presented == 37 ? "我的笔记" : "对话", close: { presented = 0 }).padding(28).frame(width: 720)
+        case 34, 37...38:
+            VStack(spacing: 20) {
+                Text("此功能已从当前产品范围移除。")
+                Button("完成") { presented = 0 }
+            }.padding(28).frame(width: 520)
         case 36: QuitConfirmationView(activity: .recording, cancel: { presented = 0 }, confirm: { presented = 0 })
         default: EmptyView()
         }

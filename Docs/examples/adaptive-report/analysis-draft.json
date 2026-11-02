@@ -1,0 +1,77 @@
+{
+  "reportId": "product-weekly-0AF69966-r19",
+  "title": "首页设计交付与离线转录验证",
+  "subtitle": "产品周会 · 核心提炼",
+  "overview": {
+    "text": "设计方案已完成评审，首页设计稿承诺于 11 月 6 日前交付；测试重点是无麦克风提示，以及导入音频的离线转录流程。",
+    "sourceIds": ["s0002", "s0003", "s0004"]
+  },
+  "notice": "合成语音实测样本。本报告展示真实录音转录后的分析效果，不代表真实项目进度。",
+  "coverage": {
+    "status": "complete",
+    "includedSourceIds": ["s0001", "s0002", "s0003", "s0004", "s0005", "s0006"],
+    "omittedSourceIds": [],
+    "note": "已分析全部 6 个正式转录片段。录音约 83 秒，其中包含测试操作等待时的静音；实际播放的合成语音约 31 秒。"
+  },
+  "blocks": [
+    {
+      "id": "next-actions",
+      "type": "actions",
+      "title": "两项明确的跟进事项",
+      "emphasis": "primary",
+      "items": [
+        {
+          "id": "deliver-homepage-design",
+          "text": "交付新版首页设计稿",
+          "owner": "设计组",
+          "dueText": "11 月 6 日前",
+          "detail": "设计方案已完成评审。转录只给出月日，未说明年份；此处保留原文时间口径。",
+          "sourceIds": ["s0002", "s0004"]
+        },
+        {
+          "id": "verify-offline-transcription",
+          "text": "验证无麦克风与离线转录流程",
+          "owner": "测试组",
+          "dueText": null,
+          "detail": "检查没有麦克风时的提示，并验证导入音频后的转录效果。完成时间未在转录中明确。",
+          "sourceIds": ["s0003", "s0004", "s0005", "s0006"]
+        }
+      ]
+    },
+    {
+      "id": "discussion-focus",
+      "type": "key_points",
+      "title": "先掌握这两点",
+      "emphasis": "secondary",
+      "items": [
+        {
+          "text": "本次讨论聚焦新版首页与离线转录。",
+          "sourceIds": ["s0001"]
+        },
+        {
+          "text": "设计方案已经完成评审，后续关注点是设计稿交付。",
+          "sourceIds": ["s0002", "s0004"]
+        }
+      ]
+    },
+    {
+      "id": "needs-confirmation",
+      "type": "questions",
+      "title": "还缺一项时间约定",
+      "emphasis": "secondary",
+      "items": [
+        {
+          "text": "测试验证计划何时完成？",
+          "detail": "原文明确了测试内容和测试组，但没有给出完成时间。",
+          "sourceIds": ["s0003", "s0004", "s0005", "s0006"]
+        }
+      ]
+    }
+  ],
+  "warnings": [
+    {
+      "text": "发言人分析在“线流”两字处出现短暂的“发言人 2 / 发言人 3”重叠标签。已知样本由两种合成声音组成；本报告按原文提取“设计组、测试组”，未据此推断真实姓名或参会人数。",
+      "sourceIds": ["s0005"]
+    }
+  ]
+}

@@ -46,9 +46,8 @@ import Foundation
         try Data("blocked".utf8).write(to: library.directory(for: record.id))
         precondition(!state.renameSpeaker("a:0", name: "不能落盘"))
         precondition(!state.editTranscriptParagraph(record.transcriptParagraphs[0].id, text: "不能落盘"))
-        precondition(!state.updateSummary("不能落盘", meetingID: record.id))
-        precondition(state.current == beforeFailure && state.text == saved.text && state.summary == (beforeFailure.summary ?? ""), "写盘失败时不发布未保存内容")
-        state.notes = "尚未保存的笔记"
+        precondition(state.current == beforeFailure && state.text == saved.text, "写盘失败时不发布未保存内容")
+        state.text = "尚未保存的转录"
         state.syncMeeting()
         precondition(!state.syncing && state.error?.contains("保存失败") == true, "本机保存失败时不能开始远端写入")
         state.useAudio(root.appendingPathComponent("not-imported.wav"))

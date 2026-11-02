@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; style-src &#x27;sha256-BCN1txmNVYi7TS6zwotKYGo989KWcQCRu+Nnipg1Ir4=&#x27;; script-src &#x27;sha256-HGUbQtHGJnj1CpjWZs1eQT/vX/grLv0TGpFG+TO7gDI=&#x27;; media-src &#x27;self&#x27; blob:; img-src data:; connect-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;"><meta name="color-scheme" content="light"><title>首页设计交付与离线转录验证 · RecordAI</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:#f4f6fa;color:#1c263c;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI",sans-serif;font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}button,a,input{touch-action:manipulation}button,a{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid #3c6cff;outline-offset:4px}button{color:inherit}.shell{max-width:1200px;margin:auto;padding:0 44px}.topbar{height:92px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e1e6ef;gap:20px}.brand{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:750;letter-spacing:-.5px}.brand-icon{display:grid;place-items:center;background:#1b55ef;color:#fff;width:34px;height:34px;border-radius:11px;font-size:24px;box-shadow:0 4px 12px #1b55ef22}.brand-sub{font-size:12px;font-weight:500;letter-spacing:1px;color:#8892a5;border-left:1px solid #d6dce8;margin-left:10px;padding-left:18px}.top-actions{display:flex;gap:10px;font-size:12px}.top-actions a,.top-actions button{border:1px solid #dce2ed;background:#fff;border-radius:9px;padding:8px 14px;color:#596780}.top-actions button{background:#1c263c;border-color:#1c263c;color:#fff}.report-meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:#7c879c;font-size:12px;margin-top:37px}.report-type{color:#2757cf;background:#e7edff;border-radius:5px;padding:3px 10px;font-weight:650}.hero{display:grid;grid-template-columns:minmax(0,1fr) 256px;gap:42px;margin:23px 0 26px;align-items:stretch}.hero-copy{padding:5px 0}h1{text-wrap:balance;font-size:38px;line-height:1.35;letter-spacing:-1.2px;margin:0 0 18px;max-width:760px;overflow-wrap:anywhere}.overview{font-size:16px;line-height:1.9;color:#58657b;margin:0 0 13px;max-width:720px}.citations{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.citation{border:0;background:#f1f4fa;color:#708099;font-size:11px;line-height:1.3;padding:5px 8px;border-radius:5px}.citation:hover{background:#e3ebff;color:#1b55ef}.trust-line{display:flex;gap:9px;flex-wrap:wrap;align-items:center;font-size:11px;color:#929bae;margin-top:22px}.trust-dot{width:5px;height:5px;border-radius:50%;background:#25a17f}.spotlight{background:#e8eeff;border:1px solid #dce4ff;border-radius:16px;padding:23px 23px 19px;display:flex;flex-direction:column;position:relative;overflow:hidden}.spotlight:after{content:"";position:absolute;width:150px;height:150px;border:26px solid #ffffff55;border-radius:50%;right:-80px;bottom:-78px;pointer-events:none}.spotlight-label{color:#6178af;font-size:11px;letter-spacing:1px}.spotlight strong{display:block;font-size:29px;letter-spacing:-.8px;line-height:1.5;color:#214ebf;margin-top:8px;overflow-wrap:anywhere}.spotlight strong.reading-label{font-size:26px}.spotlight p{color:#4e65a0;font-size:12px;margin:3px 0 24px}.spotlight-foot{font-size:10px;color:#8a9abc;margin-top:auto}.sample-notice{font-size:11px;color:#8993a7;padding:0 0 21px;line-height:1.65}.blocks{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;align-items:start}.report-block{background:#fff;border:1px solid #e4e9f2;border-radius:16px;overflow:hidden;min-width:0;grid-column:span 6}.report-block.primary{grid-column:span 8}.report-block.secondary{grid-column:span 4}.section-heading{display:flex;align-items:center;gap:10px;padding:21px 23px 15px}.section-number{font-size:10px;color:#8b9ab6;letter-spacing:1px;font-weight:600}h2{font-size:16px;line-height:1.5;margin:0;font-weight:700;letter-spacing:-.2px}h3{font-size:15px;line-height:1.65;margin:0;font-weight:650}.block-body{padding:0 23px 24px}.actions .block-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.action-item{border:1px solid #e1e7f3;background:linear-gradient(145deg,#f8faff,#fff);border-radius:11px;padding:17px;display:flex;flex-direction:column;min-width:0}.action-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:18px}.item-index{color:#adbad2;font-size:12px;font-weight:600}.due{font-size:10px;color:#345acc;background:#e9efff;padding:3px 8px;border-radius:5px;line-height:1.4}.due.undated{color:#8e94a2;background:#eff1f5}.action-item h3{font-size:17px;line-height:1.6;margin-bottom:12px;letter-spacing:-.3px}.action-item .item-detail{margin:0 0 20px;color:#7c879c;font-size:12px;line-height:1.8}.action-bottom{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.owner{font-size:11px;color:#66758e;display:flex;align-items:center;gap:6px}.avatar{width:23px;height:23px;border-radius:50%;background:#e4ebfa;color:#526da3;display:inline-grid;place-items:center;font-size:9px}.follow{font-size:10px;color:#8c98ac;display:flex;align-items:center;gap:5px;cursor:pointer}.follow input{width:14px;height:14px;accent-color:#3264f5;margin:0}.action-item:has(input:checked){background:#f5faf8;border-color:#cde5db}.action-item:has(input:checked) .follow{color:#348569}.point{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #f0f2f7}.point:first-child{padding-top:0}.point:last-child{padding-bottom:0;border-bottom:0}.point p{font-size:13px;line-height:1.85;margin:0;color:#56647c}.point-dot{flex:0 0 5px;width:5px;height:5px;background:#7094f4;border-radius:50%;margin-top:10px}.point .citations{margin-top:6px}.item-detail{font-size:12px;line-height:1.8;color:#8995aa;margin:7px 0 0}.questions{background:#fffdf8;border-color:#eee7d6}.questions .point-dot{background:#c7a763}.questions .citation{background:#f7f3ea;color:#a3977c}.questions .section-number{color:#b4a586}.topic{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid #eef1f7}.topic:first-child{padding-top:0}.topic:last-child{border-bottom:0;padding-bottom:0}.topic-marker{font-size:11px;color:#9baace;line-height:28px}.topic p{color:#728098;font-size:13px;margin:8px 0 0;line-height:1.9}.timeline .topic-marker{height:27px;width:27px;min-width:27px;text-align:center;border-radius:50%;background:#edf2ff}.concepts .topic h3{color:#27615b}.layout-knowledge .report-type{background:#e3f2ed;color:#28766c}.layout-knowledge .spotlight{background:#e6f1ee;border-color:#d4e8e2}.layout-knowledge .spotlight strong{color:#337d70}.layout-knowledge .spotlight p{color:#5c8a80}.layout-decision .report-type{background:#eee9fc;color:#7152b8}.layout-decision .spotlight{background:#ede8f8;border-color:#e3daf5}.layout-decision .spotlight strong{color:#7256ae}.comparison{grid-column:1/-1!important}.comparison .block-body{padding-top:3px}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:460px;text-align:left;font-size:13px}th,td{padding:15px;vertical-align:top;border-bottom:1px solid #e9edf5}thead th{color:#75839d;font-size:11px;background:#f7f8fc}tbody th{font-weight:500;color:#394965;min-width:120px}td{color:#738199;min-width:140px}.quote{margin:0;padding:15px 0;border-top:1px solid #edf0f6}.quote:first-child{padding-top:0;border:0}blockquote{font-size:19px;line-height:1.8;letter-spacing:-.3px;margin:0;color:#4c5870}blockquote:before{content:"“";color:#9bacd1}blockquote:after{content:"”";color:#9bacd1}figcaption{font-size:11px;color:#95a0b3;margin-top:10px}.narrative .point-dot{display:none}.narrative .point p{font-size:14px;line-height:2}.warnings{margin-top:20px}.warning{border:1px solid #e4e8ef;border-radius:10px;padding:13px 17px;display:flex;gap:12px;color:#8993a7;font-size:11px}.warning>span{color:#9da8bd;font-size:10px;min-width:17px;height:17px;line-height:17px;text-align:center;border:1px solid #b6c0d2;border-radius:50%;margin-top:3px}.warning p{margin:0}.warning .citations{margin-top:6px}.sources-panel{margin-top:22px;border:1px solid #e1e7f0;border-radius:12px;background:#fff;overflow:hidden}summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 22px;font-size:13px;font-weight:600}summary::-webkit-details-marker{display:none}summary:after{content:"＋";font-size:17px;font-weight:400;color:#a0adc3}details[open]>summary:after{content:"−"}.summary-hint{margin-left:auto;color:#9aa4b7;font-size:11px;font-weight:400}.sources-body{padding:0 22px 20px}audio{width:100%;height:35px;margin:4px 0 0}#audio-status{font-size:11px;color:#94a0b6;margin:7px 0 15px}.source-row{display:flex;gap:18px;border-top:1px solid #eef1f7;padding:16px 6px;scroll-margin-top:20px;border-radius:5px}.source-row p{font-size:13px;line-height:1.9;color:#65738b;margin:4px 0 0;overflow-wrap:anywhere}.source-time{border:0;background:#edf2fc;border-radius:5px;align-self:flex-start;min-width:48px;padding:5px;color:#6480b8;font-size:11px;margin-top:3px}.speaker{font-size:10px;color:#a0aac0}.source-row.highlight{background:#edf3ff;box-shadow:0 0 0 6px #edf3ff}.json-panel{margin-top:14px;color:#98a3b8}.json-panel summary{font-size:11px;font-weight:400;padding:10px 1px;justify-content:flex-start}.json-panel summary:after{font-size:12px}.json-panel pre{background:#1a2539;color:#d2deef;border-radius:12px;padding:22px;font-size:12px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;max-height:500px;overflow-y:auto}footer{font-size:10px;color:#a6afbf;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 15px;padding:20px 0 35px;border-top:1px solid #e3e8f0;margin-top:14px}footer p{width:100%;margin:0;color:#aeb7c7}.skip-link{position:fixed;left:16px;top:-60px;z-index:5;background:#fff;color:#234ca5;padding:10px;border-radius:6px}.skip-link:focus{top:12px}.report-block:only-child{grid-column:1/-1} .report-block.primary:last-child:nth-child(odd){grid-column:1/-1}
+@media(min-width:1000px){.composition-action-triad .blocks:has(>.questions):has(>.actions):has(>.key_points){grid-template-columns:repeat(12,minmax(0,1fr))}.composition-action-triad .blocks>.actions{grid-column:1/9;grid-row:1/3;align-self:stretch;display:flex;flex-direction:column}.composition-action-triad .blocks>.actions .block-body{flex:1;grid-template-columns:1fr}.composition-action-triad .blocks>.actions .action-item{padding:16px 19px}.composition-action-triad .blocks>.actions .action-top{margin-bottom:9px}.composition-action-triad .blocks>.actions .item-detail{margin-bottom:13px}.composition-action-triad .blocks>.actions .action-item h3{margin-bottom:8px}.composition-action-triad .blocks>.key_points{grid-column:9/13;grid-row:1}.composition-action-triad .blocks>.questions{grid-column:9/13;grid-row:2}}
+@media(max-width:900px){.shell{padding:0 28px}.hero{grid-template-columns:minmax(0,1fr) 210px;gap:25px}h1{font-size:31px}.spotlight{padding:20px}.spotlight strong{font-size:25px}.report-block.primary{grid-column:1/-1}.report-block.secondary{grid-column:span 6}.actions .block-body{grid-template-columns:repeat(2,minmax(0,1fr))}.section-heading{padding:20px 20px 15px}.block-body{padding:0 20px 20px}.action-item .item-detail{margin-bottom:16px}}
+@media(max-width:600px){body{background:#f6f7fb;font-size:14px}.shell{padding:0 20px}.topbar{height:73px}.brand{font-size:18px;gap:8px}.brand-icon{width:29px;height:29px;border-radius:9px;font-size:21px}.brand-sub{display:none}.top-actions{gap:7px;font-size:10px}.top-actions a,.top-actions button{padding:7px 10px}.report-meta{margin-top:24px;gap:7px;font-size:10px}.report-type{padding:3px 8px}.hero{grid-template-columns:1fr;gap:18px;margin:17px 0 19px}h1{font-size:28px;letter-spacing:-.7px;line-height:1.45;margin-bottom:13px}.overview{font-size:14px;line-height:1.95;margin-bottom:11px}.trust-line{font-size:10px;gap:7px;margin-top:16px}.spotlight{padding:16px 19px;border-radius:12px;display:grid;grid-template-columns:1fr auto;gap:0 15px;align-items:center}.spotlight-label{font-size:10px;grid-column:1}.spotlight strong{font-size:25px;grid-column:2;grid-row:1/3;margin:0;text-align:right;max-width:165px}.spotlight p{grid-column:1;margin:5px 0;font-size:11px}.spotlight-foot{grid-column:1/-1;font-size:9px;margin-top:6px}.sample-notice{font-size:10px;padding-bottom:17px}.blocks{grid-template-columns:1fr;gap:16px}.report-block.primary,.report-block.secondary,.report-block{grid-column:1!important;grid-row:auto!important;border-radius:12px}.section-heading{padding:18px 19px 14px;gap:8px}h2{font-size:15px}.section-number{font-size:9px}.block-body{padding:0 19px 20px}.actions .block-body{grid-template-columns:1fr;gap:12px}.action-item{padding:16px}.action-item h3{font-size:17px}.action-top{margin-bottom:12px}.action-item .item-detail{font-size:12px;margin-bottom:17px}.action-bottom{gap:12px}.owner{font-size:11px}.follow{font-size:11px}.point p{font-size:13px}.citation{font-size:10px;min-height:28px;padding:6px 9px}.warning{font-size:10px;padding:12px 14px}.warnings{margin-top:16px}.sources-panel{margin-top:18px}summary{padding:16px 17px;font-size:12px;flex-wrap:wrap;gap:6px}.summary-hint{font-size:10px}.sources-body{padding:0 16px 14px}.source-row{gap:12px}.source-row p{font-size:12px}.source-time{font-size:10px;min-width:45px;min-height:32px}.speaker{font-size:10px}.json-panel pre{padding:15px;font-size:10px}footer{font-size:9px;padding-top:17px;display:block}footer>span{display:block;margin-bottom:6px}footer p{margin-top:5px}.dot{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:#fff}.shell{max-width:none;padding:0}.topbar{height:55px}.top-actions,.follow,.json-panel,.skip-link,audio,#audio-status{display:none!important}.report-meta{margin-top:20px}.hero{grid-template-columns:1fr 220px}h1{font-size:27px}.blocks{display:block}.report-block{margin:12px 0;break-inside:avoid;page-break-inside:avoid}.actions .block-body{grid-template-columns:repeat(2,minmax(0,1fr))}.sources-panel{break-before:auto}.source-row{break-inside:avoid}.source-row p{font-size:11px}footer{margin-top:15px}}
+</style></head>
+<body class="layout-action composition-action-triad"><a class="skip-link" href="#main">跳到报告正文</a><div class="shell"><header class="topbar"><a class="brand" href="#main"><span class="brand-icon" aria-hidden="true">▥</span>RecordAI<span class="brand-sub">内容洞察</span></a><div class="top-actions"><a href="report.json" download>↓ JSON</a><button id="print-report">导出 / 打印</button></div></header>
+<main id="main"><div class="report-meta"><span class="report-type">行动简报</span><span>产品周会 · 核心提炼</span><span class="dot">·</span><time datetime="2026-11-01T15:32:26Z" class="recording-date">2026-11-01T15:32:26Z</time></div>
+<div class="hero"><div class="hero-copy"><h1>首页设计交付与离线转录验证</h1><p class="overview">设计方案已完成评审，首页设计稿承诺于 11 月 6 日前交付；测试重点是无麦克风提示，以及导入音频的离线转录流程。</p><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0002" aria-label="查看 00:58 的原文">↗ 00:58</button><button class="citation" data-source="s0003" aria-label="查看 01:05 的原文">↗ 01:05</button><button class="citation" data-source="s0004" aria-label="查看 01:13 的原文">↗ 01:13</button></div><div class="trust-line"><span class="trust-dot"></span>全文已纳入分析<span>·</span>原音 01:22<span>·</span>2 项待跟进</div></div><aside class="spotlight"><span class="spotlight-label">本次明确的时间点</span><strong>11 月 6 日前</strong><p>交付新版首页设计稿</p><span class="spotlight-foot">其余期限不作推断</span></aside></div>
+<div class="sample-notice">合成语音实测样本。本报告展示真实录音转录后的分析效果，不代表真实项目进度。</div>
+<div class="blocks"><section id="block-next-actions" class="report-block actions primary"><div class="section-heading"><span class="section-number">01</span><h2>两项明确的跟进事项</h2></div><div class="block-body"><article class="action-item"><div class="action-top"><span class="item-index">01</span><span class="due ">11 月 6 日前</span></div><h3>交付新版首页设计稿</h3><p class="item-detail">设计方案已完成评审。转录只给出月日，未说明年份；此处保留原文时间口径。</p><div class="action-bottom"><span class="owner"><span class="avatar">设</span>设计组</span><label class="follow"><input type="checkbox" data-action="deliver-homepage-design"><span>标记完成</span></label></div><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0002" aria-label="查看 00:58 的原文">↗ 00:58</button><button class="citation" data-source="s0004" aria-label="查看 01:13 的原文">↗ 01:13</button></div></article><article class="action-item"><div class="action-top"><span class="item-index">02</span><span class="due undated">期限待明确</span></div><h3>验证无麦克风与离线转录流程</h3><p class="item-detail">检查没有麦克风时的提示，并验证导入音频后的转录效果。完成时间未在转录中明确。</p><div class="action-bottom"><span class="owner"><span class="avatar">测</span>测试组</span><label class="follow"><input type="checkbox" data-action="verify-offline-transcription"><span>标记完成</span></label></div><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0003" aria-label="查看 01:05 的原文">↗ 01:05</button><button class="citation" data-source="s0004" aria-label="查看 01:13 的原文">↗ 01:13</button><button class="citation" data-source="s0005,s0006" aria-label="查看 01:18 · 2 段 的原文">↗ 01:18 · 2 段</button></div></article></div></section><section id="block-discussion-focus" class="report-block key_points secondary"><div class="section-heading"><span class="section-number">02</span><h2>先掌握这两点</h2></div><div class="block-body"><article class="point"><span class="point-dot"></span><div><p>本次讨论聚焦新版首页与离线转录。</p><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0001" aria-label="查看 00:50 的原文">↗ 00:50</button></div></div></article><article class="point"><span class="point-dot"></span><div><p>设计方案已经完成评审，后续关注点是设计稿交付。</p><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0002" aria-label="查看 00:58 的原文">↗ 00:58</button><button class="citation" data-source="s0004" aria-label="查看 01:13 的原文">↗ 01:13</button></div></div></article></div></section><section id="block-needs-confirmation" class="report-block questions secondary"><div class="section-heading"><span class="section-number">03</span><h2>还缺一项时间约定</h2></div><div class="block-body"><article class="point"><span class="point-dot"></span><div><p>测试验证计划何时完成？</p><p class="item-detail">原文明确了测试内容和测试组，但没有给出完成时间。</p><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0003" aria-label="查看 01:05 的原文">↗ 01:05</button><button class="citation" data-source="s0004" aria-label="查看 01:13 的原文">↗ 01:13</button><button class="citation" data-source="s0005,s0006" aria-label="查看 01:18 · 2 段 的原文">↗ 01:18 · 2 段</button></div></div></article></div></section></div><aside class="warnings" aria-label="核对提示"><div class="warning"><span aria-hidden="true">!</span><div><p>发言人分析在“线流”两字处出现短暂的“发言人 2 / 发言人 3”重叠标签。已知样本由两种合成声音组成；本报告按原文提取“设计组、测试组”，未据此推断真实姓名或参会人数。</p><div class="citations" aria-label="原文依据"><button class="citation" data-source="s0005" aria-label="查看 01:18 的原文">↗ 01:18</button></div></div></div></aside>
+<section class="sources-panel"><details id="sources"><summary><span>回到原文</span><span class="summary-hint">6 个片段 · 查看依据与录音</span></summary><div class="sources-body"><audio id="recording-audio" controls preload="metadata" src="audio.m4a"></audio><p id="audio-status" role="status">点击原文时间可定位录音；点击播放后才会发声。</p><div class="source-list"><article id="source-s0001" class="source-row"><button class="source-time" data-play="s0001" aria-label="定位 00:50 的录音">00:50</button><div><span class="speaker">发言人 1</span><p>大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。</p></div></article><article id="source-s0002" class="source-row"><button class="source-time" data-play="s0002" aria-label="定位 00:58 的录音">00:58</button><div><span class="speaker">发言人 2</span><p>设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。</p></div></article><article id="source-s0003" class="source-row"><button class="source-time" data-play="s0003" aria-label="定位 01:05 的录音">01:05</button><div><span class="speaker">发言人 1</span><p>好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。</p></div></article><article id="source-s0004" class="source-row"><button class="source-time" data-play="s0004" aria-label="定位 01:13 的录音">01:13</button><div><span class="speaker">发言人 2</span><p>我记录了两个行动项：设计组完成首页交付，测试组验证离</p></div></article><article id="source-s0005" class="source-row"><button class="source-time" data-play="s0005" aria-label="定位 01:18 的录音">01:18</button><div><span class="speaker">发言人 2 / 发言人 3</span><p>线流</p></div></article><article id="source-s0006" class="source-row"><button class="source-time" data-play="s0006" aria-label="定位 01:18 的录音">01:18</button><div><span class="speaker">发言人 2</span><p>程。会议结束。</p></div></article></div></div></details></section>
+<details class="json-panel"><summary>查看结构化 JSON</summary><pre>{
+  &quot;reportId&quot;: &quot;product-weekly-0AF69966-r19&quot;,
+  &quot;title&quot;: &quot;首页设计交付与离线转录验证&quot;,
+  &quot;subtitle&quot;: &quot;产品周会 · 核心提炼&quot;,
+  &quot;overview&quot;: {
+    &quot;text&quot;: &quot;设计方案已完成评审，首页设计稿承诺于 11 月 6 日前交付；测试重点是无麦克风提示，以及导入音频的离线转录流程。&quot;,
+    &quot;sourceIds&quot;: [
+      &quot;s0002&quot;,
+      &quot;s0003&quot;,
+      &quot;s0004&quot;
+    ]
+  },
+  &quot;notice&quot;: &quot;合成语音实测样本。本报告展示真实录音转录后的分析效果，不代表真实项目进度。&quot;,
+  &quot;coverage&quot;: {
+    &quot;status&quot;: &quot;complete&quot;,
+    &quot;includedSourceIds&quot;: [
+      &quot;s0001&quot;,
+      &quot;s0002&quot;,
+      &quot;s0003&quot;,
+      &quot;s0004&quot;,
+      &quot;s0005&quot;,
+      &quot;s0006&quot;
+    ],
+    &quot;omittedSourceIds&quot;: [],
+    &quot;note&quot;: &quot;已分析全部 6 个正式转录片段。录音约 83 秒，其中包含测试操作等待时的静音；实际播放的合成语音约 31 秒。&quot;
+  },
+  &quot;blocks&quot;: [
+    {
+      &quot;id&quot;: &quot;next-actions&quot;,
+      &quot;type&quot;: &quot;actions&quot;,
+      &quot;title&quot;: &quot;两项明确的跟进事项&quot;,
+      &quot;emphasis&quot;: &quot;primary&quot;,
+      &quot;items&quot;: [
+        {
+          &quot;id&quot;: &quot;deliver-homepage-design&quot;,
+          &quot;text&quot;: &quot;交付新版首页设计稿&quot;,
+          &quot;owner&quot;: &quot;设计组&quot;,
+          &quot;dueText&quot;: &quot;11 月 6 日前&quot;,
+          &quot;detail&quot;: &quot;设计方案已完成评审。转录只给出月日，未说明年份；此处保留原文时间口径。&quot;,
+          &quot;sourceIds&quot;: [
+            &quot;s0002&quot;,
+            &quot;s0004&quot;
+          ]
+        },
+        {
+          &quot;id&quot;: &quot;verify-offline-transcription&quot;,
+          &quot;text&quot;: &quot;验证无麦克风与离线转录流程&quot;,
+          &quot;owner&quot;: &quot;测试组&quot;,
+          &quot;dueText&quot;: null,
+          &quot;detail&quot;: &quot;检查没有麦克风时的提示，并验证导入音频后的转录效果。完成时间未在转录中明确。&quot;,
+          &quot;sourceIds&quot;: [
+            &quot;s0003&quot;,
+            &quot;s0004&quot;,
+            &quot;s0005&quot;,
+            &quot;s0006&quot;
+          ]
+        }
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;discussion-focus&quot;,
+      &quot;type&quot;: &quot;key_points&quot;,
+      &quot;title&quot;: &quot;先掌握这两点&quot;,
+      &quot;emphasis&quot;: &quot;secondary&quot;,
+      &quot;items&quot;: [
+        {
+          &quot;text&quot;: &quot;本次讨论聚焦新版首页与离线转录。&quot;,
+          &quot;sourceIds&quot;: [
+            &quot;s0001&quot;
+          ]
+        },
+        {
+          &quot;text&quot;: &quot;设计方案已经完成评审，后续关注点是设计稿交付。&quot;,
+          &quot;sourceIds&quot;: [
+            &quot;s0002&quot;,
+            &quot;s0004&quot;
+          ]
+        }
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;needs-confirmation&quot;,
+      &quot;type&quot;: &quot;questions&quot;,
+      &quot;title&quot;: &quot;还缺一项时间约定&quot;,
+      &quot;emphasis&quot;: &quot;secondary&quot;,
+      &quot;items&quot;: [
+        {
+          &quot;text&quot;: &quot;测试验证计划何时完成？&quot;,
+          &quot;detail&quot;: &quot;原文明确了测试内容和测试组，但没有给出完成时间。&quot;,
+          &quot;sourceIds&quot;: [
+            &quot;s0003&quot;,
+            &quot;s0004&quot;,
+            &quot;s0005&quot;,
+            &quot;s0006&quot;
+          ]
+        }
+      ]
+    }
+  ],
+  &quot;warnings&quot;: [
+    {
+      &quot;text&quot;: &quot;发言人分析在“线流”两字处出现短暂的“发言人 2 / 发言人 3”重叠标签。已知样本由两种合成声音组成；本报告按原文提取“设计组、测试组”，未据此推断真实姓名或参会人数。&quot;,
+      &quot;sourceIds&quot;: [
+        &quot;s0005&quot;
+      ]
+    }
+  ],
+  &quot;schemaVersion&quot;: 1,
+  &quot;recording&quot;: {
+    &quot;id&quot;: &quot;0AF69966-9667-43D3-AE4D-6BEA884870AE&quot;,
+    &quot;title&quot;: &quot;Codex Skill 录音实测（合成语音）&quot;,
+    &quot;revision&quot;: 19,
+    &quot;contentDigest&quot;: &quot;92d88029c2111e8ccc56d3ea92302ae60f5f29acdb477158f725b4be2f67c3d6&quot;,
+    &quot;createdAt&quot;: &quot;2026-11-01T15:32:26Z&quot;,
+    &quot;durationSeconds&quot;: 82.7179375
+  },
+  &quot;sources&quot;: [
+    {
+      &quot;id&quot;: &quot;s0001&quot;,
+      &quot;paragraphId&quot;: &quot;09387C15-114F-4D97-90CD-49DBD5C0412C&quot;,
+      &quot;audioPart&quot;: 1,
+      &quot;startSeconds&quot;: 50.394,
+      &quot;endSeconds&quot;: 57.193999999999996,
+      &quot;text&quot;: &quot;大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。&quot;,
+      &quot;speakerLabels&quot;: [
+        &quot;发言人 1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;s0002&quot;,
+      &quot;paragraphId&quot;: &quot;15FD0908-3BDF-45ED-822D-DF0E48BD56CC&quot;,
+      &quot;audioPart&quot;: 1,
+      &quot;startSeconds&quot;: 58.217999999999996,
+      &quot;endSeconds&quot;: 63.738,
+      &quot;text&quot;: &quot;设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。&quot;,
+      &quot;speakerLabels&quot;: [
+        &quot;发言人 2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;s0003&quot;,
+      &quot;paragraphId&quot;: &quot;DAF94796-49B3-496B-8556-B4C9C3F4141E&quot;,
+      &quot;audioPart&quot;: 1,
+      &quot;startSeconds&quot;: 65.114,
+      &quot;endSeconds&quot;: 72.15400000000001,
+      &quot;text&quot;: &quot;好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。&quot;,
+      &quot;speakerLabels&quot;: [
+        &quot;发言人 1&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;s0004&quot;,
+      &quot;paragraphId&quot;: &quot;25211576-6476-4BF0-A3ED-A9B459D26E8B&quot;,
+      &quot;audioPart&quot;: 1,
+      &quot;startSeconds&quot;: 73.21,
+      &quot;endSeconds&quot;: 78.25,
+      &quot;text&quot;: &quot;我记录了两个行动项：设计组完成首页交付，测试组验证离&quot;,
+      &quot;speakerLabels&quot;: [
+        &quot;发言人 2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;s0005&quot;,
+      &quot;paragraphId&quot;: &quot;15AA9518-CB53-408A-9C2B-648F64BBF36A&quot;,
+      &quot;audioPart&quot;: 1,
+      &quot;startSeconds&quot;: 78.25,
+      &quot;endSeconds&quot;: 78.72999999999999,
+      &quot;text&quot;: &quot;线流&quot;,
+      &quot;speakerLabels&quot;: [
+        &quot;发言人 2&quot;,
+        &quot;发言人 3&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;s0006&quot;,
+      &quot;paragraphId&quot;: &quot;A09AEE92-4159-4CAD-90C7-66C6D709E0E9&quot;,
+      &quot;audioPart&quot;: 1,
+      &quot;startSeconds&quot;: 78.72999999999999,
+      &quot;endSeconds&quot;: 80.25,
+      &quot;text&quot;: &quot;程。会议结束。&quot;,
+      &quot;speakerLabels&quot;: [
+        &quot;发言人 2&quot;
+      ]
+    }
+  ],
+  &quot;generation&quot;: {
+    &quot;provider&quot;: &quot;Codex（本次对话分析）&quot;,
+    &quot;method&quot;: &quot;analyst-json-validated-and-rendered&quot;,
+    &quot;generatedAt&quot;: &quot;2026-11-02T04:17:01.820503+00:00&quot;
+  }
+}</pre></details>
+<footer><span>依据「Codex Skill 录音实测（合成语音）」整理 · Codex（本次对话分析）</span><span>AI 分析请结合原文核对</span><p id="local-state-note" role="status">勾选只记录在当前浏览器，不会改写分析 JSON。</p><p>已分析全部 6 个正式转录片段。录音约 83 秒，其中包含测试操作等待时的静音；实际播放的合成语音约 31 秒。</p></footer></main></div><script id="report-data" type="application/json">{"report": {"reportId": "product-weekly-0AF69966-r19", "title": "首页设计交付与离线转录验证", "subtitle": "产品周会 · 核心提炼", "overview": {"text": "设计方案已完成评审，首页设计稿承诺于 11 月 6 日前交付；测试重点是无麦克风提示，以及导入音频的离线转录流程。", "sourceIds": ["s0002", "s0003", "s0004"]}, "notice": "合成语音实测样本。本报告展示真实录音转录后的分析效果，不代表真实项目进度。", "coverage": {"status": "complete", "includedSourceIds": ["s0001", "s0002", "s0003", "s0004", "s0005", "s0006"], "omittedSourceIds": [], "note": "已分析全部 6 个正式转录片段。录音约 83 秒，其中包含测试操作等待时的静音；实际播放的合成语音约 31 秒。"}, "blocks": [{"id": "next-actions", "type": "actions", "title": "两项明确的跟进事项", "emphasis": "primary", "items": [{"id": "deliver-homepage-design", "text": "交付新版首页设计稿", "owner": "设计组", "dueText": "11 月 6 日前", "detail": "设计方案已完成评审。转录只给出月日，未说明年份；此处保留原文时间口径。", "sourceIds": ["s0002", "s0004"]}, {"id": "verify-offline-transcription", "text": "验证无麦克风与离线转录流程", "owner": "测试组", "dueText": null, "detail": "检查没有麦克风时的提示，并验证导入音频后的转录效果。完成时间未在转录中明确。", "sourceIds": ["s0003", "s0004", "s0005", "s0006"]}]}, {"id": "discussion-focus", "type": "key_points", "title": "先掌握这两点", "emphasis": "secondary", "items": [{"text": "本次讨论聚焦新版首页与离线转录。", "sourceIds": ["s0001"]}, {"text": "设计方案已经完成评审，后续关注点是设计稿交付。", "sourceIds": ["s0002", "s0004"]}]}, {"id": "needs-confirmation", "type": "questions", "title": "还缺一项时间约定", "emphasis": "secondary", "items": [{"text": "测试验证计划何时完成？", "detail": "原文明确了测试内容和测试组，但没有给出完成时间。", "sourceIds": ["s0003", "s0004", "s0005", "s0006"]}]}], "warnings": [{"text": "发言人分析在“线流”两字处出现短暂的“发言人 2 / 发言人 3”重叠标签。已知样本由两种合成声音组成；本报告按原文提取“设计组、测试组”，未据此推断真实姓名或参会人数。", "sourceIds": ["s0005"]}], "schemaVersion": 1, "recording": {"id": "0AF69966-9667-43D3-AE4D-6BEA884870AE", "title": "Codex Skill 录音实测（合成语音）", "revision": 19, "contentDigest": "92d88029c2111e8ccc56d3ea92302ae60f5f29acdb477158f725b4be2f67c3d6", "createdAt": "2026-11-01T15:32:26Z", "durationSeconds": 82.7179375}, "sources": [{"id": "s0001", "paragraphId": "09387C15-114F-4D97-90CD-49DBD5C0412C", "audioPart": 1, "startSeconds": 50.394, "endSeconds": 57.193999999999996, "text": "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。", "speakerLabels": ["发言人 1"]}, {"id": "s0002", "paragraphId": "15FD0908-3BDF-45ED-822D-DF0E48BD56CC", "audioPart": 1, "startSeconds": 58.217999999999996, "endSeconds": 63.738, "text": "设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。", "speakerLabels": ["发言人 2"]}, {"id": "s0003", "paragraphId": "DAF94796-49B3-496B-8556-B4C9C3F4141E", "audioPart": 1, "startSeconds": 65.114, "endSeconds": 72.15400000000001, "text": "好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。", "speakerLabels": ["发言人 1"]}, {"id": "s0004", "paragraphId": "25211576-6476-4BF0-A3ED-A9B459D26E8B", "audioPart": 1, "startSeconds": 73.21, "endSeconds": 78.25, "text": "我记录了两个行动项：设计组完成首页交付，测试组验证离", "speakerLabels": ["发言人 2"]}, {"id": "s0005", "paragraphId": "15AA9518-CB53-408A-9C2B-648F64BBF36A", "audioPart": 1, "startSeconds": 78.25, "endSeconds": 78.72999999999999, "text": "线流", "speakerLabels": ["发言人 2", "发言人 3"]}, {"id": "s0006", "paragraphId": "A09AEE92-4159-4CAD-90C7-66C6D709E0E9", "audioPart": 1, "startSeconds": 78.72999999999999, "endSeconds": 80.25, "text": "程。会议结束。", "speakerLabels": ["发言人 2"]}], "generation": {"provider": "Codex（本次对话分析）", "method": "analyst-json-validated-and-rendered", "generatedAt": "2026-11-02T04:17:01.820503+00:00"}}, "audioAvailable": true}</script><script>(() => {
+  'use strict';
+  const payload = JSON.parse(document.querySelector('#report-data').textContent);
+  const report = payload.report;
+  const sources = new Map(report.sources.map(source => [source.id, source]));
+  const sourcePanel = document.querySelector('#sources');
+  const audio = document.querySelector('#recording-audio');
+  const audioStatus = document.querySelector('#audio-status');
+  let activeEnd = null;
+  let pendingTime = null;
+  let highlightTimer = null;
+  document.querySelectorAll('.recording-date').forEach(element => {
+    const date = new Date(element.dateTime);
+    if (!Number.isNaN(date.getTime())) {
+      element.textContent = new Intl.DateTimeFormat('zh-CN', {year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false}).format(date);
+    }
+  });
+  function locate(id, scroll) {
+    const ids = id.split(',');
+    const source = sources.get(ids[0]);
+    if (!source) return;
+    sourcePanel.open = true;
+    document.querySelectorAll('.source-row.highlight').forEach(row => row.classList.remove('highlight'));
+    const row = document.getElementById('source-' + ids[0]);
+    const rows = ids.map(i => document.getElementById('source-' + i)).filter(Boolean);
+    rows.forEach(r => r.classList.add('highlight'));
+    clearTimeout(highlightTimer);
+    highlightTimer = setTimeout(() => rows.forEach(r => r.classList.remove('highlight')), 4000);
+    if (scroll) row.scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'});
+    if (audio) {
+      audio.pause();
+      pendingTime = null;
+      activeEnd = null;
+      if (source.startSeconds === null) {
+        audioStatus.textContent = '该片段没有可信的时间定位，已展开原文。';
+        return;
+      }
+      pendingTime = source.startSeconds;
+      activeEnd = Math.max(...ids.map(i => sources.get(i)?.endSeconds ?? source.endSeconds));
+      if (audio.readyState >= 1) audio.currentTime = pendingTime;
+      audioStatus.textContent = '已定位到引用片段。点击播放器开始回放，段尾会自动暂停。';
+    }
+  }
+  document.addEventListener('click', event => {
+    const target = event.target.closest('[data-source], [data-play]');
+    if (target) locate(target.dataset.source || target.dataset.play, true);
+  });
+  if (audio) {
+    audio.addEventListener('loadedmetadata', () => {
+      if (pendingTime !== null) audio.currentTime = Math.min(pendingTime, audio.duration);
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (activeEnd !== null && audio.currentTime >= activeEnd) {
+        audio.pause();
+        audio.currentTime = activeEnd;
+        activeEnd = null;
+        audioStatus.textContent = '引用片段回放结束，已自动暂停。';
+      }
+    });
+    audio.addEventListener('seeking', () => {
+      if (activeEnd !== null && (audio.currentTime > activeEnd + .2 || (pendingTime !== null && audio.currentTime < pendingTime - .2))) activeEnd = null;
+    });
+    audio.addEventListener('error', () => {
+      audio.hidden = true;
+      audioStatus.textContent = '这份报告未找到随附音频文件，仍可查看完整原文与引用。';
+    });
+  }
+  const storageKey = 'recordai-report-user-state:' + report.recording.id + ':' + report.recording.contentDigest;
+  let stored = {};
+  let storageAvailable = true;
+  const note = document.querySelector('#local-state-note');
+  try {
+    const value = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    if (value && typeof value === 'object' && !Array.isArray(value)) stored = value;
+  } catch (_) { storageAvailable = false; }
+  document.querySelectorAll('[data-action]').forEach(checkbox => {
+    checkbox.checked = stored[checkbox.dataset.action] === true;
+    checkbox.addEventListener('change', () => {
+      stored[checkbox.dataset.action] = checkbox.checked;
+      if (storageAvailable) {
+        try { localStorage.setItem(storageKey, JSON.stringify(stored)); }
+        catch (_) { storageAvailable = false; }
+      }
+      note.textContent = storageAvailable ? '勾选已保存在当前浏览器；原始分析 JSON 保持不变。' : '当前环境无法保存勾选，仅在本次打开期间有效；原始分析 JSON 保持不变。';
+    });
+  });
+  if (!storageAvailable) note.textContent = '当前环境无法保存勾选，仅在本次打开期间有效。';
+  document.querySelector('#print-report').addEventListener('click', () => window.print());
+})();
+</script></body></html>

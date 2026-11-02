@@ -1,0 +1,24 @@
+Window: "RecordAI Settings", App: RecordAI.
+0 standard window RecordAI Settings, ID: com_apple_SwiftUI_Settings_window, Secondary Actions: Raise
+	1 container
+		2 text 设置
+		3 button 录音与转录
+		4 button (selected) 本地模型
+		5 button 同步账号
+		6 button Agent 与数据
+		7 text 本机存储
+		8 scroll area
+			9 text 本地模型 管理实时转写和最终转录所需的语音模型。 语音识别 实时转写与最终转录 已就绪
+			10 button 查看语音模型
+	11 text RecordAI Settings
+	12 menu button Window sharing
+13 menu bar
+	14 RecordAI
+	15 File
+	16 Edit
+	17 View
+	18 RecordAI
+	19 Window
+	20 Help
+
+The focused UI element is 0 standard window RecordAI Settings, ID: com_apple_SwiftUI_Settings_window, Secondary Actions: Raise

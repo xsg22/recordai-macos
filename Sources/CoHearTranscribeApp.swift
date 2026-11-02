@@ -44,7 +44,7 @@ struct CoHearTranscribeApp: App {
                 Button("导入音频…") { state.chooseAudio() }.keyboardShortcut("o").disabled(state.locked)
             }
             CommandGroup(replacing: .saveItem) {
-                Button("导出会议 Markdown…") { state.export(kind: "Markdown") }.keyboardShortcut("s").disabled(state.current == nil)
+                Button("导出转录 Markdown…") { state.export(kind: "Markdown") }.keyboardShortcut("s").disabled(state.current == nil)
             }
             CommandGroup(replacing: .appSettings) {
                 SettingsLink { Text("设置…") }.keyboardShortcut(",")
@@ -71,7 +71,10 @@ struct MainView: View {
     @State private var delivering = false
     @State private var recovering = false
     @State private var showingExecution = false
-    @State private var showingSummary = false
+    @State private var showingOrganization = false
+    @State private var managingCollections = false
+    @State private var batchMode = false
+    @State private var batchIDs = Set<UUID>()
     @FocusState private var editingTitle: Bool
     @State private var filter = "全部"
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -84,10 +87,10 @@ struct MainView: View {
     private var visibleHistory: [MeetingRecord] {
         state.filteredHistory.filter { filter == "全部" || filter == "回收站" || (filter == "星标" ? $0.isStarred : filter == "已完成" ? $0.status == .completed : $0.status != .completed) }
     }
-    private var emptyFilter: Bool { filter != "回收站" && (!state.search.isEmpty || filter == "星标") && visibleHistory.isEmpty }
+    private var emptyFilter: Bool { filter != "回收站" && (!state.search.isEmpty || filter != "全部" || !state.groupFilter.isEmpty) && visibleHistory.isEmpty }
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     RecordAILogo()
                     VStack(alignment: .leading, spacing: 3) {
@@ -103,26 +106,35 @@ struct MainView: View {
                     filterRow("星标", symbol: "star", count: state.history.filter(\.isStarred).count)
                     filterRow("回收站", symbol: "trash", count: state.trashedHistory.count)
                 }.padding(.top, 4)
+                organizationFilters
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").font(.system(size: 10)).foregroundStyle(RecordAITheme.muted).accessibilityHidden(true)
-                    TextField("搜索会议名称或内容…", text: $state.search).textFieldStyle(.plain).font(.system(size: 13))
+                    TextField("搜索录音名称或内容…", text: $state.search).textFieldStyle(.plain).font(.system(size: 13))
                 }.padding(12).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9))
                     .overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border))
                 HStack {
-                    Text("最近的会议").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+                    Text("录音资料库").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                     Spacer()
+                    Button(batchMode ? "完成" : "选择") { batchMode.toggle(); batchIDs = [] }.buttonStyle(.plain).font(AppTypography.secondary).disabled(state.locked || filter == "回收站").accessibilityLabel(batchMode ? "完成批量整理" : "批量整理")
                     Menu {
                         Button("全部录音") { filter = "全部" }
                         Button("已完成") { filter = "已完成" }
                         Button("待处理") { filter = "待处理" }
                     } label: { Image(systemName: "line.3.horizontal.decrease") }.menuStyle(.borderlessButton).fixedSize().accessibilityLabel("按处理状态筛选")
                 }.padding(.top, 8).padding(.horizontal, 10)
+                batchToolbar
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 4) {
                     ForEach(visibleHistory) { record in
-                        Button { if filter == "回收站" { filter = "全部" }; state.select(record.id) } label: {
-                            RecordingLibraryRow(record: record, selected: state.selection == record.id, metadata: libraryMetadata(record))
-                        }.buttonStyle(.plain).accessibilityAddTraits(state.selection == record.id ? .isSelected : [])
+                        HStack(spacing: 2) {
+                            if batchMode {
+                                Toggle("选择 \(record.title)", isOn: Binding(get: { batchIDs.contains(record.id) }, set: { if $0 { batchIDs.insert(record.id) } else { batchIDs.remove(record.id) } }))
+                                    .labelsHidden().toggleStyle(.checkbox).disabled(state.locked)
+                            }
+                            Button { if filter == "回收站" { filter = "全部" }; state.select(record.id) } label: {
+                                RecordingLibraryRow(record: record, selected: state.selection == record.id, metadata: libraryMetadata(record))
+                            }.buttonStyle(.plain)
+                        }.contextMenu { organizeMenu(ids: [record.id]) }.accessibilityAddTraits(state.selection == record.id ? .isSelected : [])
                             .accessibilityLabel(record.title + "，" + (record.status == .completed ? "已完成，" : "待处理，") + libraryMetadata(record))
                     }
                     }
@@ -133,20 +145,12 @@ struct MainView: View {
                     if direction == .up { state.select(visibleHistory[max(0, current - 1)].id) }
                 }.frame(minHeight: 0, maxHeight: .infinity).layoutPriority(-1)
                     .disabled(state.recording || state.preparing || state.recoveryBusy)
-                VStack(spacing: 16) {
-                SettingsLink {
-                    HStack(spacing: 10) {
-                        Image(systemName: "gearshape")
-                        Text("设置")
-                        Spacer()
-                        Image(systemName: "chevron.right").font(AppTypography.secondary)
-                    }.font(AppTypography.body).frame(minHeight: 36).contentShape(Rectangle())
-                }.buttonStyle(.plain).help("转录、同步账号与本机Agent")
-                Button { showingExecution = true } label: {
-                    HStack(spacing: 10) { Image(systemName: "point.3.connected.trianglepath.dotted"); Text("执行追踪"); Spacer(); Image(systemName: "chevron.right").font(AppTypography.secondary) }
-                        .font(AppTypography.body).frame(minHeight: 36).contentShape(Rectangle())
-                }.buttonStyle(.plain).help("查看采集、ASR、转录和Agent发布状态")
-                }.fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 16) {
+                    SettingsLink { Label("设置", systemImage: "gearshape").frame(maxWidth: .infinity, minHeight: 32, alignment: .leading) }
+                        .buttonStyle(.plain).help("转录、同步账号与本机Agent")
+                    Button { showingExecution = true } label: { Label("执行追踪", systemImage: "point.3.connected.trianglepath.dotted").frame(minHeight: 32) }
+                        .buttonStyle(.plain).help("查看采集、ASR、转录和Agent发布状态")
+                }.font(AppTypography.secondary).fixedSize(horizontal: false, vertical: true)
 
             }.padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(RecordAITheme.sidebar)
@@ -157,15 +161,15 @@ struct MainView: View {
                     RecordingTrashView(state: state) { filter = "全部" }
                 } else if emptyFilter {
                     VStack(spacing: 24) {
-                        Image(systemName: state.search.isEmpty ? "star" : "magnifyingglass").font(.system(size: 30)).foregroundStyle(accent)
+                        Image(systemName: state.search.isEmpty && filter == "星标" ? "star" : "magnifyingglass").font(.system(size: 30)).foregroundStyle(accent)
                             .frame(width: 100, height: 110)
                             .background(LinearGradient(colors: [RecordAITheme.surface, accent.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
                             .overlay(RoundedRectangle(cornerRadius: 16).stroke(RecordAITheme.border, lineWidth: 1))
                             .rotationEffect(.degrees(-7)).shadow(color: accent.opacity(0.06), radius: 14, y: 10).padding(.bottom, 8)
-                        Text(state.search.isEmpty ? "暂无星标录音" : "没有找到相关录音").font(.system(size: 23, weight: .semibold))
-                        Text(state.search.isEmpty ? "在会议标题旁添加星标，即可在这里快速找到。" : "试试会议名称中的其他词，或清除搜索查看全部录音。")
+                        Text(filter == "星标" && state.groupFilter.isEmpty && state.search.isEmpty ? "暂无星标录音" : "没有找到相关录音").font(.system(size: 23, weight: .semibold))
+                        Text("调整搜索或分组筛选，也可以导入新的音频。")
                             .font(AppTypography.body).foregroundStyle(.secondary)
-                        Button(state.search.isEmpty ? "查看全部录音" : "清除搜索") { state.search = ""; filter = "全部" }.buttonStyle(RecordAIPrimaryButtonStyle())
+                        Button(state.search.isEmpty ? "查看全部录音" : "清除搜索") { state.search = ""; state.groupFilter = ""; filter = "全部" }.buttonStyle(RecordAIPrimaryButtonStyle())
                     }.padding(.top, 100).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else {
                 if missingMicrophone {
@@ -173,7 +177,7 @@ struct MainView: View {
                     missingMicrophoneView
                 } else if state.current != nil {
                     meetingToolbar
-                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution && !showingSummary {
+                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution && !showingOrganization {
                         RecordAICard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
                     }
                     if let issue = state.recordingIssue {
@@ -248,6 +252,8 @@ struct MainView: View {
                 .onChange(of: geometry.size.width) { _, width in windowWidth = width }
         })
         .onAppear { state.openRecordingWindow = { openWindow(id: "recordings") } }
+        .sheet(isPresented: $managingCollections) { CollectionManager(state: state) }
+        .onChange(of: state.history.map(\.id)) { batchIDs.formIntersection(Set(state.history.map(\.id))) }
         .sheet(isPresented: $recovering) { CaptureRecoveryView(state: state) }
         .sheet(isPresented: $state.showModelDownload) {
             VStack(alignment: .leading, spacing: 20) {
@@ -257,9 +263,9 @@ struct MainView: View {
         .sheet(isPresented: Binding(get: { showingExecution || state.showExecutionTrace }, set: { value in showingExecution = value; state.showExecutionTrace = value })) { RecordAIExecutionView(state: state) }
         .sheet(isPresented: $delivering) { RecordingDeliveryView(state: state) }
         .sheet(item: $state.deletionRequest) { record in ConfirmTrashView(state: state, record: record) }
-        .sheet(isPresented: $showingSummary) {
+        .sheet(isPresented: $showingOrganization) {
             VStack(alignment: .leading) {
-                HStack { Spacer(); Button("完成") { showingSummary = false } }
+                HStack { Spacer(); Button("完成") { showingOrganization = false } }
                 meetingInspector
             }.padding(20).frame(width: 520, height: 500)
         }
@@ -269,11 +275,38 @@ struct MainView: View {
         }
     }
 
+    private var organizationFilters: some View {
+        HStack(spacing: 8) {
+            Picker("分组筛选", selection: $state.groupFilter) {
+                Text("所有分组").tag("")
+                Text("未分组").tag("ungrouped")
+                ForEach(state.organization.groups) { Text($0.name).tag($0.id.uuidString) }
+            }.pickerStyle(.menu).labelsHidden().accessibilityLabel("分组筛选").frame(maxWidth: .infinity)
+            if !state.groupFilter.isEmpty {
+                Button { state.groupFilter = "" } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).accessibilityLabel("清除分组筛选")
+            }
+            Button { managingCollections = true } label: { Image(systemName: "folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel("管理分组")
+        }.font(AppTypography.secondary).disabled(state.locked)
+    }
+    @ViewBuilder private var batchToolbar: some View {
+        if batchMode {
+            HStack {
+                Text("已选 \(batchIDs.count)").foregroundStyle(.secondary)
+                Button("全选当前") { batchIDs = Set(visibleHistory.map(\.id)) }
+                Menu("移动到") { organizeMenu(ids: batchIDs) }.disabled(batchIDs.isEmpty)
+            }.font(AppTypography.secondary).disabled(state.locked || filter == "回收站")
+        }
+    }
+    @ViewBuilder private func organizeMenu(ids: Set<UUID>) -> some View {
+        Button("未分组") { _ = state.setGroup(nil, recordIDs: ids) }
+        ForEach(state.organization.groups) { group in Button(group.name) { _ = state.setGroup(group.id, recordIDs: ids) } }
+    }
+
     private func filterRow(_ title: String, symbol: String, count: Int) -> some View {
         Button { if title == "回收站" { state.select(nil) }; filter = title } label: {
             HStack(spacing: 10) {
                 Image(systemName: symbol).frame(width: 18)
-                Text(title == "全部" ? "全部会议" : title)
+                Text(title == "全部" ? "全部录音" : title)
                 Spacer()
                 Text("\(count)").foregroundStyle(RecordAITheme.muted)
             }.font(.system(size: 14, weight: filter == title ? .semibold : .regular))
@@ -382,12 +415,13 @@ struct MainView: View {
                         .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
                 }
             }
-            Button { delivering = true } label: { Label("交付", systemImage: "square.and.arrow.up") }
+            Button { showingOrganization = true } label: { Label("整理", systemImage: "folder") }
+            Button { delivering = true } label: { Label("导出", systemImage: "square.and.arrow.up") }
                 .disabled(state.current == nil)
             Menu {
                 Button(state.editingTranscript ? "完成全文编辑" : "编辑全文") { state.editingTranscript.toggle() }.disabled(state.locked)
                 Button("导入音频…") { state.chooseAudio() }.disabled(state.locked)
-                Button("查看会议摘要") { showingSummary = true }
+                Button("录音分组…") { showingOrganization = true }
                 Button("执行追踪") { showingExecution = true }
                 Menu("录音设置") {
                     Picker("音源", selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
@@ -396,13 +430,13 @@ struct MainView: View {
                 }.disabled(state.locked)
                 Divider()
                 Button("继续录音") { state.continueRecording() }.disabled(state.locked || state.syncing)
-                Button("新会议录音") { state.toggleRecording() }.disabled(state.locked || state.syncing)
+                Button("开始新录音") { state.toggleRecording() }.disabled(state.locked || state.syncing)
                 Divider()
-                Button("复制会议 Markdown") {
+                Button("复制转录 Markdown") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(state.markdown, forType: .string)
                 }
-                Button("导出会议 Markdown…") { state.export(kind: "Markdown") }
+                Button("导出转录 Markdown…") { state.export(kind: "Markdown") }
                 Button("导出转录 TXT…") { state.export(kind: "文本") }
                 Button("导出原始字幕 SRT…") { state.export(kind: "字幕") }.disabled(state.current?.subtitles.isEmpty ?? true)
                 Divider()

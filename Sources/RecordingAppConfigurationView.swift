@@ -3,11 +3,10 @@ import AppKit
 
 struct RecordingAppConfigurationView: View {
     @ObservedObject var state: AppState
-    var optionalModels: OptionalModelStore? = nil
     @State private var section = "recording"
     @State private var showingSpeechModels = false
-    init(state: AppState, optionalModels: OptionalModelStore? = nil, initialSection: String = "recording") {
-        self.state = state; self.optionalModels = optionalModels; _section = State(initialValue: initialSection)
+    init(state: AppState, initialSection: String = "recording") {
+        self.state = state; _section = State(initialValue: initialSection)
     }
     private let sections = [("recording", "录音与转录", "waveform"), ("models", "本地模型", "cpu"), ("accounts", "同步账号", "person.crop.circle"), ("data", "Agent 与数据", "externaldrive")]
     var body: some View {
@@ -39,7 +38,6 @@ struct RecordingAppConfigurationView: View {
             }.background(RecordAITheme.surface)
         }.frame(width: 920, height: 632).font(AppTypography.body)
             .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)
-            .onChange(of: section) { if section == "models" { state.refreshAssistantAvailability() } }
             .sheet(isPresented: $showingSpeechModels) {
                 VStack(alignment: .leading, spacing: 20) {
                     ASRModelSetupView(store: state.speechModels, close: { showingSpeechModels = false })
@@ -77,7 +75,7 @@ struct RecordingAppConfigurationView: View {
 
     private var models: some View {
         Group {
-            RecordAIPageHeader(title: "本地模型", subtitle: "语音识别与辅助模型分别管理。") { EmptyView() }
+            RecordAIPageHeader(title: "本地模型", subtitle: "管理实时转写和最终转录所需的语音模型。") { EmptyView() }
             RecordAICard(spacing: 20) {
                 Text("语音识别").font(AppTypography.heading)
                 HStack {
@@ -88,7 +86,6 @@ struct RecordingAppConfigurationView: View {
                 }
                 Button("查看语音模型") { showingSpeechModels = true }
             }
-            OptionalModelSettingsView(store: optionalModels)
         }
     }
 

@@ -33,4 +33,29 @@ def attribute(text,items,turns,offset,duration):
         else:result.append(dict(text=part,start=start,end=end,speakerIDs=speakers,separator=''))
     if not words and text:result=[dict(text=text,start=offset,end=offset+duration,speakerIDs=[],separator='')]
     if ''.join(p['text'] for p in result)!=text:raise ValueError('分段未完整覆盖原文')
-    return result
+    return coalesce_fragments(result)
+
+
+def coalesce_fragments(rows):
+    """Suppress brief attribution jitter without dropping text or inventing a speaker.
+
+    A sentence boundary, pause, or deliberate short answer stays a boundary. Mixed
+    adjacent fragments are marked unknown, not falsely labelled as overlap.
+    """
+    merged = []
+    def tiny(row):
+        return len(normalized(row['text'])) <= 2 and row['end'] - row['start'] < .8
+    for row in rows:
+        row = dict(row)
+        if merged:
+            prior = merged[-1]
+            gap = row['start'] - prior['end']
+            boundary = prior['text'].rstrip(" \t\r\n”’\"'」』）)]}").endswith(tuple('。！？!?；;.')) or '\n' in row.get('separator', '')
+            if -.15 <= gap <= .45 and not boundary and (tiny(prior) or tiny(row)) and len(prior['text']) + len(row['text']) <= 180:
+                prior['text'] += row.get('separator', '') + row['text']
+                prior['end'] = max(prior['end'], row['end'])
+                if prior['speakerIDs'] != row['speakerIDs']:
+                    prior['speakerIDs'] = []
+                continue
+        merged.append(row)
+    return merged

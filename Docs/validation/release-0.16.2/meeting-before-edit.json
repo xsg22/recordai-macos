@@ -1,0 +1,116 @@
+{
+  "actionItems" : [
+
+  ],
+  "assistantEntries" : [
+
+  ],
+  "attachments" : [
+
+  ],
+  "audioDurations" : {
+    "530F9959-8F6D-4387-B312-77484210A136.wav" : 31.29625
+  },
+  "audioFiles" : [
+    "530F9959-8F6D-4387-B312-77484210A136.wav"
+  ],
+  "captureWarnings" : [
+
+  ],
+  "continuousSegmentFiles" : [
+
+  ],
+  "created" : 815298315.75257,
+  "duration" : 31.29625,
+  "enhancedNotes" : "",
+  "enhancedNotesCitations" : [
+
+  ],
+  "enhancedNotesContextWasTruncated" : false,
+  "id" : "FFBCCCBD-93AD-477B-9EB3-CA4A9A2F4357",
+  "importedCaptureSessions" : {
+
+  },
+  "isStarred" : false,
+  "language" : "zh",
+  "legacyLiveText" : "",
+  "liveUtterances" : [
+
+  ],
+  "notes" : "",
+  "pendingAudioFiles" : [
+
+  ],
+  "previewText" : "",
+  "recordingSessionMode" : "conference",
+  "seconds" : 9.7257080078125,
+  "speakerAliases" : {
+
+  },
+  "speakerAnalysisMessage" : "最多区分4位发言人；续录标签独立，可手动改名或合并。重叠与不确定片段请核对。",
+  "speakerAnalysisStatus" : "completed",
+  "speakerNames" : {
+    "530F9959-8F6D-4387-B312-77484210A136.wav:0" : "发言人 1",
+    "530F9959-8F6D-4387-B312-77484210A136.wav:1" : "发言人 2"
+  },
+  "status" : "completed",
+  "subtitles" : "1\n00:00:00,506 --> 00:00:07,404\n大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。\n\n2\n00:00:08,250 --> 00:00:14,028\n设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。\n\n3\n00:00:15,162 --> 00:00:22,380\n好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。\n\n4\n00:00:23,162 --> 00:00:30,476\n我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。\n\n",
+  "summaryCitations" : [
+
+  ],
+  "summaryContextWasTruncated" : false,
+  "text" : "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。\n设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。\n好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。\n我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。",
+  "title" : "Product-weekly-demo",
+  "transcriptParagraphs" : [
+    {
+      "audioFile" : "530F9959-8F6D-4387-B312-77484210A136.wav",
+      "end" : 7.306,
+      "id" : "AC775B01-0859-40C2-ADEA-8E461141F6F0",
+      "localStart" : 0.506,
+      "separator" : "",
+      "speakerIDs" : [
+        "530F9959-8F6D-4387-B312-77484210A136.wav:0"
+      ],
+      "start" : 0.506,
+      "text" : "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。"
+    },
+    {
+      "audioFile" : "530F9959-8F6D-4387-B312-77484210A136.wav",
+      "end" : 13.85,
+      "id" : "5DBDB5C7-F907-443C-A071-B8D8CF3132AF",
+      "localStart" : 8.33,
+      "separator" : "\n",
+      "speakerIDs" : [
+        "530F9959-8F6D-4387-B312-77484210A136.wav:1"
+      ],
+      "start" : 8.33,
+      "text" : "设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。"
+    },
+    {
+      "audioFile" : "530F9959-8F6D-4387-B312-77484210A136.wav",
+      "end" : 22.282,
+      "id" : "C0B8A8D2-2358-4455-A3F0-BE86924DE56F",
+      "localStart" : 15.162,
+      "separator" : "\n",
+      "speakerIDs" : [
+        "530F9959-8F6D-4387-B312-77484210A136.wav:0"
+      ],
+      "start" : 15.162,
+      "text" : "好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。"
+    },
+    {
+      "audioFile" : "530F9959-8F6D-4387-B312-77484210A136.wav",
+      "end" : 30.282,
+      "id" : "D0D7500D-4987-4752-8632-F7AC64AA68E9",
+      "localStart" : 23.322,
+      "separator" : "\n",
+      "speakerIDs" : [
+        "530F9959-8F6D-4387-B312-77484210A136.wav:1"
+      ],
+      "start" : 23.322,
+      "text" : "我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。"
+    }
+  ],
+  "transcriptionEngine" : "qwen3-asr-1.7b-8bit",
+  "updated" : 815298332.883771
+}

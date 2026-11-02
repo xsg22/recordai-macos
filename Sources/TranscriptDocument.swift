@@ -60,3 +60,46 @@ struct TranscriptPlaybackRange: Equatable {
         guard end > start else { return nil }
     }
 }
+
+/// 阅读层分组保留原始段落与 ID；混合归属不伪称同时发言。
+struct TranscriptReadingGroup: Identifiable {
+    var paragraphs: [TranscriptParagraph]
+    var id: UUID { paragraphs[0].id }
+    var combined: TranscriptParagraph {
+        var result = paragraphs[0]
+        for row in paragraphs.dropFirst() {
+            result.text += row.separator + row.text
+            result.end = row.end
+            if Set(result.speakerIDs) != Set(row.speakerIDs) { result.speakerIDs = [] }
+        }
+        return result
+    }
+}
+enum TranscriptReadability {
+    static func groups(_ rows: [TranscriptParagraph]) -> [TranscriptReadingGroup] {
+        var result: [TranscriptReadingGroup] = []
+        for row in rows {
+            if let last = result.last, last.paragraphs.allSatisfy({ $0.previousSpeakerIDs == nil }),
+               canJoin(last.combined, row, combinedLength: last.combined.text.count) {
+                result[result.count - 1].paragraphs.append(row)
+            } else { result.append(TranscriptReadingGroup(paragraphs: [row])) }
+        }
+        return result
+    }
+    private static func canJoin(_ a: TranscriptParagraph, _ b: TranscriptParagraph, combinedLength: Int) -> Bool {
+        guard a.audioFile == b.audioFile,
+              a.previousSpeakerIDs == nil, b.previousSpeakerIDs == nil,
+              let end = a.end, let start = b.start, let aStart = a.start, let bEnd = b.end,
+              [start, end, aStart, bEnd].allSatisfy(\.isFinite),
+              start >= end - 0.15, start - end <= 0.45,
+              !b.separator.contains("\n"),
+              !a.text.trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "”’\"'」』）)]}"))).hasSuffix(where: { "。！？!?；;.".contains($0) }),
+              combinedLength + b.text.count <= 180 else { return false }
+        let letters: (String) -> Int = { $0.filter { $0.isLetter || $0.isNumber }.count }
+        // 短暂归属抖动只影响阅读分组；正常长句和完整短答保留各自边界。
+        return (letters(a.text) <= 2 && end - aStart < 0.8) || (letters(b.text) <= 2 && bEnd - start < 0.8)
+    }
+}
+private extension String {
+    func hasSuffix(where predicate: (Character) -> Bool) -> Bool { last.map(predicate) ?? false }
+}

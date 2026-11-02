@@ -48,6 +48,33 @@ struct MeetingAttachment: Codable, Equatable, Identifiable {
     var bytes: Int64
 }
 
+enum OrganizationError: LocalizedError {
+    case invalidName
+    var errorDescription: String? {
+        switch self {
+        case .invalidName: return "名称应为 1–40 个字，不能换行或与已有名称重复。"
+        }
+    }
+}
+struct RecordingCollection: Codable, Equatable, Identifiable {
+    var id = UUID()
+    var name: String
+}
+struct LibraryOrganization: Codable, Equatable {
+    var groups: [RecordingCollection] = []
+    func group(_ id: UUID?) -> RecordingCollection? { groups.first { $0.id == id } }
+    mutating func setName(_ name: String, id: UUID?) throws -> UUID {
+        let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty, clean.count <= 40, clean.rangeOfCharacter(from: .newlines) == nil,
+              !groups.contains(where: { $0.id != id && $0.name.compare(clean, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) else { throw OrganizationError.invalidName }
+        let key = id ?? UUID()
+        if let id, !groups.contains(where: { $0.id == id }) { throw MeetingLibraryError.missingMeeting }
+        if let index = groups.firstIndex(where: { $0.id == key }) { groups[index].name = clean }
+        else { groups.append(RecordingCollection(id: key, name: clean)) }
+        return key
+    }
+}
+
 /// seconds 沿用 0.1 版的转录处理耗时；duration 才是会议音频时长。
 struct MeetingRecord: Codable, Identifiable, Equatable {
     var id: UUID = UUID()
@@ -70,6 +97,7 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     var importedCaptureSessions: [String: String] = [:]
     var status: MeetingStatus = .completed
     var isStarred = false
+    var groupID: UUID? = nil
     var actionItems: [MeetingActionItem] = []
     var attachments: [MeetingAttachment] = []
     var recoveryMessage: String? = nil
@@ -107,6 +135,7 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case groupID
         case captureWarnings, id, title, created, text, subtitles, language, seconds, duration, notes, summary, isStarred, actionItems, attachments
         case legacyLiveText, liveUtterances, transcriptParagraphs, speakerNames, speakerAliases, speakerAnalysisStatus, speakerAnalysisMessage
         case importedCaptureSessions, transcriptionEngine, previewEngine, pendingAudioFiles, audioDurations, audioFiles, recordingSessionMode, continuousSegmentFiles, status, recoveryMessage, updated, previewText, enhancedNotes, assistantEntries, summaryCitations, enhancedNotesCitations, summaryContextWasTruncated, enhancedNotesContextWasTruncated
@@ -131,6 +160,7 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
         pendingAudioFiles = try values.decodeIfPresent([String].self, forKey: .pendingAudioFiles) ?? []
         audioDurations = try values.decodeIfPresent([String: Double].self, forKey: .audioDurations) ?? [:]
         status = try values.decodeIfPresent(MeetingStatus.self, forKey: .status) ?? .completed
+        groupID = try values.decodeIfPresent(UUID.self, forKey: .groupID)
         isStarred = try values.decodeIfPresent(Bool.self, forKey: .isStarred) ?? false
         actionItems = try values.decodeIfPresent([MeetingActionItem].self, forKey: .actionItems) ?? []
         attachments = try values.decodeIfPresent([MeetingAttachment].self, forKey: .attachments) ?? []
@@ -188,6 +218,22 @@ final class MeetingLibrary {
         republishAgentData()
     }
 
+    func organization() throws -> LibraryOrganization {
+        let url = root.appendingPathComponent("organization.json")
+        guard manager.fileExists(atPath: url.path) else { return LibraryOrganization() }
+        return try JSONDecoder().decode(LibraryOrganization.self, from: Data(contentsOf: url))
+    }
+    func saveOrganization(_ value: LibraryOrganization) throws {
+        for rows in [value.groups] {
+            guard Set(rows.map(\.id)).count == rows.count else { throw OrganizationError.invalidName }
+            var validated = LibraryOrganization()
+            for row in rows { _ = try validated.setName(row.name, id: nil) }
+        }
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(value).write(to: root.appendingPathComponent("organization.json"), options: .atomic)
+        republishAgentData()
+    }
+
     func directory(for id: UUID) -> URL {
         meetingsDirectory.appendingPathComponent(id.uuidString, isDirectory: true)
     }
@@ -205,6 +251,8 @@ final class MeetingLibrary {
            manager.fileExists(atPath: directory(for: id).appendingPathComponent("Capture/Segments/segments.json").path) {
             record.recordingSessionMode = .continuous
         }
+        let catalog = try organization()
+        record.groupID = catalog.group(record.groupID)?.id
         return record
     }
 
@@ -233,6 +281,8 @@ final class MeetingLibrary {
         for file in record.audioFiles { _ = try audioURL(file, meeting: record.id) }
         for attachment in record.attachments { _ = try attachmentURL(attachment, meeting: record.id) }
         var saved = record
+        let catalog = try organization()
+        saved.groupID = catalog.group(saved.groupID)?.id
         saved.updated = Date()
         let directory = directory(for: saved.id)
         try manager.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -445,7 +495,9 @@ final class MeetingLibrary {
                 guard let id = UUID(uuidString: directory.lastPathComponent),
                       (try? directory.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true,
                       let data = try? Data(contentsOf: directory.appendingPathComponent("meeting.json")),
-                      let record = try? JSONDecoder().decode(MeetingRecord.self, from: data), record.id == id else { return nil }
+                      var record = try? JSONDecoder().decode(MeetingRecord.self, from: data), record.id == id else { return nil }
+                let catalog = try organization()
+                record.groupID = catalog.group(record.groupID)?.id
                 return record
             }.sorted { $0.updated > $1.updated }
     }
@@ -477,6 +529,7 @@ final class MeetingLibrary {
     func republishAgentData() {
         do {
             try publisher.prepare()
+            _ = try organization() // 分类索引损坏不能被误判为全部资料已删除。
             let records = try list()
             let ids = Set(records.map(\.id))
             let publicRoot = root.appendingPathComponent("AgentData/recordings")

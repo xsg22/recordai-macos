@@ -1,0 +1,191 @@
+{
+  "reportId": "product-weekly-0AF69966-r19",
+  "title": "首页设计交付与离线转录验证",
+  "subtitle": "产品周会 · 核心提炼",
+  "overview": {
+    "text": "设计方案已完成评审，首页设计稿承诺于 11 月 6 日前交付；测试重点是无麦克风提示，以及导入音频的离线转录流程。",
+    "sourceIds": [
+      "s0002",
+      "s0003",
+      "s0004"
+    ]
+  },
+  "notice": "合成语音实测样本。本报告展示真实录音转录后的分析效果，不代表真实项目进度。",
+  "coverage": {
+    "status": "complete",
+    "includedSourceIds": [
+      "s0001",
+      "s0002",
+      "s0003",
+      "s0004",
+      "s0005",
+      "s0006"
+    ],
+    "omittedSourceIds": [],
+    "note": "已分析全部 6 个正式转录片段。录音约 83 秒，其中包含测试操作等待时的静音；实际播放的合成语音约 31 秒。"
+  },
+  "blocks": [
+    {
+      "id": "next-actions",
+      "type": "actions",
+      "title": "两项明确的跟进事项",
+      "emphasis": "primary",
+      "items": [
+        {
+          "id": "deliver-homepage-design",
+          "text": "交付新版首页设计稿",
+          "owner": "设计组",
+          "dueText": "11 月 6 日前",
+          "detail": "设计方案已完成评审。转录只给出月日，未说明年份；此处保留原文时间口径。",
+          "sourceIds": [
+            "s0002",
+            "s0004"
+          ]
+        },
+        {
+          "id": "verify-offline-transcription",
+          "text": "验证无麦克风与离线转录流程",
+          "owner": "测试组",
+          "dueText": null,
+          "detail": "检查没有麦克风时的提示，并验证导入音频后的转录效果。完成时间未在转录中明确。",
+          "sourceIds": [
+            "s0003",
+            "s0004",
+            "s0005",
+            "s0006"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discussion-focus",
+      "type": "key_points",
+      "title": "先掌握这两点",
+      "emphasis": "secondary",
+      "items": [
+        {
+          "text": "本次讨论聚焦新版首页与离线转录。",
+          "sourceIds": [
+            "s0001"
+          ]
+        },
+        {
+          "text": "设计方案已经完成评审，后续关注点是设计稿交付。",
+          "sourceIds": [
+            "s0002",
+            "s0004"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "needs-confirmation",
+      "type": "questions",
+      "title": "还缺一项时间约定",
+      "emphasis": "secondary",
+      "items": [
+        {
+          "text": "测试验证计划何时完成？",
+          "detail": "原文明确了测试内容和测试组，但没有给出完成时间。",
+          "sourceIds": [
+            "s0003",
+            "s0004",
+            "s0005",
+            "s0006"
+          ]
+        }
+      ]
+    }
+  ],
+  "warnings": [
+    {
+      "text": "发言人分析在“线流”两字处出现短暂的“发言人 2 / 发言人 3”重叠标签。已知样本由两种合成声音组成；本报告按原文提取“设计组、测试组”，未据此推断真实姓名或参会人数。",
+      "sourceIds": [
+        "s0005"
+      ]
+    }
+  ],
+  "schemaVersion": 1,
+  "recording": {
+    "id": "0AF69966-9667-43D3-AE4D-6BEA884870AE",
+    "title": "Codex Skill 录音实测（合成语音）",
+    "revision": 19,
+    "contentDigest": "92d88029c2111e8ccc56d3ea92302ae60f5f29acdb477158f725b4be2f67c3d6",
+    "createdAt": "2026-11-01T15:32:26Z",
+    "durationSeconds": 82.7179375
+  },
+  "sources": [
+    {
+      "id": "s0001",
+      "paragraphId": "09387C15-114F-4D97-90CD-49DBD5C0412C",
+      "audioPart": 1,
+      "startSeconds": 50.394,
+      "endSeconds": 57.193999999999996,
+      "text": "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。",
+      "speakerLabels": [
+        "发言人 1"
+      ]
+    },
+    {
+      "id": "s0002",
+      "paragraphId": "15FD0908-3BDF-45ED-822D-DF0E48BD56CC",
+      "audioPart": 1,
+      "startSeconds": 58.217999999999996,
+      "endSeconds": 63.738,
+      "text": "设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。",
+      "speakerLabels": [
+        "发言人 2"
+      ]
+    },
+    {
+      "id": "s0003",
+      "paragraphId": "DAF94796-49B3-496B-8556-B4C9C3F4141E",
+      "audioPart": 1,
+      "startSeconds": 65.114,
+      "endSeconds": 72.15400000000001,
+      "text": "好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。",
+      "speakerLabels": [
+        "发言人 1"
+      ]
+    },
+    {
+      "id": "s0004",
+      "paragraphId": "25211576-6476-4BF0-A3ED-A9B459D26E8B",
+      "audioPart": 1,
+      "startSeconds": 73.21,
+      "endSeconds": 78.25,
+      "text": "我记录了两个行动项：设计组完成首页交付，测试组验证离",
+      "speakerLabels": [
+        "发言人 2"
+      ]
+    },
+    {
+      "id": "s0005",
+      "paragraphId": "15AA9518-CB53-408A-9C2B-648F64BBF36A",
+      "audioPart": 1,
+      "startSeconds": 78.25,
+      "endSeconds": 78.72999999999999,
+      "text": "线流",
+      "speakerLabels": [
+        "发言人 2",
+        "发言人 3"
+      ]
+    },
+    {
+      "id": "s0006",
+      "paragraphId": "A09AEE92-4159-4CAD-90C7-66C6D709E0E9",
+      "audioPart": 1,
+      "startSeconds": 78.72999999999999,
+      "endSeconds": 80.25,
+      "text": "程。会议结束。",
+      "speakerLabels": [
+        "发言人 2"
+      ]
+    }
+  ],
+  "generation": {
+    "provider": "Codex（本次对话分析）",
+    "method": "analyst-json-validated-and-rendered",
+    "generatedAt": "2026-11-02T04:17:01.820503+00:00"
+  }
+}
