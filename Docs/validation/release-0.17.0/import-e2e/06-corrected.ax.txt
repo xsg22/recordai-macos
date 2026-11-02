@@ -1,0 +1,75 @@
+Window: "RecordAI", App: RecordAI.
+0 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise
+	1 split group recordings-AppWindow-1, SidebarNavigationSplitView
+		2 container
+			3 image RecordAI
+			4 text RecordAI 本地录音 · AI 转写
+			5 button 开始新录音
+			6 button 全部录音, 2
+			7 button 星标, 0
+			8 button 回收站, 0
+			9 pop up button Description: 分组筛选, 分组筛选, Value: 所有分组
+			10 button Description: 管理分组, ID: folder.badge.plus
+			11 text field (settable) 搜索录音名称或内容…
+			12 text 录音资料库
+			13 button 批量整理
+			14 menu button 过滤, Description: filter, ID: line.3.horizontal.decrease
+			15 scroll area
+				16 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					17 button (selected) Product-weekly-demo, 已完成，今天 18:16 · 31 秒
+					18 button mixed, 待处理，今天 18:16 · 29 秒
+			19 button Description: 设置, Help: 转录、同步账号与本机Agent
+			20 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
+		21 splitter (disabled, settable, float) 279
+		22 container
+			23 text field (settable) Value: Product-weekly-demo, Placeholder: 录音标题
+			24 button Description: 编辑录音标题, ID: pencil
+			25 button Description: 添加星标, ID: star
+			26 text 2026年11月2日 18:16—18:17 · 31 秒
+			27 button 继续录音
+			28 button 整理
+			29 button 导出
+			30 menu button 更多, Help: 导出及更多操作, ID: ellipsis
+			31 slider (settable, float) Description: 音频波形播放进度, Value: 13.85, Details: 13 秒，共 31 秒
+			32 text 00:00 00:31
+			33 button Description: 后退 15 秒, ID: gobackward.15
+			34 button Description: 播放录音, ID: play.fill
+			35 button Description: 前进 15 秒, ID: goforward.15
+			36 scroll area
+				37 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					38 button Description: 00:00, Help: 播放这一段，结束后自动暂停
+					39 menu button 发言人 1, Help: 修改名称或合并同一人的发言
+					40 button Description: 播放本段：大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					41 menu button 更多, Help: 编辑文字或修改本段发言人, ID: ellipsis
+					42 button Description: 00:08, Help: 播放这一段，结束后自动暂停
+					43 menu button 发言人 2, Help: 修改名称或合并同一人的发言
+					44 button Description: 播放本段：设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					45 menu button 更多, Help: 编辑文字或修改本段发言人, ID: ellipsis
+					46 button Description: 00:15, Help: 播放这一段，结束后自动暂停
+					47 menu button 发言人 1, Help: 修改名称或合并同一人的发言
+					48 button Description: 播放本段：好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					49 menu button 更多, Help: 编辑文字或修改本段发言人, ID: ellipsis
+					50 button Description: 00:23, Help: 播放这一段，结束后自动暂停
+					51 menu button 发言人 2, Help: 修改名称或合并同一人的发言
+					52 button Description: 播放本段：我记录了两个行动项：设计组完成首页交付，测试组验证离线流程。会议结束。, Help: 点击播放本段，播完自动暂停；文字校正请使用段落菜单
+					53 menu button 更多, Help: 编辑文字或修改本段发言人, ID: ellipsis
+			54 text 最多区分4位发言人；续录标签独立，可手动改名或合并。重叠与不确定片段请核对。
+			55 disclosure triangle Description: 原始字幕与时间戳, Value: off
+			56 scroll area
+				57 text 录音整理
+				58 button Description: 管理分组, ID: slider.horizontal.3
+				59 pop up button 分组, Value: 未分组
+	60 toolbar
+		61 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	62 text RecordAI
+	63 menu button Window sharing
+64 menu bar
+	65 RecordAI
+	66 File
+	67 Edit
+	68 View
+	69 RecordAI
+	70 Window
+	71 Help
+
+The focused UI element is 11 text field (settable) 搜索录音名称或内容…

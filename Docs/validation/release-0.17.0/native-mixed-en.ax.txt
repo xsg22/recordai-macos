@@ -1,0 +1,71 @@
+Window: "RecordAI", App: RecordAI.
+0 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise
+	1 split group recordings-AppWindow-1, SidebarNavigationSplitView
+		2 container
+			3 image RecordAI
+			4 text RecordAI Local recording · AI transcription
+			5 button New recording
+			6 button All recordings, 2
+			7 button Starred, 0
+			8 button Trash, 0
+			9 pop up button Description: Group filter, Group filter, Value: All groups
+			10 button Description: Manage groups, ID: folder.badge.plus
+			11 text field (settable) Search titles or transcripts…
+			12 text Recording library
+			13 button Select recordings
+			14 menu button Filter, Description: filter, ID: line.3.horizontal.decrease
+			15 scroll area
+				16 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					17 button Product-weekly-demo, Completed, Today 18:16 · 31 sec
+					18 button (selected) mixed, Completed, Today 18:16 · 29 sec
+			19 button Description: Settings, Help: Transcription, accounts and local agents
+			20 button Description: Processing status, Help: View audio capture, ASR, transcription and agent snapshot status
+		21 splitter (disabled, settable, float) 279
+		22 container
+			23 text field (settable) Value: mixed, Placeholder: Recording title
+			24 button Description: Edit recording title, ID: pencil
+			25 button Description: Add star, ID: star
+			26 text Nov 2, 2026 6:16 PM—6:16 PM · 29 sec
+			27 button Resume recording
+			28 button Organize
+			29 button Export
+			30 menu button More, Help: Export and more actions, ID: ellipsis
+			31 slider (settable, float) Description: Audio playback position, Value: 0, Details: 0 of 29 seconds
+			32 text 00:00 00:29
+			33 button Description: Back 15 seconds, ID: gobackward.15
+			34 button Description: Play recording, ID: play.fill
+			35 button Description: Forward 15 seconds, ID: goforward.15
+			36 scroll area
+				37 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					38 button Description: 00:00, Help: Play this segment and pause at its end
+					39 menu button Speaker 1, Help: Rename or merge the same speaker
+					40 button Help: Click to play this segment and pause at its end. Use the segment menu to correct text., Description: Play segment: Welcome to the record AI test. Please keep the original recording and organize it into a group. The next release is version 0.17.
+					41 menu button More, Help: Edit text or change the segment speaker
+					42 button Description: 00:09, Help: Play this segment and pause at its end
+					43 menu button Speaker 2, Help: Rename or merge the same speaker
+					44 button Description: Play segment: 大家好，今天测试离线转录，请保留原始录音。按照分组管理资料，让外部智能助手读取转录结果。, Help: Click to play this segment and pause at its end. Use the segment menu to correct text.
+					45 menu button More, Help: Edit text or change the segment speaker
+					46 button Description: 00:20, Help: Play this segment and pause at its end
+					47 menu button Speaker 3, Help: Rename or merge the same speaker
+					48 button Help: Click to play this segment and pause at its end. Use the segment menu to correct text., Description: Play segment: I will check a flying transcription on Friday. The budget is $25. Let the external agent read the final transcript.
+					49 menu button More, Help: Edit text or change the segment speaker
+			50 text Up to 4 speakers. Appended recordings have separate labels that you can rename or merge. Review overlapping or uncertain segments.
+			51 disclosure triangle Description: Original subtitles & timestamps, Value: off
+			52 scroll area
+				53 text Recording organization
+				54 button Description: Manage groups, ID: slider.horizontal.3
+				55 pop up button Group, Value: Ungrouped
+	56 toolbar
+		57 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	58 text RecordAI
+	59 menu button Window sharing
+60 menu bar
+	61 RecordAI
+	62 File
+	63 Edit
+	64 View
+	65 RecordAI
+	66 Window
+	67 Help
+
+The focused UI element is 0 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise

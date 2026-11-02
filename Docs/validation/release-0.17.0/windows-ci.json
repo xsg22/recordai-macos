@@ -1,0 +1,14 @@
+{
+  "runId": 41428182612,
+  "runURL": "https://github.com/xsg22/recordai-macos/actions/runs/41428182612",
+  "sourceCommit": "8d8147d3028f7e79301ec25599b5a339f5d09766",
+  "runnerOS": "Windows Server 2025 x64",
+  "python": "3.12.10",
+  "portableContractsPassed": 15,
+  "wasapiDependencyInstalled": "PyAudioWPatch 0.2.12.9",
+  "deviceInspectionStatus": "unavailable",
+  "hardwareCaptureValidated": false,
+  "nativeWindowsInferenceValidated": false,
+  "engineJob": "skipped",
+  "jobId": 125219816376
+}

@@ -1,0 +1,13 @@
+{
+  "recorded_at": "2026-11-02T10:28:14.158114+00:00",
+  "version": "0.17.0",
+  "sourceDigest": "742f47495f90f6a8975c9a5d420d5643a875da9c2f666636f4977adb2dd43aad",
+  "script_exit_code": 0,
+  "main_binary_sha256": "52ec7eece8f692a3c5f0262a8ff33fefb542d5fb34ea7870db802696b309cc72",
+  "cli_sha256": "c29efb6fee18278f19d99c05d381108a2274fb2ce3e4bc8a0f253ac53078a05c",
+  "embedded_asr_sha256": "8c402c341a8b10b8992cbb14cf74df5d8e7cb16b99bb28fd1013bef2cf123724",
+  "artifacts": {
+    "RecordAI-0.17.0-arm64.pkg": "a8483fa8b42e5a11781c86668421752285e59062d52745b392fc335bde728304",
+    "RecordAI-0.17.0-arm64.dmg": "73ebe166dc664b219c19fca6bb3c479d56024228d6b7dccf5c5937b092c890d7"
+  }
+}

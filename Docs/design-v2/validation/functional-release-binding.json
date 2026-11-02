@@ -1,9 +1,10 @@
 {
-  "recorded_at": "2026-11-02T07:50:30.636402+00:00",
-  "verifiedSourceCommit": "faa0f6ae94799a9c9c208113f5c258d2995313e9",
-  "sourceDigest": "90e98c7ca220fcc1e7cb441125ee828fa11cb20fa534f99d4a4118ed1d35666e",
+  "recorded_at": "2026-11-02T10:28:14.158114+00:00",
+  "verifiedSourceCommit": "8d8147d3028f7e79301ec25599b5a339f5d09766",
+  "sourceDigest": "742f47495f90f6a8975c9a5d420d5643a875da9c2f666636f4977adb2dd43aad",
   "runtimeInputs": [
     "Native/AgentCLI/main.swift",
+    "Native/QwenRuntime/language_policy.py",
     "Native/QwenRuntime/requirements.lock",
     "Native/QwenRuntime/speaker_attribution.py",
     "Native/QwenRuntime/worker.py",
@@ -15,9 +16,9 @@
     "Scripts/prepare-asr-runtime.py",
     "Scripts/qwen-runtime.spec"
   ],
-  "runtimeInputDigest": "58ceed798cb99f3c8bb36b29359a8c3a7f0888c20a16dfab6ba594f0fb0585d0",
-  "embeddedAsrSha256": "2f7d4892c51122c453862eb62829dc2391cafe7509acbbda00aaac8fda9cdc2b",
-  "releasePolicy": "用户明确允许主功能验证通过后先发布一版；本通道仅创建功能验证 prerelease，不将 UI 验收标为通过。",
-  "evidenceRoot": "Docs/validation/release-0.16.2",
-  "verifiedWorkingTree": "Release tag v0.16.2-functional.1 identifies the source matching these digests; later documentation-only commits do not alter application inputs."
+  "runtimeInputDigest": "c1e302448989b9960da3e5f70966fb86a8ba83d6c48478212c7e5e8bb0e891e6",
+  "embeddedAsrSha256": "8c402c341a8b10b8992cbb14cf74df5d8e7cb16b99bb28fd1013bef2cf123724",
+  "releasePolicy": "User authorized publication after primary functional validation; functional prerelease only, without full UI sign-off.",
+  "evidenceRoot": "Docs/validation/release-0.17.0",
+  "verifiedWorkingTree": "Application inputs match verifiedSourceCommit; later documentation/evidence commits must preserve these digests."
 }

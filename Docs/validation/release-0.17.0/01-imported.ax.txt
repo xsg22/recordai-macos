@@ -1,0 +1,50 @@
+The following is a diff from the previous accessibility tree for Window: "RecordAI" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 58-135
+~54 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise
+~	55 split group recordings-AppWindow-1, SidebarNavigationSplitView
+~		56 container
+~			57 image RecordAI
++			58 text RecordAI 本地录音 · AI 转写
++			59 button 开始新录音
++			60 button 全部录音, 2
++			61 button 星标, 0
++			62 button 回收站, 0
++			63 pop up button Description: 分组筛选, 分组筛选, Value: 所有分组
++			64 button Description: 管理分组, ID: folder.badge.plus
++			65 text field (settable) 搜索录音名称或内容…
++			66 text 录音资料库
++			67 button 批量整理
++			68 menu button 过滤, Description: filter, ID: line.3.horizontal.decrease
++			69 scroll area
++				70 list Secondary Actions: AXScrollToTop, AXScrollToBottom
++					71 button (selected) Product-weekly-demo, 待处理，今天 18:16 · 31 秒
++					72 button mixed, 待处理，今天 18:16 · 29 秒
++			73 button Description: 设置, Help: 转录、同步账号与本机Agent
++			74 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
++		75 splitter (disabled, settable, float) 279
++		76 container
++			77 text field (settable) Value: Product-weekly-demo, Placeholder: 录音标题
++			78 button Description: 编辑录音标题, ID: pencil
++			79 button Description: 添加星标, ID: star
++			80 text 2026年11月2日 18:16—18:17 · 31 秒
++			81 button 开始转录
++			82 button 整理
++			83 button 导出
++			84 menu button 更多, Help: 导出及更多操作, ID: ellipsis
++			85 slider (settable, float) Description: 音频波形播放进度, Value: 0, Details: 0 秒，共 31 秒
++			86 text 00:00 00:31
++			87 button Description: 后退 15 秒, ID: gobackward.15
++			88 button Description: 播放录音, ID: play.fill
++			89 button Description: 前进 15 秒, ID: goforward.15
++			90 scroll area
++				91 list Secondary Actions: AXScrollToTop, AXScrollToBottom
++					92 text 录音或导入音频后，转录正文会显示在这里。
++			93 scroll area
++				94 text 录音整理
++				95 button Description: 管理分组, ID: slider.horizontal.3
++				96 pop up button 分组, Value: 未分组
++	97 toolbar
++		98 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
++	99 text RecordAI
++	100 menu button Window sharing
+The focused UI element is 65 text field (settable) 搜索录音名称或内容…

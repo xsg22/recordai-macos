@@ -58,6 +58,12 @@ def main():
     runtime_paths = [ROOT / name for name in binding["runtimeInputs"]]
     version = plistlib.loads((ROOT / "Resources/Info.plist").read_bytes())["CFBundleShortVersionString"]
     issues = validate(read("import-e2e/result"), read("data-regression"), read("ui-contracts"), read("candidate-package"), binding, source_hash, digest(runtime_paths), version)
+    if (ROOT / "Resources/Localization/en.json").is_file():
+        bilingual = read("bilingual-acceptance")
+        if bilingual.get("sourceDigest") != source_hash or bilingual.get("packagedEngineSHA256") != binding["embeddedAsrSha256"]:
+            issues.append("中英文实测没有绑定当前源码与包内引擎")
+        if not all(bilingual.get(key) is True for key in ["englishTranscriptionAndAlignment", "mixedTranscriptionAndAlignment", "nativeEnglishInterface", "localeDataInvariant"]):
+            issues.append("缺英文/中英混合真实推理、界面与数据保全验证")
     for name in ["03-transcribed.jpg", "05-segment-ended.ax.txt", "06-corrected.ax.txt", "07-direct-entry.jpg", "09-direct-completed.jpg", "合成会议导入验收-原始识别.md", "合成会议导入验收-人工校正.md", "合成会议导入验收.srt"]:
         if not (evidence / "import-e2e" / name).is_file():
             issues.append("缺实测附件：" + name)

@@ -1,6 +1,6 @@
 # 中英文界面、转录与 Windows 验证准备
 
-2026-11-02，开发分支 `codex/bilingual-windows-validation`，基于 `53bb053`。本次没有发布新安装包；已有 0.16.2 发布证据和下载保持原有版本含义。
+2026-11-02，开发分支 `codex/bilingual-windows-validation`，基于 `53bb053`。本阶段改动已纳入 0.17.0 发布候选，最终安装包验证见 [0.17.0 交付记录](../release-0.17.0/README.md)；已有 0.16.2 发布证据保留原有版本含义。
 
 界面语言独立保存为跟随系统、简体中文或 English；转录语言独立保存为中文、英语或中英自动。设置中的说明明确：实时 Paraformer 为固定中英双语预览，最终 Qwen 转录遵循所选语言。修正自动模式下纯英文片段误用中文强制对齐策略的问题。没有新增模型下载或用系统 ASR 替换已有模型。
 
@@ -66,4 +66,4 @@ python3 Scripts/test-bilingual-engine.py \
 
 已准备 [PowerShell 入口及用法](../../../Platforms/Windows/README.md)、设备枚举、WASAPI 麦克风/系统声音分轨采集、Qwen 与 faster-whisper 本地 CPU/CUDA 引擎基准、JSON 报告及自动测试。静音、设备变化、驱动异常、非法时间戳、参考文本丢失、缺少 Windows 环境均不会伪装为成功。
 
-GitHub 工作流默认运行契约与设备枚举，可手动选择下载 tiny.en 并在 Windows Runner 的本地合成语音上实际跑 CPU 推理。该工作流已编写并解析 YAML，尚未推送、触发或产生远端成功结果。当前 Mac 未安装 PowerShell，也没有真实 Windows 环境，所以 PowerShell 执行、Windows 原生模型性能、WASAPI 采集、长录音及设备切换都仍待验证；不能据此交付 Windows 安装包。
+GitHub 工作流默认运行契约与设备枚举，可手动选择下载 tiny.en 并在 Windows Runner 的本地合成语音上实际跑 CPU 推理。该工作流的 15 项契约测试已在 Windows Server 2025 x64 / Python 3.12.10 上通过，PyAudioWPatch 安装成功；设备枚举为 unavailable，推理任务 skipped，见 [CI 记录](../release-0.17.0/windows-ci.json)。PowerShell 包装入口、Windows 原生模型性能、WASAPI 采集、长录音及设备切换仍待验证；不能据此交付 Windows 安装包。

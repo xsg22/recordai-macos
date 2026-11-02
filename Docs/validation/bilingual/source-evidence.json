@@ -1,7 +1,7 @@
 {
   "baseCommit": "53bb053d7afe0da2d270a6c2e88c98a5c202e70b",
   "branch": "codex/bilingual-windows-validation",
-  "uncommitted": true,
+  "uncommitted": false,
   "sourceSHA256": {
     "Sources/WaveformViews.swift": "b9c4f1e61c3c8e894a691b4cc4fe8e0e5b1915792769458bd42845e134e043d7",
     "Sources/AppState.swift": "c76b6aedbf948bf29cd0ca131eb7831c3f375fc64dcc5d8b898902d2f6f69da2",
@@ -70,9 +70,13 @@
     "Resources/Localization/en.json": "35b5086fd2ecdbdefaa7a6ddda336fbaa035874ac4766790d6ebaa6bf37f749c"
   },
   "previewSHA256": "4ca3a6ff7d0b3e64644426561ca60fb115040e2a8e2ebecd5cab7507481b29bb",
-  "windowsNativeExecuted": false,
   "runtimeSHA256": {
     ".build/bilingual-e2e/Engine/qwen-asr": "8c402c341a8b10b8992cbb14cf74df5d8e7cb16b99bb28fd1013bef2cf123724",
     ".build/bilingual-e2e/Engine/paraformer-live": "63902fdd7a01a9bad1dba8eeab2e202092f1bac661d3a747124c4128ae79725c"
-  }
+  },
+  "verifiedSourceCommit": "8d8147d3028f7e79301ec25599b5a339f5d09766",
+  "windowsNativeContractsExecuted": true,
+  "windowsNativeInferenceExecuted": false,
+  "windowsHardwareCaptureExecuted": false,
+  "windowsContractRunURL": "https://github.com/xsg22/recordai-macos/actions/runs/41428182612"
 }
