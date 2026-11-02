@@ -9,6 +9,10 @@ fi
 python3 -c 'import sys; assert sys.version_info[:2] == (3, 12), "请使用 Python 3.12 构建；最终用户不需要安装 Python"'
 if (( ! candidate )); then python3 Scripts/check-ui-acceptance.py; fi
 mkdir -p .build
+python3 Scripts/check-localization.py
+zsh Scripts/test-localization.zsh
+python3 Tests/LanguagePolicySmoke.py
+export RECORD_AI_UI_LANGUAGE=zh-Hans
 python3 Scripts/test-recording-entry.py
 python3 Scripts/test-ui-contracts.py
 python3 Scripts/test-agent-setup.py

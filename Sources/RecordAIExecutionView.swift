@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RecordAIExecutionView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
     @Environment(\.dismiss) private var dismiss
 
@@ -66,17 +67,17 @@ struct RecordAIExecutionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            RecordAIPageHeader(title: "执行追踪", subtitle: "当前会话的真实处理阶段。") { Button("完成") { dismiss() }.keyboardShortcut(.cancelAction) }
+            RecordAIPageHeader(title: L10n.text("执行追踪"), subtitle: L10n.text("当前会话的真实处理阶段。")) { Button(L10n.text("完成")) { dismiss() }.keyboardShortcut(.cancelAction) }
             RecordAICard(quiet: true) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
-                        Text(state.current?.title ?? "无录音会话").font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                        Text(state.current?.title ?? L10n.text("无录音会话")).font(.system(size: 14, weight: .semibold)).lineLimit(1)
                         Spacer()
-                        Text(sessionStatus).font(.system(size: 11)).foregroundStyle(RecordAITheme.muted)
-                            .help("录音时长：" + clock(state.elapsed > 0 ? state.elapsed : Int(state.current?.duration ?? 0)))
+                        Text(L10n.text(sessionStatus)).font(.system(size: 11)).foregroundStyle(RecordAITheme.muted)
+                            .help(L10n.text("录音时长：" + clock(state.elapsed > 0 ? state.elapsed : Int(state.current?.duration ?? 0))))
                     }.frame(minHeight: 46)
                     Divider()
-                    HStack { Text("总状态"); Spacer(); Text(state.status).lineLimit(2) }.frame(minHeight: 46)
+                    HStack { Text(L10n.text("总状态")); Spacer(); Text(L10n.processingStatus(state.status)).lineLimit(2) }.frame(minHeight: 46)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             VStack(spacing: 0) {
@@ -85,10 +86,10 @@ struct RecordAIExecutionView: View {
                         Circle().fill(["待修复", "失败", "待重试", "部分完成"].contains(stage.1) ? Color.orange : RecordAITheme.accent)
                             .frame(width: 10, height: 10).padding(.top, 4)
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(stage.0).font(.system(size: 14, weight: .semibold))
-                            Text(stage.2).font(.system(size: 12)).foregroundStyle(RecordAITheme.muted).lineLimit(2)
+                            Text(L10n.text(stage.0)).font(.system(size: 14, weight: .semibold))
+                            Text(L10n.processingStatus(stage.2)).font(.system(size: 12)).foregroundStyle(RecordAITheme.muted).lineLimit(2)
                         }.frame(maxWidth: .infinity, alignment: .leading)
-                        Text(stage.1).font(.system(size: 11)).foregroundStyle(RecordAITheme.muted)
+                        Text(L10n.text(stage.1)).font(.system(size: 11)).foregroundStyle(RecordAITheme.muted)
                             .padding(.horizontal, 6).padding(.vertical, 5)
                             .frame(minHeight: 44, alignment: .top)
                             .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 6))
@@ -96,7 +97,7 @@ struct RecordAIExecutionView: View {
                 }
             }.padding(20).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(RecordAITheme.border, lineWidth: 1))
-                .help("片段关闭后依次定稿并区分发言人；录音继续。音频与已保存文字通过 AgentData、CLI 和 MCP 读取。")
+                .help(L10n.text("片段关闭后依次定稿并区分发言人；录音继续。音频与已保存文字通过 AgentData、CLI 和 MCP 读取。"))
             Spacer()
         }.padding(28).frame(width: 720, height: 780).font(AppTypography.body)
             .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)

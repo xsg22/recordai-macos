@@ -3,6 +3,7 @@ import SwiftUI
 
 /// 统一阅读面：已定稿段落 + 本次实时片段；历史预览只在用户主动选择时展示。
 struct TranscriptTimelineView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
     @State private var history = false
     @State private var following = true
@@ -17,38 +18,38 @@ struct TranscriptTimelineView: View {
             if history || state.editingTranscript {
             HStack {
                 if !state.liveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
-                Picker("转写来源", selection: $history) {
-                    Text("正文").tag(false); Text("实时历史").tag(true)
+                Picker(L10n.text("转写来源"), selection: $history) {
+                    Text(L10n.text("正文")).tag(false); Text(L10n.text("实时历史")).tag(true)
                 }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 240).controlSize(.regular)
                 }
                 Spacer()
                 if showingLive || history {
-                    Toggle("跟随最新", isOn: $following).toggleStyle(.checkbox).font(AppTypography.secondary)
+                    Toggle(L10n.text("跟随最新"), isOn: $following).toggleStyle(.checkbox).font(AppTypography.secondary)
                 } else {
-                    Button(state.editingTranscript ? "完成编辑" : "编辑全文") { state.editingTranscript.toggle() }.disabled(state.busy)
+                    Button(L10n.text(state.editingTranscript ? "完成编辑" : "编辑全文")) { state.editingTranscript.toggle() }.disabled(state.busy)
                 }
             }
             }
             if !history && state.editingTranscript && !showingLive { fullEditor }
             else { timeline.padding(.top, showingLive ? 10 : 0) }
             if let record = state.current, !record.speakerAnalysisMessage.isEmpty, !showingLive && !history {
-                Text(record.speakerAnalysisMessage).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(3)
+                Text(L10n.text(record.speakerAnalysisMessage)).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(3)
             }
             if !state.recording && !(state.current?.subtitles.isEmpty ?? true) && !history {
-                DisclosureGroup("原始字幕与时间戳") {
+                DisclosureGroup(L10n.text("原始字幕与时间戳")) {
                     ScrollView { Text(state.current?.subtitles ?? "").font(.system(size: 15, design: .monospaced)).textSelection(.enabled) }.frame(maxHeight: 100)
                 }.font(AppTypography.secondary)
             }
         }
         .contextMenu {
-            Toggle("查看实时历史", isOn: $history)
-            Toggle("跟随最新", isOn: $following)
+            Toggle(L10n.text("查看实时历史"), isOn: $history)
+            Toggle(L10n.text("跟随最新"), isOn: $following)
         }
         .onChange(of: state.selection) { history = false; state.editingTranscript = false; following = true }
         .onChange(of: state.recording) { if state.recording { history = false; following = true; state.editingTranscript = false } }
         .onChange(of: history) { following = !history }
         .sheet(item: $editing) { paragraph in
-            TranscriptParagraphEditor(paragraph: paragraph, speakerName: state.current?.paragraphSpeaker(paragraph) ?? "", cancel: { editing = nil }, save: { updated in
+            TranscriptParagraphEditor(paragraph: paragraph, speakerName: state.current?.displayParagraphSpeaker(paragraph) ?? "", cancel: { editing = nil }, save: { updated in
                 let success = state.editTranscriptParagraph(paragraph.id, text: updated)
                 if success { editing = nil }; return success
             })
@@ -68,8 +69,8 @@ struct TranscriptTimelineView: View {
             if state.busy || state.preparing { ProgressView().controlSize(.small) }
             else { Image(systemName: state.recording ? "waveform" : state.current?.status == .completed ? "checkmark.circle.fill" : "text.alignleft").foregroundStyle(accent) }
             VStack(alignment: .leading, spacing: 3) {
-                Text(stageTitle).font(AppTypography.body.weight(.medium))
-                Text(stageDetail).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Text(L10n.text(stageTitle)).font(AppTypography.body.weight(.medium))
+                Text(L10n.text(stageDetail)).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
@@ -118,7 +119,7 @@ struct TranscriptTimelineView: View {
                         .background(UserScrollDetector { following = false })
                 }
                 if !following && (showingLive || history) {
-                    Button { following = true; proxy.scrollTo("transcript-tail", anchor: .bottom) } label: { Label("回到最新", systemImage: "arrow.down") }
+                    Button { following = true; proxy.scrollTo("transcript-tail", anchor: .bottom) } label: { Label(L10n.text("回到最新"), systemImage: "arrow.down") }
                         .buttonStyle(.bordered).padding(6).background(.regularMaterial, in: Capsule())
                 }
             }
@@ -136,18 +137,18 @@ struct TranscriptTimelineView: View {
                             if let time = group.combined.start {
                                 Button(clock(time)) { state.playReadingGroup(group.id) }.buttonStyle(.plain)
                                     .font(AppTypography.secondary.monospacedDigit()).foregroundStyle(RecordAITheme.muted).frame(width: 46, height: 24)
-                                    .disabled(!state.canPlayTranscriptParagraph(group.combined)).help("播放合并片段，结束后自动暂停")
+                                    .disabled(!state.canPlayTranscriptParagraph(group.combined)).help(L10n.text("播放合并片段，结束后自动暂停"))
                             } else { Color.clear.frame(width: 46, height: 24) }
-                            Text(Set(group.paragraphs.map { Set($0.speakerIDs) }).count > 1 ? "发言人需核对" : record.paragraphSpeaker(group.combined))
+                            Text(Set(group.paragraphs.map { Set($0.speakerIDs) }).count > 1 ? L10n.text("发言人需核对") : record.displayParagraphSpeaker(group.combined))
                                 .font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
                                 .frame(width: 104, alignment: .leading).padding(.top, 4)
                             Button { state.playReadingGroup(group.id) } label: {
                                 Text(group.combined.text).font(.system(size: 16)).lineSpacing(4).lineLimit(nil)
                                     .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
                             }.buttonStyle(.plain).disabled(!state.canPlayTranscriptParagraph(group.combined))
-                                .accessibilityLabel("播放合并片段：" + group.combined.text)
+                                .accessibilityLabel(L10n.text("播放合并片段：") + group.combined.text)
                         }
-                        DisclosureGroup("原始分段（\(group.paragraphs.count)）· 播放与编辑") {
+                        DisclosureGroup(L10n.text("原始分段（\(group.paragraphs.count)）· 播放与编辑")) {
                             ForEach(group.paragraphs) { paragraph in paragraphRow(paragraph, record: record) }
                         }.font(AppTypography.secondary).padding(.leading, 70)
                     }.padding(.vertical, 6)
@@ -156,11 +157,11 @@ struct TranscriptTimelineView: View {
             }
         } else if !state.text.isEmpty {
             VStack(alignment: .leading, spacing: 7) {
-                if showingLive { Text("已有定稿").font(AppTypography.secondary).foregroundStyle(.secondary) }
+                if showingLive { Text(L10n.text("已有定稿")).font(AppTypography.secondary).foregroundStyle(.secondary) }
                 Text(state.text).font(AppTypography.transcript).lineSpacing(7).textSelection(.enabled)
-                if !(state.current?.transcriptParagraphs.isEmpty ?? true) { Text("全文已编辑，旧的发言人分段未同步；可重新转录生成新分段。").font(AppTypography.secondary).foregroundStyle(.secondary) }
+                if !(state.current?.transcriptParagraphs.isEmpty ?? true) { Text(L10n.text("全文已编辑，旧的发言人分段未同步；可重新转录生成新分段。")).font(AppTypography.secondary).foregroundStyle(.secondary) }
             }
-        } else if !showingLive { Text("录音或导入音频后，转录正文会显示在这里。").font(AppTypography.body).foregroundStyle(.secondary).padding(.vertical, 18) }
+        } else if !showingLive { Text(L10n.text("录音或导入音频后，转录正文会显示在这里。")).font(AppTypography.body).foregroundStyle(.secondary).padding(.vertical, 18) }
     }
     private func paragraphRow(_ paragraph: TranscriptParagraph, record: MeetingRecord) -> some View {
         HStack(alignment: .top, spacing: 12) {
@@ -168,44 +169,44 @@ struct TranscriptTimelineView: View {
                 Button(clock(time)) { state.playTranscriptParagraph(paragraph) }
                     .buttonStyle(.plain).font(AppTypography.secondary.monospacedDigit()).foregroundStyle(RecordAITheme.muted)
                     .frame(width: 46, height: 24).contentShape(Rectangle())
-                    .disabled(!state.canPlayTranscriptParagraph(paragraph)).help("播放这一段，结束后自动暂停")
+                    .disabled(!state.canPlayTranscriptParagraph(paragraph)).help(L10n.text("播放这一段，结束后自动暂停"))
             } else { Color.clear.frame(width: 46, height: 24) }
             Group {
                 if let id = paragraph.speakerIDs.first, paragraph.speakerIDs.count == 1 { speakerMenu(id, record: record) }
-                else { Text(record.paragraphSpeaker(paragraph)).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).padding(.top, 4) }
+                else { Text(record.displayParagraphSpeaker(paragraph)).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).padding(.top, 4) }
             }.frame(width: 104, alignment: .leading)
             Group {
                 if state.canPlayTranscriptParagraph(paragraph) {
                     Button { state.playTranscriptParagraph(paragraph) } label: { paragraphText(paragraph) }.buttonStyle(.plain)
-                        .help("点击播放本段，播完自动暂停；文字校正请使用段落菜单")
-                        .accessibilityLabel("播放本段：" + paragraph.text)
+                        .help(L10n.text("点击播放本段，播完自动暂停；文字校正请使用段落菜单"))
+                        .accessibilityLabel(L10n.text("播放本段：") + paragraph.text)
                 } else { paragraphText(paragraph).textSelection(.enabled) }
             }
                 .contextMenu {
-                    Button("复制这段文字") {
+                    Button(L10n.text("复制这段文字")) {
                         NSPasteboard.general.clearContents(); NSPasteboard.general.setString(paragraph.text, forType: .string)
                     }
-                    Button("编辑这段") { editing = paragraph }.disabled(state.locked)
+                    Button(L10n.text("编辑这段")) { editing = paragraph }.disabled(state.locked)
                 }
                 Menu {
                     if showingLive || !state.liveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
-                        Toggle("查看实时历史", isOn: $history)
-                        Toggle("跟随最新", isOn: $following)
+                        Toggle(L10n.text("查看实时历史"), isOn: $history)
+                        Toggle(L10n.text("跟随最新"), isOn: $following)
                         Divider()
                     }
-                    Button("编辑这段") { editing = paragraph }.disabled(state.locked)
-                    Menu("修改这段发言人") {
+                    Button(L10n.text("编辑这段")) { editing = paragraph }.disabled(state.locked)
+                    Menu(L10n.text("修改这段发言人")) {
                         let ids = Array(Set((Array(record.speakerNames.keys) + record.transcriptParagraphs.flatMap(\.speakerIDs)).map { record.canonicalSpeaker($0) })).sorted()
                         ForEach(ids, id: \.self) { id in
-                            Button(record.speakerName(id)) { state.assignParagraphSpeaker(paragraph.id, speakerID: id) }
+                            Button(record.displaySpeakerName(id)) { state.assignParagraphSpeaker(paragraph.id, speakerID: id) }
                         }
                         Divider()
-                        Button("标为发言人未确定") { state.assignParagraphSpeaker(paragraph.id, speakerID: nil) }
+                        Button(L10n.text("标为发言人未确定")) { state.assignParagraphSpeaker(paragraph.id, speakerID: nil) }
                     }.disabled(state.locked)
                     if paragraph.previousSpeakerIDs != nil {
-                        Button("撤销本段发言人修改") { state.undoParagraphSpeaker(paragraph.id) }.disabled(state.locked)
+                        Button(L10n.text("撤销本段发言人修改")) { state.undoParagraphSpeaker(paragraph.id) }.disabled(state.locked)
                     }
-                } label: { Image(systemName: "ellipsis").frame(width: 28, height: 28) }.menuStyle(.borderlessButton).fixedSize().help("编辑文字或修改本段发言人")
+                } label: { Image(systemName: "ellipsis").frame(width: 28, height: 28) }.menuStyle(.borderlessButton).fixedSize().help(L10n.text("编辑文字或修改本段发言人"))
         }.padding(.vertical, 7)
             .background(state.playingParagraphID == paragraph.id ? accent.opacity(0.09) : .clear, in: RoundedRectangle(cornerRadius: 6))
     }
@@ -217,38 +218,38 @@ struct TranscriptTimelineView: View {
         let canonical = record.canonicalSpeaker(id)
         let others = record.speakerNames.keys.filter { record.canonicalSpeaker($0) == $0 && $0 != canonical }.sorted()
         return Menu {
-            if canonical != id { Button("恢复独立发言人标签") { state.unmergeSpeaker(id) } }
-            Button("修改名称…") { renaming = canonical }
+            if canonical != id { Button(L10n.text("恢复独立发言人标签")) { state.unmergeSpeaker(id) } }
+            Button(L10n.text("修改名称…")) { renaming = canonical }
             if !others.isEmpty {
-                Menu("合并到") { ForEach(others, id: \.self) { target in Button(record.speakerName(target)) { state.mergeSpeaker(canonical, into: target) } } }
+                Menu(L10n.text("合并到")) { ForEach(others, id: \.self) { target in Button(record.displaySpeakerName(target)) { state.mergeSpeaker(canonical, into: target) } } }
             }
-        } label: { Text(record.speakerName(canonical)).font(.system(size: 13, weight: .medium)).lineLimit(1).truncationMode(.tail).frame(maxWidth: .infinity, minHeight: 24, alignment: .leading) }
-            .menuStyle(.borderlessButton).tint(RecordAITheme.ink).foregroundStyle(RecordAITheme.ink).help("修改名称或合并同一人的发言")
+        } label: { Text(record.displaySpeakerName(canonical)).font(.system(size: 13, weight: .medium)).lineLimit(1).truncationMode(.tail).frame(maxWidth: .infinity, minHeight: 24, alignment: .leading) }
+            .menuStyle(.borderlessButton).tint(RecordAITheme.ink).foregroundStyle(RecordAITheme.ink).help(L10n.text("修改名称或合并同一人的发言"))
     }
     @ViewBuilder private var currentLiveRows: some View {
-        if !state.text.isEmpty { Divider(); Text("本次实时识别 · 未定稿").font(AppTypography.secondary).foregroundStyle(.secondary) }
+        if !state.text.isEmpty { Divider(); Text(L10n.text("本次实时识别 · 未定稿")).font(AppTypography.secondary).foregroundStyle(.secondary) }
         ForEach(state.recordingLiveUtterances) { row in liveRow(row) }
         if !state.livePartial.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                Text("正在识别 · 可能修订").font(AppTypography.secondary).foregroundStyle(.secondary)
+                Text(L10n.text("正在识别 · 可能修订")).font(AppTypography.secondary).foregroundStyle(.secondary)
                 Text(state.livePartial).font(AppTypography.transcript).lineSpacing(7).foregroundStyle(.secondary).textSelection(.enabled)
             }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
         } else if state.recordingLiveUtterances.isEmpty {
-            Text(state.liveStatus.isEmpty ? "等待语音，识别文字会持续出现…" : state.liveStatus).font(AppTypography.body).foregroundStyle(.secondary).padding(.vertical, 12)
+            Text(L10n.text(state.liveStatus.isEmpty ? "等待语音，识别文字会持续出现…" : state.liveStatus)).font(AppTypography.body).foregroundStyle(.secondary).padding(.vertical, 12)
         }
     }
     @ViewBuilder private var historyRows: some View {
-        Text("录音时的识别记录 · 未定稿，不用于导出和同步").font(AppTypography.secondary).foregroundStyle(.secondary)
+        Text(L10n.text("录音时的识别记录 · 未定稿，不用于导出和同步")).font(AppTypography.secondary).foregroundStyle(.secondary)
         if let record = state.current, !record.liveUtterances.isEmpty {
             if !record.legacyLiveText.isEmpty {
-                Text("之前的实时记录").font(AppTypography.secondary).foregroundStyle(.secondary)
+                Text(L10n.text("之前的实时记录")).font(AppTypography.secondary).foregroundStyle(.secondary)
                 Text(record.legacyLiveText).font(AppTypography.transcript).lineSpacing(7).textSelection(.enabled)
                 Divider()
             }
             ForEach(record.liveUtterances) { row in liveRow(row) }
             if state.recording && !state.livePartial.isEmpty { Text(state.livePartial).font(AppTypography.transcript).foregroundStyle(.secondary) }
         } else {
-            Text(state.liveText.isEmpty ? "这场会议没有实时识别历史。" : state.liveText).font(AppTypography.transcript).lineSpacing(7).textSelection(.enabled)
+            Text(state.liveText.isEmpty ? L10n.text("这场会议没有实时识别历史。") : state.liveText).font(AppTypography.transcript).lineSpacing(7).textSelection(.enabled)
         }
     }
     private func liveRow(_ row: LiveUtterance) -> some View {
@@ -259,7 +260,7 @@ struct TranscriptTimelineView: View {
     }
     private var fullEditor: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("修改全文后，旧的发言人分段可能无法对应。少量纠错建议在段落菜单里编辑。").font(AppTypography.secondary).foregroundStyle(.secondary)
+            Text(L10n.text("修改全文后，旧的发言人分段可能无法对应。少量纠错建议在段落菜单里编辑。")).font(AppTypography.secondary).foregroundStyle(.secondary)
             TextEditor(text: $state.text).font(AppTypography.transcript).lineSpacing(7)
                 .scrollContentBackground(.hidden).disabled(state.locked).onChange(of: state.text) { state.scheduleSave() }
         }
@@ -271,6 +272,7 @@ struct TranscriptTimelineView: View {
 }
 
 struct TranscriptParagraphEditor: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let cancel: () -> Void
     let save: (String) -> Bool
     private let paragraph: TranscriptParagraph
@@ -283,17 +285,17 @@ struct TranscriptParagraphEditor: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: "编辑这段文字", subtitle: "保留录音时间和发言人标签。") { Button("取消", action: cancel).keyboardShortcut(.cancelAction) }
+            RecordAIPageHeader(title: L10n.text("编辑这段文字"), subtitle: L10n.text("保留录音时间和发言人标签。")) { Button(L10n.text("取消"), action: cancel).keyboardShortcut(.cancelAction) }
             TextEditor(text: $draft).font(AppTypography.body).lineSpacing(6).padding(12)
                 .scrollContentBackground(.hidden).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(RecordAITheme.border, lineWidth: 1))
-                .accessibilityLabel("段落正文")
-            if failed { RecordAIInfo(text: "尚未保存，输入仍保留，请重试。", warning: true) }
+                .accessibilityLabel(L10n.text("段落正文"))
+            if failed { RecordAIInfo(text: L10n.text("尚未保存，输入仍保留，请重试。"), warning: true) }
             HStack {
                 if let start = paragraph.start, let end = paragraph.end {
                     Text(String(format: "%02d:%02d—%02d:%02d", Int(start) / 60, Int(start) % 60, Int(end) / 60, Int(end) % 60) + (speakerName.isEmpty ? "" : " · " + speakerName)).font(AppTypography.secondary).foregroundStyle(.secondary)
                 }
-                Spacer(); Button("保存") { failed = !save(draft) }.buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction)
+                Spacer(); Button(L10n.text("保存")) { failed = !save(draft) }.buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction)
             }
         }.padding(28).frame(width: 720, height: 446).buttonStyle(RecordAISecondaryButtonStyle())
     }

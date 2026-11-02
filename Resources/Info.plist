@@ -7,8 +7,8 @@
     <key>CFBundleDisplayName</key><string>RecordAI</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.16.2</string>
-    <key>CFBundleVersion</key><string>37</string>
+    <key>CFBundleShortVersionString</key><string>0.17.0</string>
+    <key>CFBundleVersion</key><string>38</string>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSMicrophoneUsageDescription</key><string>录制你的声音并在本机转为文字，音频不会上传。</string>

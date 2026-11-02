@@ -1,0 +1,82 @@
+name: Windows feasibility contracts
+on:
+  workflow_dispatch:
+    inputs:
+      run_engine:
+        description: 'Download the tiny English model and run real CPU inference on synthetic speech (no recording)'
+        type: boolean
+        default: false
+  push:
+    branches: ['codex/bilingual-windows-validation']
+    paths: ['Platforms/Windows/**', 'Tests/windows/**', '.github/workflows/windows-validation.yml']
+  pull_request:
+    paths: ['Platforms/Windows/**', 'Tests/windows/**', '.github/workflows/windows-validation.yml']
+permissions:
+  contents: read
+env:
+  PYTHONUTF8: '1'
+jobs:
+  contracts:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - name: Run portable WAV, metrics, reporting and guard contracts
+        run: python -m unittest discover -s Tests/windows -v
+      - name: Install the pinned WASAPI probe dependency
+        run: python -m pip install -r Platforms/Windows/requirements-capture.txt
+      - name: Inspect runner audio devices without recording
+        shell: pwsh
+        run: |
+          python Platforms/Windows/recordai_probe.py devices --output .build/windows-ci/devices.json
+          # Hosted runners may have no audio endpoints. An unavailable device is evidence, not a capture pass.
+          if ($LASTEXITCODE -notin @(0, 2)) { exit $LASTEXITCODE }
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-device-inspection
+          path: .build/windows-ci/devices.json
+  engine:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_engine
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          architecture: x64
+      - run: python -m pip install -r Platforms/Windows/requirements-whisper.txt
+      - name: Generate local synthetic English speech without capture
+        shell: powershell
+        run: |
+          Add-Type -AssemblyName System.Speech
+          New-Item -ItemType Directory -Force .build/windows-engine | Out-Null
+          $text = 'Welcome to Record AI. This is an offline transcription test. Please keep the original recording.'
+          [IO.File]::WriteAllText((Join-Path $PWD '.build/windows-engine/reference.txt'), $text)
+          $synth = [System.Speech.Synthesis.SpeechSynthesizer]::new()
+          $format = [System.Speech.AudioFormat.SpeechAudioFormatInfo]::new(16000, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen, [System.Speech.AudioFormat.AudioChannel]::Mono)
+          try {
+            $voice = $synth.GetInstalledVoices() | Where-Object { $_.VoiceInfo.Culture.Name -like 'en-*' } | Select-Object -First 1
+            if (-not $voice) { throw 'No installed English TTS voice. No inference claim can be made.' }
+            $synth.SelectVoice($voice.VoiceInfo.Name)
+            $synth.SetOutputToWaveFile((Join-Path $PWD '.build/windows-engine/english.wav'), $format)
+            $synth.Speak($text)
+          } finally { $synth.Dispose() }
+      - name: Real Windows CPU inference and accuracy report
+        run: >-
+          python Platforms/Windows/recordai_probe.py transcribe
+          --engine faster-whisper --model Systran/faster-whisper-tiny.en --allow-download
+          --input .build/windows-engine/english.wav --reference .build/windows-engine/reference.txt
+          --language en --device cpu --output .build/windows-engine/engine.json
+      - name: Require native inference and recognizable content
+        run: >-
+          python -c "import json; r=json.load(open('.build/windows-engine/engine.json')); assert r['nativeWindowsInferenceValidated']; assert r['quality']['wordErrorRate'] <= .35, r['quality']"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-synthetic-engine-benchmark
+          path: .build/windows-engine/

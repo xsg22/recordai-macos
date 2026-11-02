@@ -1,0 +1,12 @@
+{
+  "language": "auto",
+  "paragraphs": 3,
+  "processingSeconds": 9.401394009590149,
+  "realModelInference": true,
+  "textPreserved": true,
+  "audioDuration": 29.8768125,
+  "inputSHA256": "34b1ac292dd8ff3e8fd67bba5181413c67ad032178c3d0587d348443fd26c707",
+  "syntheticInput": true,
+  "platform": "macOS arm64",
+  "windowsValidated": false
+}

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RecordAIErrorView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let message: String
     let close: () -> Void
     var retry: (() -> Void)? = nil
@@ -8,14 +9,14 @@ struct RecordAIErrorView: View {
         VStack(alignment: .leading, spacing: 24) {
             Image(systemName: "exclamationmark.triangle").font(.system(size: 30)).foregroundStyle(.orange)
                 .frame(width: 64, height: 64).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 15))
-            Text("操作未能完成").font(.system(size: 24, weight: .semibold))
-            Text(message).font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
+            Text(L10n.text("操作未能完成")).font(.system(size: 24, weight: .semibold))
+            Text(L10n.text(message)).font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
                 .lineSpacing(5).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
             HStack {
-                Button("返回", action: close).keyboardShortcut(.cancelAction)
+                Button(L10n.text("返回"), action: close).keyboardShortcut(.cancelAction)
                 Spacer()
-                if let retry { Button("重试", action: retry).buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction) }
+                if let retry { Button(L10n.text("重试"), action: retry).buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction) }
             }
         }.padding(28).frame(width: 470).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle())
     }

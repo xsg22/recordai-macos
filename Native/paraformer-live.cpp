@@ -100,6 +100,9 @@ int main(int argc,char **argv) {
     try {
         if(argc==5 && std::string(argv[1])=="segment")return segment(argv[2],argv[3],argv[4]);
         if(argc!=3)throw std::runtime_error("usage: paraformer-live modelDirectory language OR segment modelDirectory wav outputDirectory");
+        const std::string requestedLanguage=argv[2];
+        if(requestedLanguage!="zh"&&requestedLanguage!="en"&&requestedLanguage!="auto")
+            throw std::runtime_error("Live preview supports Chinese and English only (zh, en, auto).");
         const std::string models=argv[1];
         SherpaOnnxOnlineRecognizerConfig config{};
         std::string encoder=models+"/encoder.int8.onnx",decoder=models+"/decoder.int8.onnx",tokens=models+"/tokens.txt";
@@ -111,6 +114,9 @@ int main(int argc,char **argv) {
         auto *recognizer=SherpaOnnxCreateOnlineRecognizer(&config);
         auto *vad=makeVAD(models+"/silero_vad.onnx");
         if(!recognizer||!vad)throw std::runtime_error("Paraformer或Silero模型加载失败");
+        // This fixed bilingual model does not force a single language. The final Qwen pass does.
+        std::cout<<"{\"type\":\"ready\",\"text\":\"\",\"start\":0,\"end\":0,\"requestedLanguage\":"
+                 <<quoted(requestedLanguage)<<",\"effectiveLanguage\":\"zh-en\",\"forcedLanguage\":false}"<<std::endl;
         const SherpaOnnxOnlineStream *stream=nullptr;
         std::vector<float> prefix,buffer;uint64_t total=0;double begin=0;std::string last;
         auto decode=[&](bool final) {

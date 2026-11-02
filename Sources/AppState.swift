@@ -26,7 +26,12 @@ final class AppState: ObservableObject {
     @Published var editingTranscript = false
     @Published var audio: URL?
     @Published var playbackSegment = 0
-    @Published var language = "zh"
+    @Published var language = TranscriptionLanguage.saved {
+        didSet {
+            guard TranscriptionLanguage(rawValue: language) != nil else { language = oldValue; return }
+            UserDefaults.standard.set(language, forKey: TranscriptionLanguage.preferenceKey)
+        }
+    }
     @Published var busy = false
     @Published var recording = false
     @Published var preparing = false
@@ -150,7 +155,7 @@ final class AppState: ObservableObject {
         let editedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !editedTitle.isEmpty { current.title = editedTitle }
         current.text = text
-        return AgentDataPublisher.markdown(current)
+        return AgentDataPublisher.presentationMarkdown(current)
     }
 
     init(storageURL: URL? = nil, connectionNamespace: String = "", speechModelStore: ASRModelStore? = nil,
@@ -336,7 +341,7 @@ final class AppState: ObservableObject {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.audio, .mpeg4Audio, .mp3, .wav, .aiff]
         panel.allowsMultipleSelection = false
-        panel.message = "导入音频后会在本机保存副本，文件不会上传。"
+        panel.message = L10n.text("导入音频后会在本机保存副本，文件不会上传。")
         if panel.runModal() == .OK, let url = panel.url { useAudio(url) }
     }
 
@@ -570,7 +575,7 @@ final class AppState: ObservableObject {
         recordingIssue = nil; liveLevels = [Float](repeating: 0, count: 72)
         saveEdits(); stopPlayback(); preparing = true
         Task { [self] in
-            var record = continuing ? current! : MeetingRecord(title: "会议 " + Date().formatted(date: .numeric, time: .shortened), language: language, status: .recording)
+            var record = continuing ? current! : MeetingRecord(title: L10n.text("会议 ") + Date().formatted(Date.FormatStyle(date: .numeric, time: .shortened).locale(L10n.locale)), language: language, status: .recording)
             let original = record
             do {
                 record.recordingSessionMode = activeRecordingSessionMode
@@ -1072,7 +1077,7 @@ final class AppState: ObservableObject {
     func dismissAgentOnboarding() { agentOnboardingDidAppear(); agentOnboardingRecordingID = nil }
     @discardableResult func copyAgentPrompt() -> Bool {
         NSPasteboard.general.clearContents()
-        guard NSPasteboard.general.setString(agentSetup.prompt, forType: .string) else {
+        guard NSPasteboard.general.setString(agentSetup.prompt(interfaceLanguage: AppLanguage.shared.effective.rawValue), forType: .string) else {
             agentSetupIssue = "未能写入剪贴板，请重试。"; return false
         }
         agentSetupIssue = nil
@@ -1095,7 +1100,7 @@ final class AppState: ObservableObject {
     func exportAudio() {
         guard !locked, let current, let library else { return }
         let panel = NSOpenPanel(); panel.canChooseDirectories = true; panel.canChooseFiles = false
-        panel.prompt = "导出到此文件夹"
+        panel.prompt = L10n.text("导出到此文件夹")
         guard panel.runModal() == .OK, let parent = panel.url else { return }
         let temporary = parent.appendingPathComponent(".cohear-export-" + UUID().uuidString)
         let destination = parent.appendingPathComponent("录音-" + current.id.uuidString + "-" + String(Int(Date().timeIntervalSince1970)))
@@ -1184,6 +1189,7 @@ final class AppState: ObservableObject {
         guard !locked, !name.isEmpty, saveEdits(), var current else { return false }
         let source = current.canonicalSpeaker(id)
         current.speakerNames[source] = name
+        current.customSpeakerNameIDs.insert(source)
         if let target {
             let target = current.canonicalSpeaker(target)
             guard source != target, current.speakerNames[target] != nil else { return false }

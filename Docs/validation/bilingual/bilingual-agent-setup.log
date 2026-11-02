@@ -1,0 +1,2 @@
+PASS: CLI各格式/音频/游标、MCP初始化/只读工具/资源/草稿选择/非法UUID/未支持写操作、原始会议哈希不变
+PASS: bundled CLI/MCP setup equality, no-data read-only bootstrap, version, spaced/quoted paths, isolated skill installation/query, queue/result/status, stale status and cold-start boundaries; no real agent configuration or recording touched.

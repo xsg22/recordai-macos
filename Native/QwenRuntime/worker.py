@@ -5,6 +5,7 @@ os.environ['HF_HUB_OFFLINE']='1'
 os.environ['TRANSFORMERS_OFFLINE']='1'
 os.environ['TOKENIZERS_PARALLELISM']='false'
 import json,math,pathlib,sys,wave
+from language_policy import recognition_language, alignment_language
 
 def diarize(model_path,audio_path,output):
     import miniaudio,numpy as np
@@ -46,7 +47,7 @@ def align_speakers(model_path,manifest_path,turns_path,output):
             if w.getframerate()!=16000 or w.getnchannels()!=1 or w.getsampwidth()!=2:raise ValueError('Invalid alignment audio format')
             audio=np.frombuffer(w.readframes(w.getnframes()),dtype='<i2').astype(np.float32)/32768
         # 中文分词器也支持混合拉丁词；显式英语使用英语分词。
-        language='English' if clip.get('language')=='en' else 'Chinese'
+        language=alignment_language(clip.get('language','auto'),clip['text'])
         aligned=model.generate(audio=audio,text=clip['text'],language=language)
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
         rows=attribute(clip['text'],items,turns,clip['start'],clip['end']-clip['start'])
@@ -65,8 +66,7 @@ def main():
     model_path=pathlib.Path(model_path).resolve(strict=True)
     manifest=pathlib.Path(manifest).resolve(strict=True)
     clips=json.loads(manifest.read_text())
-    languages={'zh':'Chinese','en':'English','ja':'Japanese','auto':None}
-    if language not in languages:raise ValueError('Unsupported language')
+    selected_language=recognition_language(language)
     for clip in clips:
         start,end=clip['start'],clip['end']
         path=pathlib.Path(clip['audio']).resolve(strict=True)
@@ -82,7 +82,7 @@ def main():
         model=load(model_path)
         for index,clip in enumerate(clips):
             with wave.open(clip['audio'],'rb') as w:audio=np.frombuffer(w.readframes(w.getnframes()),dtype='<i2').astype(np.float32)/32768
-            generated=model.generate(audio=audio,language=languages[language],max_tokens=512,temperature=0,
+            generated=model.generate(audio=audio,language=selected_language,max_tokens=512,temperature=0,
                                      chunk_duration=30,min_chunk_duration=0.1,repetition_penalty=1.05,verbose=False)
             if generated.generation_tokens>=512:raise ValueError('Transcript token limit reached; partial result not saved')
             result.append(dict(text=generated.text.strip(),start=clip['start'],end=clip['end']))

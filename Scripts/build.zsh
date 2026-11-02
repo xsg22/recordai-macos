@@ -22,6 +22,7 @@ xcrun swiftc -O -swift-version 5 -parse-as-library -target arm64-apple-macosx14.
 xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx14.0 \
     Sources/AgentSchema.swift Sources/RecordAIControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$app/Contents/MacOS/recordai"
 ditto Resources/AgentSkill "$app/Contents/Resources/AgentSkill"
+ditto Resources/Localization "$app/Contents/Resources/Localization"
 cp Resources/Info.plist "$app/Contents/Info.plist"
 mkdir -p "$app/Contents/Resources/Engine/ASR"
 ditto .build/qwen-runtime/qwen-asr "$app/Contents/Resources/Engine/ASR"

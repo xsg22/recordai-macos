@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SpeakerEditor: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let record: MeetingRecord
     let speakerID: String
     let cancel: () -> Void
@@ -18,18 +19,18 @@ struct SpeakerEditor: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            RecordAIPageHeader(title: "发言人名称", subtitle: "声音标签不会自动对应真实身份。") { Button("取消", action: cancel).keyboardShortcut(.cancelAction) }
-            HStack { Text("当前标签"); Spacer(); Text(record.speakerName(speakerID)).foregroundStyle(.secondary) }
-            TextField("发言人名称", text: $name).textFieldStyle(.plain).padding(11).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9)).overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border)).accessibilityLabel("发言人名称")
+            RecordAIPageHeader(title: L10n.text("发言人名称"), subtitle: L10n.text("声音标签不会自动对应真实身份。")) { Button(L10n.text("取消"), action: cancel).keyboardShortcut(.cancelAction) }
+            HStack { Text(L10n.text("当前标签")); Spacer(); Text(record.speakerName(speakerID)).foregroundStyle(.secondary) }
+            TextField(L10n.text("发言人名称"), text: $name).textFieldStyle(.plain).padding(11).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9)).overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border)).accessibilityLabel(L10n.text("发言人名称"))
             RecordAICard(quiet: true) {
-                Text("合并到已有发言人").font(AppTypography.heading)
-                RecordAISettingRow(title: "已有发言人") {
-                    RecordAIChoicePicker(title: "已有发言人", items: [("不合并", "")] + others.map { (record.speakerName($0), $0) }, selection: $target)
+                Text(L10n.text("合并到已有发言人")).font(AppTypography.heading)
+                RecordAISettingRow(title: L10n.text("已有发言人")) {
+                    RecordAIChoicePicker(title: L10n.text("已有发言人"), items: [(L10n.text("不合并"), "")] + others.map { (record.speakerName($0), $0) }, selection: $target)
                 }.padding(.vertical, 8)
-                Text("合并后可从段落菜单恢复独立标签。").font(AppTypography.secondary).foregroundStyle(.secondary)
+                Text(L10n.text("合并后可从段落菜单恢复独立标签。")).font(AppTypography.secondary).foregroundStyle(.secondary)
             }
-            if failed { RecordAIInfo(text: "保存失败，输入已保留，请重试。", warning: true) }
-            HStack { Button("取消", action: cancel); Spacer(); Button("保存") { failed = !save(name, target.isEmpty ? nil : target) }
+            if failed { RecordAIInfo(text: L10n.text("保存失败，输入已保留，请重试。"), warning: true) }
+            HStack { Button(L10n.text("取消"), action: cancel); Spacer(); Button(L10n.text("保存")) { failed = !save(name, target.isEmpty ? nil : target) }
                 .buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction)
                 .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
         }.padding(28).frame(width: 720).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle())

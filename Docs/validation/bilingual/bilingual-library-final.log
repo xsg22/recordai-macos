@@ -1,0 +1,10 @@
+MeetingLibrary smoke passed（仅临时测试数据）
+PASS: 本机快照白名单、草稿隔离、ready、幂等版本、游标、只读、发布故障保原件、路径安全、删除回收
+PASS: 改名、合并、恢复独立标签、按段纠错与定位保留、全文修改后不展示过期标签。仅临时会议。
+PASS: 真播放器静音验证点击段落定位/句尾暂停/续录偏移/快速切句/连续回放/拖动退出/缺失和失效时间拒绝。
+PASS: 分组批量整理与筛选、时间点移除兼容与重启、Agent 独立版本、删除分类与回收站恢复、原音保全、写盘失败及阅读分组。
+PASS: CLI/MCP 查询、分组筛选及移除标签接口、正文检索和时间点移除、旧 list/read 兼容、独立 metadata 事件、旧标签参数拒绝，无录音副作用。
+PASS: 中文英文标点空格完整保留、两人切换、重叠与未知、对齐不完整拒绝。
+PASS: 连续短碎段合并、正文与时间边界保全、未知归属不冒充重叠、完整短答及静音分界保留。
+PASS: 英文句末短答边界保留。
+PASS: 资料管理与 Agent 验证记录 /Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/library-management-test.KgqUyB

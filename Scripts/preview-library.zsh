@@ -3,7 +3,8 @@
 set -euo pipefail
 cd "${0:A:h:h}"
 mkdir -p .build
-app="$PWD/.build/RecordAILibraryPreview.app"
+app="${RECORD_AI_PREVIEW_APP:-$PWD/.build/RecordAILibraryPreview.app}"
+bundleID="${RECORD_AI_PREVIEW_BUNDLE_ID:-com.recordai.preview.librarymanagement}"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 [[ -d /Applications/RecordAI.app/Contents/Resources/Engine ]] || { print -u2 '需要已安装的 RecordAI 引擎，仅用于本机预览。'; exit 1; }
 python3 - <<'PY'
@@ -19,16 +20,17 @@ xcrun swiftc -swift-version 5 -target arm64-apple-macosx14.0 \
     Sources/AgentSchema.swift Sources/RecordAIControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$app/Contents/MacOS/recordai"
 cp Resources/ASRModels.json "$app/Contents/Resources/"
 ditto Resources/AgentSkill "$app/Contents/Resources/AgentSkill"
+ditto Resources/Localization "$app/Contents/Resources/Localization"
 if [[ -L "$app/Contents/Resources/Engine" ]]; then unlink "$app/Contents/Resources/Engine"; fi
 if [[ ! -d "$app/Contents/Resources/Engine" ]]; then
     cp -cR /Applications/RecordAI.app/Contents/Resources/Engine "$app/Contents/Resources/Engine"
 fi
 cp /Applications/RecordAI.app/Contents/Resources/AppIcon.icns "$app/Contents/Resources/"
-python3 - "$app/Contents/Info.plist" <<'PY'
+python3 - "$app/Contents/Info.plist" "$bundleID" <<'PY'
 import plistlib,sys
 from pathlib import Path
 with Path('Resources/Info.plist').open('rb') as f: value=plistlib.load(f)
-value.update(CFBundleIdentifier='com.recordai.preview.librarymanagement',CFBundleExecutable='RecordAIPreview',CFBundleName='RecordAI 资料管理预览')
+value.update(CFBundleIdentifier=sys.argv[2],CFBundleExecutable='RecordAIPreview',CFBundleName='RecordAI Preview')
 with Path(sys.argv[1]).open('wb') as f: plistlib.dump(value,f)
 PY
 if [[ -n "${1:-}" ]]; then

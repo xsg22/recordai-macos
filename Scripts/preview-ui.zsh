@@ -6,6 +6,7 @@ mkdir -p .build/RecordAIAgentPreview.app/Contents/Resources
 cp Resources/ASRModels.json .build/RecordAIAgentPreview.app/Contents/Resources/
 cp Docs/design-v2/manifest.json .build/RecordAIAgentPreview.app/Contents/Resources/UIPages.json
 ditto Resources/AgentSkill .build/RecordAIAgentPreview.app/Contents/Resources/AgentSkill
+ditto Resources/Localization .build/RecordAIAgentPreview.app/Contents/Resources/Localization
 xcrun swiftc -swift-version 5 -target arm64-apple-macosx14.0 Sources/AgentSchema.swift Sources/RecordAIControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o .build/RecordAIAgentPreview.app/Contents/MacOS/recordai
 mkdir -p .build/ui-preview-icon.iconset
 xcrun swift Scripts/icon.swift .build/ui-preview-icon.iconset

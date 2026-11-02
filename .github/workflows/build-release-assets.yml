@@ -59,8 +59,13 @@ jobs:
       - name: Prepare fixed account components
         run: zsh Scripts/prepare-account-components.zsh
       - name: Run local regression
+        env:
+          RECORD_AI_UI_LANGUAGE: zh-Hans
         run: |
           mkdir -p .build
+          python3 Scripts/check-localization.py
+          zsh Scripts/test-localization.zsh
+          python3 Tests/LanguagePolicySmoke.py
           python3 Scripts/test-recording-entry.py
           python3 Scripts/test-ui-contracts.py
           python3 Scripts/test-agent-setup.py

@@ -1,0 +1,2 @@
+# Python 3.12 x64. Native Windows wheel availability checked on PyPI.
+PyAudioWPatch==0.2.12.9; sys_platform == 'win32'

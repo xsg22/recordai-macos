@@ -28,6 +28,7 @@ enum RecordAITheme {
 }
 
 struct RecordAILogo: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     var size: CGFloat = 44
     var body: some View {
         Group {
@@ -55,6 +56,7 @@ struct RecordAISecondaryButtonStyle: ButtonStyle {
 }
 
 struct RecordAICard<Content: View>: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     var quiet = false
     var spacing: CGFloat = 16
     @ViewBuilder let content: Content
@@ -67,6 +69,7 @@ struct RecordAICard<Content: View>: View {
 }
 
 struct RecordAIPageHeader<Trailing: View>: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let title: String
     var subtitle = ""
     @ViewBuilder let trailing: Trailing
@@ -83,6 +86,7 @@ struct RecordAIPageHeader<Trailing: View>: View {
 }
 
 struct RecordAISettingRow<Content: View>: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let title: String
     var minimumHeight: CGFloat = 62
     @ViewBuilder let content: Content
@@ -96,6 +100,7 @@ struct RecordAISettingRow<Content: View>: View {
 }
 
 struct RecordAIInfo: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let text: String
     var warning = false
     var success = false
@@ -112,6 +117,7 @@ struct RecordAIInfo: View {
 }
 
 struct RecordAISegmentedPicker<Value: Hashable>: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let items: [(String, Value)]
     @Binding var selection: Value
     var body: some View {
@@ -123,7 +129,7 @@ struct RecordAISegmentedPicker<Value: Hashable>: View {
                         .frame(maxWidth: .infinity).padding(.vertical, 10)
                         .foregroundStyle(selection == item.1 ? RecordAITheme.accent : .secondary)
                         .background(selection == item.1 ? RecordAITheme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
-                }.buttonStyle(.plain).accessibilityValue(selection == item.1 ? "已选择" : "未选择")
+                }.buttonStyle(.plain).accessibilityValue(L10n.text(selection == item.1 ? "已选择" : "未选择"))
             }
         }.padding(4).background(RecordAITheme.tabs, in: RoundedRectangle(cornerRadius: 10))
     }
@@ -131,6 +137,7 @@ struct RecordAISegmentedPicker<Value: Hashable>: View {
 
 /// A menu keeps native keyboard navigation while matching the design's field surface.
 struct RecordAIChoicePicker<Value: Hashable>: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let title: String
     let items: [(String, Value)]
     @Binding var selection: Value
@@ -149,6 +156,6 @@ struct RecordAIChoicePicker<Value: Hashable>: View {
             .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
             .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9))
             .overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border))
-            .accessibilityLabel(title)
+            .accessibilityLabel(L10n.text(title))
     }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MeetingReadingView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
     var body: some View {
         VStack(spacing: 18) {

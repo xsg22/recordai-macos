@@ -2,6 +2,7 @@ import SwiftUI
 
 /// 本地验收专用入口；显式隔离资料目录，绝不加载或改写个人库。
 @main struct LibraryManagementPreview: App {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @StateObject private var state: AppState
     init() {
         let args = CommandLine.arguments
@@ -18,10 +19,11 @@ import SwiftUI
     var body: some Scene {
         WindowGroup {
             MainView(state: state).frame(minWidth: 1040, minHeight: 760)
+                .environment(\.locale, appLanguage.locale)
                 .background(RecordingWindowObserver(state: state).frame(width: 0, height: 0))
                 .font(AppTypography.body).controlSize(.extraLarge)
                 .onAppear { NSApp.activate(ignoringOtherApps: true) }
         }.defaultSize(width: 1440, height: 900)
-        Settings { RecordingAppConfigurationView(state: state) }
+        Settings { RecordingAppConfigurationView(state: state).environment(\.locale, appLanguage.locale) }
     }
 }

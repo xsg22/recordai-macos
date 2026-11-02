@@ -39,6 +39,8 @@ PY
     [[ -x "$bundle/Contents/Resources/Engine/ASR/paraformer-live" ]]
     [[ -f "$bundle/Contents/Resources/Engine/ASR/_internal/Python.framework/Versions/3.12/Python" ]]
     [[ -f "$bundle/Contents/Resources/ASRModels.json" ]]
+    [[ -f "$bundle/Contents/Resources/Localization/en.json" ]]
+    cmp Resources/Localization/en.json "$bundle/Contents/Resources/Localization/en.json"
 }
 
 verify_app "$appBundle"

@@ -32,6 +32,17 @@ extension MeetingRecord {
         return result
     }
     func speakerName(_ id: String) -> String { speakerNames[canonicalSpeaker(id)] ?? "未命名发言人" }
+    func displaySpeakerName(_ id: String) -> String {
+        let key = canonicalSpeaker(id), name = speakerName(id)
+        guard !customSpeakerNameIDs.contains(key) else { return name }
+        if speakerNames[key] == nil || name.range(of: #"^发言人 [0-9]+$"#, options: .regularExpression) != nil { return L10n.text(name) }
+        return name
+    }
+    func displayParagraphSpeaker(_ paragraph: TranscriptParagraph) -> String {
+        let ids = Array(Set(paragraph.speakerIDs.map { canonicalSpeaker($0) })).sorted()
+        if ids.isEmpty { return L10n.text(paragraph.start == nil ? "原有正文" : "发言人未确定") }
+        return (ids.count > 1 ? L10n.text("重叠发言 · ") : "") + ids.map { displaySpeakerName($0) }.joined(separator: " / ")
+    }
     func paragraphSpeaker(_ paragraph: TranscriptParagraph) -> String {
         let ids = Array(Set(paragraph.speakerIDs.map { canonicalSpeaker($0) })).sorted()
         if ids.isEmpty { return paragraph.start == nil ? "原有正文" : "发言人未确定" }

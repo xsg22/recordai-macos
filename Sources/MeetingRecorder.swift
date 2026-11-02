@@ -10,9 +10,9 @@ enum MeetingRecordingMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .microphone: return "麦克风"
-        case .systemAudio: return "系统声音"
-        case .meeting: return "会议 · 麦克风和系统声音"
+        case .microphone: return L10n.text("麦克风")
+        case .systemAudio: return L10n.text("系统声音")
+        case .meeting: return L10n.text("会议 · 麦克风和系统声音")
         }
     }
     var needsMicrophone: Bool { self != .systemAudio }

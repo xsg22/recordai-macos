@@ -34,6 +34,21 @@ struct AgentSetup {
         安装后验证 Skill 可被加载，再列出最近录音、读取一条可用定稿验证接口；没有录音时验证接口即可。分别报告安装、加载和查询结果，不把文件存在当作连接成功。此次接入不要自动开始录音，也不要上传原始音频或整库。之后只有我明确要求录音时才使用控制接口。
         """
     }
+    func prompt(interfaceLanguage: String) -> String {
+        guard interfaceLanguage == "en" else { return prompt }
+        return """
+        Install the RecordAI Skill for your own agent environment on this Mac so I can query transcripts and, only when explicitly requested, control recording.
+
+        First run this read-only command to obtain the current installation instructions and complete Skill files:
+        \(invocation) setup --json
+        If RecordAI MCP is already connected, call get_agent_setup instead. If commands cannot be executed, read this local file:
+        \(dataRoot.appendingPathComponent("SETUP.md").path)
+
+        Identify your product, version, installation scope and execution environment. Install for your own agent using its supported mechanism. setup returns skill.files: relative paths and complete file contents. Write only the RecordAI Skill and necessary connection configuration. Do not install for other agents or overwrite unrelated existing skills. Use the actual returned paths; never guess installation directories. If local files or installation are unavailable, explain the limitation and supported import steps.
+
+        Verify that the Skill can be discovered, list recent recordings and read one available final transcript. With an empty library, verify the interface only. Report installation, discovery and query results separately; file existence alone does not prove a working connection. This setup must not start recording or upload original audio or the whole library. Use recording controls later only when I explicitly request recording.
+        """
+    }
     var guide: String {
         let json = (try? JSONSerialization.data(withJSONObject: connection, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])) ?? Data()
         return """

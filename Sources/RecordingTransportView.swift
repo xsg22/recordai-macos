@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct RecordingTransportView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 8) {
                 Circle().fill(state.paused ? Color.secondary : .red).frame(width: 7, height: 7)
-                Text(state.paused ? "录音已暂停" : "正在录音")
+                Text(L10n.text(state.paused ? "录音已暂停" : "正在录音"))
                 Text(String(format: "%02d:%02d:%02d", state.elapsed / 3600, state.elapsed / 60 % 60, state.elapsed % 60)).fontWeight(.semibold).monospacedDigit()
             }.font(AppTypography.body).foregroundStyle(state.paused ? Color.secondary : .red)
             LiveWaveformView(samples: state.liveLevels, tint: RecordAITheme.accent)
@@ -16,16 +17,16 @@ struct RecordingTransportView: View {
                 .font(AppTypography.secondary).monospacedDigit().foregroundStyle(.secondary)
             ZStack {
                 HStack {
-                Text(state.recordingMode.title).font(AppTypography.secondary).foregroundStyle(.secondary)
+                Text(L10n.text(state.recordingMode.title)).font(AppTypography.secondary).foregroundStyle(.secondary)
                 Spacer()
-                Button { state.toggleRecording() } label: { Label("停止并保存", systemImage: "stop.fill").foregroundStyle(.red) }
+                Button { state.toggleRecording() } label: { Label(L10n.text("停止并保存"), systemImage: "stop.fill").foregroundStyle(.red) }
                     .disabled(state.preparing || state.quitting)
                 }
                 Button { state.pauseRecording() } label: {
                     Image(systemName: state.paused ? "play.fill" : "pause.fill").font(.system(size: 20)).foregroundStyle(.white)
                         .frame(width: 52, height: 52).background(RecordAITheme.primaryFill, in: Circle())
-                }.buttonStyle(.plain).accessibilityLabel(state.paused ? (state.canRetryMicrophone ? "重试并继续" : "继续录音") : "暂停录音")
-                    .help(state.paused ? "继续录音" : "暂停录音")
+                }.buttonStyle(.plain).accessibilityLabel(L10n.text(state.paused ? (state.canRetryMicrophone ? "重试并继续" : "继续录音") : "暂停录音"))
+                    .help(L10n.text(state.paused ? "继续录音" : "暂停录音"))
                     .disabled(state.preparing || state.quitting || (state.recordingIssue != nil && !state.canRetryMicrophone))
             }.padding(.vertical, 6)
         }
@@ -36,12 +37,13 @@ struct RecordingTransportView: View {
 }
 
 struct NativePlaybackBar: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             if let record = state.current, record.audioFiles.count > 1 {
-                Picker("播放片段", selection: Binding(get: { state.playbackSegment }, set: { state.selectPlaybackSegment($0) })) {
-                    ForEach(record.audioFiles.indices, id: \.self) { index in Text("第 \(index + 1) 段录音").tag(index) }
+                Picker(L10n.text("播放片段"), selection: Binding(get: { state.playbackSegment }, set: { state.selectPlaybackSegment($0) })) {
+                    ForEach(record.audioFiles.indices, id: \.self) { index in Text(L10n.text("第 \(index + 1) 段录音")).tag(index) }
                 }.frame(maxWidth: 260).disabled(state.recording || state.preparing)
             }
             if let audio = state.audio {
@@ -54,11 +56,11 @@ struct NativePlaybackBar: View {
             HStack(spacing: 30) {
                 Spacer()
                 Button { state.seek(state.playbackTime - 15) } label: { Image(systemName: "gobackward.15") }
-                    .buttonStyle(.plain).help("后退 15 秒").accessibilityLabel("后退 15 秒")
+                    .buttonStyle(.plain).help(L10n.text("后退 15 秒")).accessibilityLabel(L10n.text("后退 15 秒"))
                 Button { state.togglePlayback() } label: { Image(systemName: state.playing ? "pause.fill" : "play.fill").font(.system(size: 20)).foregroundStyle(.white).frame(width: 52, height: 52).background(RecordAITheme.primaryFill, in: Circle()) }
-                    .buttonStyle(.plain).help(state.playing ? "暂停回放" : "播放录音").accessibilityLabel(state.playing ? "暂停回放" : "播放录音")
+                    .buttonStyle(.plain).help(L10n.text(state.playing ? "暂停回放" : "播放录音")).accessibilityLabel(L10n.text(state.playing ? "暂停回放" : "播放录音"))
                 Button { state.seek(state.playbackTime + 15) } label: { Image(systemName: "goforward.15") }
-                    .buttonStyle(.plain).help("前进 15 秒").accessibilityLabel("前进 15 秒")
+                    .buttonStyle(.plain).help(L10n.text("前进 15 秒")).accessibilityLabel(L10n.text("前进 15 秒"))
                 Spacer()
             }.disabled(state.recording || state.preparing).padding(.top, 15).padding(.bottom, 7)
         }

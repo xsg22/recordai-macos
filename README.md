@@ -22,6 +22,8 @@ RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并�
 
 ## 开发环境
 
+开发分支现已加入中英文界面（跟随系统 / 简体中文 / English），与中文 / 英语 / 中英自动转录分别设置；已有标题、正文、分组和自定义发言人名称保留原样。已用合成英文与中英混合语音完成真实模型转录和发言人对齐，并实际验收原生客户端导入流程。这些改动尚未发布到上方 0.16.2 安装包，详见[中英文验证与效果图](Docs/validation/bilingual/README.md)。Windows 目前提供[独立引擎与 WASAPI 验证工具](Platforms/Windows/README.md)，尚未交付 Windows 客户端。
+
 - Apple Silicon、macOS 14 或更新版本
 - Xcode 命令行工具、CMake、Python 3.12
 - 构建前准备官方 DWS 与 lark-cli 可执行文件，分别放在 `.vendor/dws/dws` 和 `.vendor/lark-cli/lark-cli`。`Scripts/build.zsh` 会校验固定版本的 SHA-256。

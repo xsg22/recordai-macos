@@ -29,6 +29,19 @@ final class AgentDataPublisher {
         } else { content += record.text + "\n" }
         return content
     }
+    /// App export/sync presentation; canonical Agent snapshots never depend on the interface language.
+    static func presentationMarkdown(_ record: MeetingRecord) -> String {
+        let title = record.title.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")
+        var content = L10n.format("# {0}\n\n录音时间：{1}\n\n音频时长：{2} 秒\n\n## 转录正文\n\n", title,
+                                 ISO8601DateFormatter().string(from: record.created), String(Int(max(0, record.duration))))
+        if record.hasCurrentParagraphs {
+            for row in record.transcriptParagraphs {
+                if let time = row.start { content += L10n.format("**{0} · {1} 秒**\n\n", record.displayParagraphSpeaker(row), String(Int(max(0, time)))) }
+                content += row.text + "\n\n"
+            }
+        } else { content += record.text + "\n" }
+        return content
+    }
     static func snapshot(_ record: MeetingRecord, libraryRoot: URL, revision: Int = 0) throws -> AgentRecording {
         let fm = FileManager.default
         let base = libraryRoot.appendingPathComponent("Meetings/\(record.id.uuidString)/Audio").resolvingSymlinksInPath().standardizedFileURL

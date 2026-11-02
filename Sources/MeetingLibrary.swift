@@ -109,6 +109,8 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     var liveUtterances: [LiveUtterance] = []
     var transcriptParagraphs: [TranscriptParagraph] = []
     var speakerNames: [String: String] = [:]
+    /// Explicit user names stay verbatim when the interface language changes.
+    var customSpeakerNameIDs: Set<String> = []
     var speakerAliases: [String: String] = [:]
     var speakerAnalysisStatus: SpeakerAnalysisStatus = .notStarted
     var speakerAnalysisMessage = ""
@@ -135,7 +137,7 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case groupID
+        case groupID, customSpeakerNameIDs
         case captureWarnings, id, title, created, text, subtitles, language, seconds, duration, notes, summary, isStarred, actionItems, attachments
         case legacyLiveText, liveUtterances, transcriptParagraphs, speakerNames, speakerAliases, speakerAnalysisStatus, speakerAnalysisMessage
         case importedCaptureSessions, transcriptionEngine, previewEngine, pendingAudioFiles, audioDurations, audioFiles, recordingSessionMode, continuousSegmentFiles, status, recoveryMessage, updated, previewText, enhancedNotes, assistantEntries, summaryCitations, enhancedNotesCitations, summaryContextWasTruncated, enhancedNotesContextWasTruncated
@@ -172,6 +174,7 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
         liveUtterances = try values.decodeIfPresent([LiveUtterance].self, forKey: .liveUtterances) ?? []
         transcriptParagraphs = try values.decodeIfPresent([TranscriptParagraph].self, forKey: .transcriptParagraphs) ?? []
         speakerNames = try values.decodeIfPresent([String: String].self, forKey: .speakerNames) ?? [:]
+        customSpeakerNameIDs = try values.decodeIfPresent(Set<String>.self, forKey: .customSpeakerNameIDs) ?? []
         speakerAliases = try values.decodeIfPresent([String: String].self, forKey: .speakerAliases) ?? [:]
         speakerAnalysisStatus = try values.decodeIfPresent(SpeakerAnalysisStatus.self, forKey: .speakerAnalysisStatus) ?? .notStarted
         speakerAnalysisMessage = try values.decodeIfPresent(String.self, forKey: .speakerAnalysisMessage) ?? ""

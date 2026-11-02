@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LiveWaveformView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     let samples: [Float]
     var tint: Color = .red
     var body: some View {
@@ -13,11 +14,12 @@ struct LiveWaveformView: View {
                                   width: max(1, min(4, step - 1)), height: height)
                 context.fill(Path(roundedRect: rect, cornerRadius: 2), with: .color(tint))
             }
-        }.accessibilityLabel("实时录音声波").accessibilityValue(samples.last.map { $0 > 0.005 ? "检测到声音" : "静音" } ?? "等待音频")
+        }.accessibilityLabel(L10n.text("实时录音声波")).accessibilityValue(L10n.text(samples.last.map { $0 > 0.005 ? "检测到声音" : "静音" } ?? "等待音频"))
     }
 }
 
 struct PlaybackWaveformView: View {
+    @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
     let audio: URL
     @State private var waveform: AudioWaveform?
@@ -53,13 +55,13 @@ struct PlaybackWaveformView: View {
                         .position(x: max(23, min(geometry.size.width - 23, geometry.size.width * state.playbackTime / duration)), y: -16)
                         .accessibilityHidden(true)
                     Slider(value: Binding(get: { min(duration, max(0, state.playbackTime)) }, set: { state.seek($0) }), in: 0...duration)
-                        .labelsHidden().focused($seeking).opacity(0.015).accessibilityLabel("音频波形播放进度")
-                        .accessibilityValue("\(Int(state.playbackTime)) 秒，共 \(Int(duration)) 秒")
+                        .labelsHidden().focused($seeking).opacity(0.015).accessibilityLabel(L10n.text("音频波形播放进度"))
+                        .accessibilityValue(L10n.text("\(Int(state.playbackTime)) 秒，共 \(Int(duration)) 秒"))
                         .disabled(state.recording || state.preparing)
                 }
             }.frame(height: 78).overlay(RoundedRectangle(cornerRadius: 6).stroke(seeking ? accent : .clear, lineWidth: 2))
-            if loading { Text("声波正在生成，可直接播放").font(AppTypography.secondary).foregroundStyle(.secondary) }
-            if let issue { Text(issue).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(2) }
+            if loading { Text(L10n.text("声波正在生成，可直接播放")).font(AppTypography.secondary).foregroundStyle(.secondary) }
+            if let issue { Text(L10n.text(issue)).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(2) }
         }
         .task(id: audio, priority: .utility) {
             waveform = nil; issue = nil; loading = true
