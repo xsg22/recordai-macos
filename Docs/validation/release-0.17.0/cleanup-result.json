@@ -1,0 +1,71 @@
+{
+  "completed_at": "2026-11-02T10:49:04.201020+00:00",
+  "reason": "After 0.17.0 published assets are downloaded and validated, retain current 0.17.0 and verified 0.16.2 rollback; remove superseded 0.16.1 installers/checksums only.",
+  "current": "0.17.0 GitHub assets",
+  "rollback": "0.16.2 GitHub assets",
+  "files": [
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist/RecordAI-0.16.1-arm64.dmg",
+      "bytes": 206138015,
+      "sha256": "e1d33f500f0a660664ee2365cf2844d99aa57610a745d348c42f2242bbc6e3bd"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist/RecordAI-0.16.1-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "e92e723123fdcb8ea02194f6fd0856af0a2da947501354eb54fcb3d8ba5109dd"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist/RecordAI-0.16.1-arm64.pkg",
+      "bytes": 155065654,
+      "sha256": "762b93dae65f5e18cec562002493135c8389422def00e80e4fabf4a222b1d79c"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist/RecordAI-0.16.1-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "0729caee8108ecc6c9e2a8017e589727717099970d4479c64ea8de1ee04071e9"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-0170-acceptance/local-candidate-assets/RecordAI-0.17.0-arm64.pkg",
+      "bytes": 158085114,
+      "sha256": "a8483fa8b42e5a11781c86668421752285e59062d52745b392fc335bde728304"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-0170-acceptance/local-candidate-assets/RecordAI-0.17.0-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "aa001ebdc7b4263ed496530959014b22ab8cc41c4f5c19ae25fd884281d6b36a"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-0170-acceptance/local-candidate-assets/RecordAI-0.17.0-arm64.dmg",
+      "bytes": 210030724,
+      "sha256": "73ebe166dc664b219c19fca6bb3c479d56024228d6b7dccf5c5937b092c890d7"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-0170-acceptance/local-candidate-assets/RecordAI-0.17.0-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "d449f9c8f377ec69fe379b3679e846b54432328c0a472d41ce17ade39ed4b0dd"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/published-0170/assets/RecordAI-0.17.0-arm64.dmg",
+      "bytes": 207762711,
+      "sha256": "1ac47b901e20ae77a62f39bc5be050cb8341e1a0504dcadb5c8db86995859827"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/published-0170/assets/RecordAI-0.17.0-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "c381b467b982c14e2df372cd2813f2ed315954d30839a3b1a36e4f016ced9133"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/published-0170/assets/RecordAI-0.17.0-arm64.pkg",
+      "bytes": 155027681,
+      "sha256": "5af172993b8422196f9c23c0e758555a23c6d810ef00466dba7b7d83990f9421"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/published-0170/assets/RecordAI-0.17.0-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "a2f098570894f2a0fd0e14bb842d8f24a81cb7787428fad8631b4b8e2f21c0d1"
+    }
+  ],
+  "removedBytesLogical": 1092110451,
+  "allRemoved": true,
+  "scope": "Known superseded installers/checksums and redundant copies only; no source, recordings, models, dependency caches or remote assets removed."
+}

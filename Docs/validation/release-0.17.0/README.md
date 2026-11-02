@@ -15,6 +15,12 @@
 
 音频只使用可分享的合成样本。模型在 APFS 克隆的隔离资料目录内复用，不修改个人库。识别仍有误差：中文样本将一处“设计组”识别为“测试组”，英文样本将 “offline” 识别为 “a flying”。这些结果只支持功能验证，不代表真实会议总体准确率。
 
+## GitHub 交付验证
+
+[发布页](https://github.com/xsg22/recordai-macos/releases/tag/v0.17.0-functional.1)已生成。[GitHub 构建](ci-result.json)和发布任务成功；四个实际发布资产已重新下载，校验文件和 GitHub 独立 SHA-256 均匹配，见[下载记录](downloaded-assets.json)。下载包再次通过签名、arm64、内置 Python、引擎和资源、DMG/PKG 内容校验，并实际完成英文及中英混合转录/对齐和 CLI/MCP 查询，见[发布包结果](published/result.json)、[包内容日志](published/package-verification.log)、[包内引擎日志](published/engine.log)。
+
+[清理记录](cleanup-result.json)保留当前 0.17.0 和已验证的 0.16.2 回滚包，清理更旧的 0.16.1、已被公开版本取代的本地候选包和重复下载副本；未删除源码、个人资料、模型、依赖缓存或远端发布资产。
+
 ## Windows
 
 [Windows Runner 记录](windows-ci.json)与[GitHub 工作流](https://github.com/xsg22/recordai-macos/actions/runs/41428182612)：15 项契约测试在 Windows Server 2025 x64 / Python 3.12.10 上通过，PyAudioWPatch 安装成功。设备探测结果为 `unavailable`，没有进行真实采集；可选引擎推理任务为 skipped。因此没有 Windows 原生推理、显卡性能或声卡采集通过的结论，也没有 Windows 安装包。

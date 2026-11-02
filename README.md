@@ -1,28 +1,26 @@
 # RecordAI
 
-RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
+RecordAI 是 macOS 本地录音与转录应用。支持简体中文与 English 界面，界面语言与中文、英语、中英自动转录分别设置。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
 
-**[下载 0.16.2 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.2-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.pkg)
+**[下载 0.17.0 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.17.0-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.17.0-functional.1/RecordAI-0.17.0-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.17.0-functional.1/RecordAI-0.17.0-arm64.pkg)
 
-以下为 0.17.0 候选客户端的实际截图，使用合成英文与中英混合语音及隔离演示资料。本版聚焦录音、转录与分组，分析交给外部 Agent；完整 UI 设计稿的逐页验收尚未全部完成。
+以下为 0.17.0 原生客户端的实际截图，使用合成英文与中英混合语音及隔离演示资料。本版聚焦录音、转录与分组，分析交给外部 Agent；完整 UI 设计稿的逐页验收尚未全部完成。
 
 ![RecordAI 中英混合转录与英文界面](Docs/images/recordai-library-0170.jpg)
 
 ![独立设置界面语言和转录语言](Docs/images/recordai-settings-0170.jpg)
 
-![分组管理](Docs/images/recordai-groups-0162.jpg)
-
 [完整设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [下载安装包](https://github.com/xsg22/recordai-macos/releases)
 
 选择麦克风、系统声音或两者作为音源，录音时可暂停、继续或切换到 mini 录音条；完成后可回放、按时间定位转录并导出。首次使用需要下载语音模型。
 
-没有麦克风也可以从首页导入音频，点击“开始转录”验证效果。已用 31 秒双人合成中文样本实测本地转录、发言人分段、段落回放、人工校正和 Markdown / 原始 SRT 导出，详见[实测结果与原始输出](Docs/validation/release-0.16.2/README.md)。样本包含一处“设计组”识别为“测试组”的错误，不代表真实会议总体准确率。
+没有麦克风也可以从首页导入音频，点击“开始转录”验证效果。已用英文、中英混合与 31 秒双人合成中文样本实测本地转录、发言人分段、段落回放、人工校正和 Markdown / 原始 SRT 导出，详见[实测结果与原始输出](Docs/validation/release-0.17.0/README.md)。样本包含一处“设计组”识别为“测试组”的错误，不代表真实会议总体准确率。
 
 首次使用时，在应用内下载并校验语音模型。模型文件不随源码或安装包分发，参见[模型下载](Docs/模型下载.md)。
 
 ## 开发环境
 
-开发分支现已加入中英文界面（跟随系统 / 简体中文 / English），与中文 / 英语 / 中英自动转录分别设置；已有标题、正文、分组和自定义发言人名称保留原样。已用合成英文与中英混合语音完成真实模型转录和发言人对齐，并实际验收原生客户端导入流程。这些改动尚未发布到上方 0.16.2 安装包，详见[中英文验证与效果图](Docs/validation/bilingual/README.md)。Windows 目前提供[独立引擎与 WASAPI 验证工具](Platforms/Windows/README.md)，尚未交付 Windows 客户端。
+0.17.0 已加入中英文界面（跟随系统 / 简体中文 / English），与中文 / 英语 / 中英自动转录分别设置；已有标题、正文、分组和自定义发言人名称保留原样。已用合成英文与中英混合语音完成真实模型转录和发言人对齐，并实际验收原生客户端导入流程。详见[中英文验证与效果图](Docs/validation/bilingual/README.md)。Windows 目前提供[独立引擎与 WASAPI 验证工具](Platforms/Windows/README.md)，尚未交付 Windows 客户端。
 
 - Apple Silicon、macOS 14 或更新版本
 - Xcode 命令行工具、CMake、Python 3.12
@@ -54,7 +52,7 @@ zsh Scripts/release.zsh
 
 该命令及 GitHub 发布工作流会要求全部 UI 验收通过。仅准备本地候选包可运行 `zsh Scripts/release.zsh --candidate`；它不会发布。
 
-明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.2-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
+明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.17.0-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
 
 详见[发布流程](Docs/发布流程.md)。Python 3.12 和语音引擎随安装包提供，最终用户无需另外安装 Python。
 
@@ -84,7 +82,7 @@ python3 -m unittest discover -s Tests/reporting -v
 - 旧转录在阅读层合并短碎段并保留原始引用；新转录在发言人对齐后抑制连续短碎段，不强行合并完整短答。
 - CLI/MCP 可按分组、录音标题和正文查找，整理信息使用独立版本，不使正文引用失效。
 
-上述功能随 0.16.2 功能验证版交付。详细契约、兼容规则与验证命令见[资料管理说明](Docs/产品定位与资料管理.md)，当前候选包证据见[本版验证记录](Docs/validation/release-0.16.2/README.md)。私人音频和截图不作为公开示例提交。
+上述功能随 0.16.2 功能验证版交付。详细契约、兼容规则与验证命令见[资料管理说明](Docs/产品定位与资料管理.md)，当前候选包证据见[本版验证记录](Docs/validation/release-0.17.0/README.md)。私人音频和截图不作为公开示例提交。
 
 ```zsh
 zsh Scripts/test-library-management.zsh
