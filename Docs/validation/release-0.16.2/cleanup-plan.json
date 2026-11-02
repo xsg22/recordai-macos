@@ -1,0 +1,29 @@
+{
+  "reason": "0.16.2 candidate built, native import/transcription verified, DMG/PKG validated; retain 0.16.1 rollback, remove superseded 0.16.0 installers only",
+  "retained": [
+    "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/dist",
+    "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist"
+  ],
+  "files": [
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.dmg",
+      "bytes": 210159225,
+      "sha256": "6c4ef0ee93d24aeed43f704f18620d55283dd298702d161d48d21c0f2b872930"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "18532af6a640344679d7f6b53ff1a03af1038e7044e92e78427365b0972eb602"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.pkg",
+      "bytes": 154983627,
+      "sha256": "b866ec403ed35e054a1a00174200f279a3802d5c5c493c59a2c0d3473fe8a8ab"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "a82c3f61a83facda19eba45a3ee5fb07b98f000ed0965ac9e2e45e91a0a988ee"
+    }
+  ]
+}

@@ -15,3 +15,9 @@
 `functional-release-binding.json` 指向本目录，门禁核对当前应用与资源、运行时输入、真实导入/分人/回放/校正/导出和候选包证据。本次允许功能验证 prerelease，未将历史全套设计稿验收标为通过。
 
 未验范围：真实硬件录音与首次系统授权、外部 OAuth 和远端文档写入、各品牌 Agent 的全部真实加载环境，以及完整设计稿逐页视觉还原。合成音频有一处已知识别错误；碎段减少不等于识别准确率提高。升级保留原音、转录和模型；可用 0.16.1 安装包回退。
+
+GitHub [构建与发布任务](https://github.com/xsg22/recordai-macos/actions/runs/41409076159)的 build、publish 均成功，[0.16.2 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.16.2-functional.1)已发布，标签指向 `faa0f6ae94799a9c9c208113f5c258d2995313e9`。四个资产已实际下载，全部 SHA-256 与 GitHub 摘要一致；下载的 DMG 只读挂载、PKG 展开，签名、版本、架构、内置 Python/引擎、Skill/CLI 及包内二进制比较均通过。
+
+使用下载的包内引擎重新执行中文转录、SRT、预取消、VAD、双人区分和强制对齐，4 段、2 位发言人，正文完整保留。下载的 CLI/MCP 实际读到本次校正后的转录，分组筛选正常。两个安装包中的引擎一致；详细输出见 `published/`、`published-package-verification.log` 与 `published-result.json`。DMG 下载曾遇到连接中断，分片续传后完成全文件摘要校验。
+
+本地 `dist/` 现在保存从 GitHub 下载的当前交付包；确认可用后清理过期 0.16.0 安装包及被远端交付包替代的本地候选安装包，保留 0.16.1 回滚包。清理只涉及明确的安装包与校验文件，见 `cleanup-plan.json` / `cleanup-result.json`。隔离验收客户端已经退出，避免影响正式应用的后续启动。发布后的补充提交只更新文档及证据，不改变已发布程序的输入摘要。

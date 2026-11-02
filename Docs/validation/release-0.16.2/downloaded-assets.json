@@ -1,0 +1,33 @@
+{
+  "recorded_at": "2026-11-02T08:10:10.341711+00:00",
+  "releaseTag": "v0.16.2-functional.1",
+  "allFourDownloaded": true,
+  "checksumFilesMatchPackages": true,
+  "allFourMatchGitHubDigest": true,
+  "assets": [
+    {
+      "name": "RecordAI-0.16.2-arm64.dmg",
+      "bytes": 203594058,
+      "sha256": "ecaeaf33b58819c9801ffd8b6743f85f5829c3eb885c1ff0df9a01092f911f1e",
+      "url": "https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.dmg"
+    },
+    {
+      "name": "RecordAI-0.16.2-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "c71f9a29414571e0fa22f4a7dd87b6f72cdd591f38982c9f8ef6e036b49642cb",
+      "url": "https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.dmg.sha256"
+    },
+    {
+      "name": "RecordAI-0.16.2-arm64.pkg",
+      "bytes": 154965281,
+      "sha256": "35987fe6c0ce4ac578307a8f5a3b45e2467c219dc46afa491a96ff90269d7e44",
+      "url": "https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.pkg"
+    },
+    {
+      "name": "RecordAI-0.16.2-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "6671ba89c52339afc71ee00366bcb10dbd7e4e5c115dad2b78ef62f9efd2a29b",
+      "url": "https://github.com/xsg22/recordai-macos/releases/download/v0.16.2-functional.1/RecordAI-0.16.2-arm64.pkg.sha256"
+    }
+  ]
+}

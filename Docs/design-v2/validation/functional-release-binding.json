@@ -1,6 +1,6 @@
 {
   "recorded_at": "2026-11-02T07:50:30.636402+00:00",
-  "verifiedSourceCommit": "5ac42b50fb806e1fb2ad911273ff24612000f3a3",
+  "verifiedSourceCommit": "faa0f6ae94799a9c9c208113f5c258d2995313e9",
   "sourceDigest": "90e98c7ca220fcc1e7cb441125ee828fa11cb20fa534f99d4a4118ed1d35666e",
   "runtimeInputs": [
     "Native/AgentCLI/main.swift",
@@ -19,5 +19,5 @@
   "embeddedAsrSha256": "2f7d4892c51122c453862eb62829dc2391cafe7509acbbda00aaac8fda9cdc2b",
   "releasePolicy": "用户明确允许主功能验证通过后先发布一版；本通道仅创建功能验证 prerelease，不将 UI 验收标为通过。",
   "evidenceRoot": "Docs/validation/release-0.16.2",
-  "verifiedWorkingTree": "Application and runtime digests identify the validated uncommitted release inputs; verifiedSourceCommit is the baseline."
+  "verifiedWorkingTree": "Release tag v0.16.2-functional.1 identifies the source matching these digests; later documentation-only commits do not alter application inputs."
 }

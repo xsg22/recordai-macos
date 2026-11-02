@@ -16,7 +16,7 @@ RecordAI 是 macOS 本地录音与转录应用。它在本机处理音频，并�
 
 选择麦克风、系统声音或两者作为音源，录音时可暂停、继续或切换到 mini 录音条；完成后可回放、按时间定位转录并导出。首次使用需要下载语音模型。
 
-没有麦克风也可以从首页导入音频，点击“开始转录”验证效果。已用 31 秒双人合成中文样本实测本地转录、发言人分段、段落回放、人工校正和 Markdown / 原始 SRT 导出，详见[实测结果与原始输出](Docs/validation/release-0.16.1/README.md)。样本包含一处“设计组”识别为“测试组”的错误，不代表真实会议总体准确率。
+没有麦克风也可以从首页导入音频，点击“开始转录”验证效果。已用 31 秒双人合成中文样本实测本地转录、发言人分段、段落回放、人工校正和 Markdown / 原始 SRT 导出，详见[实测结果与原始输出](Docs/validation/release-0.16.2/README.md)。样本包含一处“设计组”识别为“测试组”的错误，不代表真实会议总体准确率。
 
 首次使用时，在应用内下载并校验语音模型。模型文件不随源码或安装包分发，参见[模型下载](Docs/模型下载.md)。
 
@@ -52,7 +52,7 @@ zsh Scripts/release.zsh
 
 该命令及 GitHub 发布工作流会要求全部 UI 验收通过。仅准备本地候选包可运行 `zsh Scripts/release.zsh --candidate`；它不会发布。
 
-明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.1-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
+明确选择先交付主功能时，可运行 `zsh Scripts/publish-functional-release.zsh v0.16.2-functional.1`。脚本核对实测证据后推送标签，由 GitHub 重新回归、打包并发布标明 UI 验收状态的功能验证 prerelease；不会修改 UI 验收结果。
 
 详见[发布流程](Docs/发布流程.md)。Python 3.12 和语音引擎随安装包提供，最终用户无需另外安装 Python。
 
@@ -62,13 +62,13 @@ zsh Scripts/release.zsh
 
 CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。该功能随 0.16.1 功能验证版提供；真实各品牌 Agent 的加载兼容性尚未全部联测。
 
-![首次转录后的 Agent 接入引导（合成音频验收资料）](Docs/validation/release-0.16.1/02-transcribed.jpg)
+![首次转录后的 Agent 接入引导（合成音频验收资料）](Docs/validation/release-0.16.2/import-e2e/03-transcribed.jpg)
 
 ## 开发预览：自适应分析报告
 
 已实现可复用的 JSON 契约与离线 HTML 渲染器，并用刚才的实际转录生成[首份 HTML 报告](Docs/examples/adaptive-report/output/report.html)和[结构化 JSON](Docs/examples/adaptive-report/output/report.json)。内容块和重点由分析决定，支持行动、知识、观点、对比等不同编排；不强制填满固定会议模板。
 
-本轮分析来源为当前 Codex，尚未接入 App 自动总结或手机默认页，未发布新安装包。实现、重复生成命令与验证边界见[自适应分析报告](Docs/自适应分析报告.md)。
+示例分析由 Codex 生成；此离线报告工具供外部 Agent 使用，未接入 App 自动总结或手机默认页。当前桌面端聚焦录音资料管理。实现、重复生成命令与验证边界见[自适应分析报告](Docs/自适应分析报告.md)。仓库示例不分发音频，回听需在本机生成完整报告包。
 
 ```sh
 python3 -m unittest discover -s Tests/reporting -v

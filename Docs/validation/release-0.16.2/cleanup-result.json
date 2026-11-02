@@ -1,0 +1,55 @@
+{
+  "reason": "0.16.2 candidate built, native import/transcription verified, DMG/PKG validated; retain 0.16.1 rollback, remove superseded 0.16.0 installers only",
+  "retained": [
+    "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/dist",
+    "/Users/xueshengguo/Documents/projects/recordai-agent-onboarding/dist"
+  ],
+  "files": [
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.dmg",
+      "bytes": 210159225,
+      "sha256": "6c4ef0ee93d24aeed43f704f18620d55283dd298702d161d48d21c0f2b872930"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "18532af6a640344679d7f6b53ff1a03af1038e7044e92e78427365b0972eb602"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.pkg",
+      "bytes": 154983627,
+      "sha256": "b866ec403ed35e054a1a00174200f279a3802d5c5c493c59a2c0d3473fe8a8ab"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-macos/dist/github-v0.16.0-functional.1/RecordAI-0.16.0-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "a82c3f61a83facda19eba45a3ee5fb07b98f000ed0965ac9e2e45e91a0a988ee"
+    }
+  ],
+  "completed_at": "2026-11-02T07:53:44.595516+00:00",
+  "removed_bytes": 736840368,
+  "all_removed": true,
+  "supersededLocalCandidateInstallers": [
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-acceptance/local-candidate-assets/RecordAI-0.16.2-arm64.dmg",
+      "bytes": 213682411,
+      "sha256": "17932f8f92e5ad373416f6950bdd76ac3ab737be7211cab073308d547cb78942"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-acceptance/local-candidate-assets/RecordAI-0.16.2-arm64.dmg.sha256",
+      "bytes": 92,
+      "sha256": "b60c8bf78e9aa5674dbd20c5a4baa678ae1192e8be15f0bffaf83bff96c45898"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-acceptance/local-candidate-assets/RecordAI-0.16.2-arm64.pkg",
+      "bytes": 158014737,
+      "sha256": "1a0eaca79f38ae3c593235532e8609fbf1e62ef3bf0b344a2450f8248e723aec"
+    },
+    {
+      "path": "/Users/xueshengguo/Documents/projects/recordai-adaptive-reports/.build/release-acceptance/local-candidate-assets/RecordAI-0.16.2-arm64.pkg.sha256",
+      "bytes": 92,
+      "sha256": "c70b2bc654814b529c4be5067516714fa764531946be7cffe2d4d0da43eb07fe"
+    }
+  ],
+  "currentDelivery": "dist/RecordAI-0.16.2-arm64.{dmg,pkg} downloaded from GitHub"
+}
