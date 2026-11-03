@@ -31,7 +31,7 @@ final class BrowserAuthorizationCoordinator {
                 deadline = Task { [weak self] in
                     do { try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000)); try Task.checkCancellation() }
                     catch { return }
-                    self?.finish(.failure(MCPError.message("等待浏览器授权超时，未发送任何会议内容。请重新连接。")))
+                    self?.finish(.failure(MCPError.message("等待浏览器授权超时，未发送任何录音内容。请重新连接。")))
                 }
             }
         } onCancel: { Task { @MainActor [weak self] in self?.cancel() } }

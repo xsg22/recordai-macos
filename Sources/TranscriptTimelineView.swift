@@ -10,14 +10,17 @@ struct TranscriptTimelineView: View {
     @State private var editing: TranscriptParagraph?
     @State private var renaming: String?
     private let accent = RecordAITheme.accent
-    private var showingLive: Bool { state.recording || state.preparing || (state.busy && state.transcriptPhase == .recognizing) }
+    private var selectedRecording: Bool { state.isViewingRecording }
+    private var selectedPreparing: Bool { state.preparing && state.isViewingActiveTask }
+    private var selectedProcessing: Bool { state.busy && state.isViewingActiveTask }
+    private var showingLive: Bool { selectedRecording || selectedPreparing || (selectedProcessing && state.transcriptPhase == .recognizing) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if state.preparing || state.transcriptPhase == .failed { stageBanner }
+            if selectedPreparing || state.current?.status == .failed { stageBanner }
             if history || state.editingTranscript {
             HStack {
-                if !state.liveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
+                if !state.displayedLiveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
                 Picker(L10n.text("转写来源"), selection: $history) {
                     Text(L10n.text("正文")).tag(false); Text(L10n.text("实时历史")).tag(true)
                 }.pickerStyle(.segmented).labelsHidden().frame(maxWidth: 240).controlSize(.regular)
@@ -26,7 +29,7 @@ struct TranscriptTimelineView: View {
                 if showingLive || history {
                     Toggle(L10n.text("跟随最新"), isOn: $following).toggleStyle(.checkbox).font(AppTypography.secondary)
                 } else {
-                    Button(L10n.text(state.editingTranscript ? "完成编辑" : "编辑全文")) { state.editingTranscript.toggle() }.disabled(state.busy)
+                    Button(L10n.text(state.editingTranscript ? "完成编辑" : "编辑全文")) { state.editingTranscript.toggle() }.disabled(selectedProcessing)
                 }
             }
             }
@@ -35,7 +38,7 @@ struct TranscriptTimelineView: View {
             if let record = state.current, !record.speakerAnalysisMessage.isEmpty, !showingLive && !history {
                 Text(L10n.text(record.speakerAnalysisMessage)).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(3)
             }
-            if !state.recording && !(state.current?.subtitles.isEmpty ?? true) && !history {
+            if !selectedRecording && !(state.current?.subtitles.isEmpty ?? true) && !history {
                 DisclosureGroup(L10n.text("原始字幕与时间戳")) {
                     ScrollView { Text(state.current?.subtitles ?? "").font(.system(size: 15, design: .monospaced)).textSelection(.enabled) }.frame(maxHeight: 100)
                 }.font(AppTypography.secondary)
@@ -46,7 +49,7 @@ struct TranscriptTimelineView: View {
             Toggle(L10n.text("跟随最新"), isOn: $following)
         }
         .onChange(of: state.selection) { history = false; state.editingTranscript = false; following = true }
-        .onChange(of: state.recording) { if state.recording { history = false; following = true; state.editingTranscript = false } }
+        .onChange(of: selectedRecording) { if selectedRecording { history = false; following = true; state.editingTranscript = false } }
         .onChange(of: history) { following = !history }
         .sheet(item: $editing) { paragraph in
             TranscriptParagraphEditor(paragraph: paragraph, speakerName: state.current?.displayParagraphSpeaker(paragraph) ?? "", cancel: { editing = nil }, save: { updated in
@@ -66,8 +69,8 @@ struct TranscriptTimelineView: View {
     }
     private var stageBanner: some View {
         HStack(alignment: .top, spacing: 8) {
-            if state.busy || state.preparing { ProgressView().controlSize(.small) }
-            else { Image(systemName: state.recording ? "waveform" : state.current?.status == .completed ? "checkmark.circle.fill" : "text.alignleft").foregroundStyle(accent) }
+            if selectedProcessing || selectedPreparing { ProgressView().controlSize(.small) }
+            else { Image(systemName: selectedRecording ? "waveform" : state.current?.status == .completed ? "checkmark.circle.fill" : "text.alignleft").foregroundStyle(accent) }
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.text(stageTitle)).font(AppTypography.body.weight(.medium))
                 Text(L10n.text(stageDetail)).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -76,9 +79,9 @@ struct TranscriptTimelineView: View {
         }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
     }
     private var stageTitle: String {
-        if state.recording { return state.paused ? "录音已暂停" : "正在实时识别" }
-        if state.preparing { return "正在保存录音" }
-        if state.busy {
+        if selectedRecording { return state.paused ? "录音已暂停" : "正在实时识别" }
+        if selectedPreparing { return "正在保存录音" }
+        if selectedProcessing {
             switch state.transcriptPhase {
             case .diarizing: return "正在区分发言人"
             case .aligning: return "正在对齐发言人与文字"
@@ -88,18 +91,18 @@ struct TranscriptTimelineView: View {
         return state.current?.status == .completed ? "转录已保存" : "等待转录"
     }
     private var stageDetail: String {
-        if state.recording && state.paused {
+        if selectedRecording && state.paused {
             return state.canRetryMicrophone
                 ? "麦克风可能已断开。重新连接后点击“重试并继续”；已有录音会保留。"
                 : (state.recordingIssue == nil ? "采集已暂停，已有文字保留；继续后接着记录。" : "已有原轨保留，请停止并保存后检查输入设备。")
         }
-        if state.recording || state.preparing {
+        if selectedRecording || selectedPreparing {
             return state.activeRecordingSessionMode == .continuous
                 ? "录音继续；片段关闭后依次定稿并区分发言人。"
                 : "文字持续出现，停止后生成定稿和发言人标签。"
         }
-        if state.busy && [.diarizing, .aligning].contains(state.transcriptPhase) { return "正文已保存；分析可取消，不影响已有文字。" }
-        if state.busy { return "正在核对录音中的语音片段，实时历史仍可回看。" }
+        if selectedProcessing && [.diarizing, .aligning].contains(state.transcriptPhase) { return "正文已保存；分析可取消，不影响已有文字。" }
+        if selectedProcessing { return "正在核对录音中的语音片段，实时历史仍可回看。" }
         if state.current?.status == .interrupted, state.audio == nil { return "原文已保留；检查原轨可恢复未保存的音频。" }
         if state.current?.pendingAudioFiles.isEmpty == false { return "已有音频可回放；继续转录仅处理未完成片段。" }
         return "点击正文或时间播放本段，播完自动暂停；播放器可连续回放。"
@@ -123,7 +126,7 @@ struct TranscriptTimelineView: View {
                         .buttonStyle(.bordered).padding(6).background(.regularMaterial, in: Capsule())
                 }
             }
-            .onChange(of: state.liveText) { if following && (showingLive || history) { proxy.scrollTo("transcript-tail", anchor: .bottom) } }
+            .onChange(of: state.displayedLiveText) { if following && (showingLive || history) { proxy.scrollTo("transcript-tail", anchor: .bottom) } }
             .onChange(of: following) { if following { proxy.scrollTo("transcript-tail", anchor: .bottom) } }
         }
     }
@@ -189,7 +192,7 @@ struct TranscriptTimelineView: View {
                     Button(L10n.text("编辑这段")) { editing = paragraph }.disabled(state.locked)
                 }
                 Menu {
-                    if showingLive || !state.liveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
+                    if showingLive || !state.displayedLiveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
                         Toggle(L10n.text("查看实时历史"), isOn: $history)
                         Toggle(L10n.text("跟随最新"), isOn: $following)
                         Divider()
@@ -229,10 +232,10 @@ struct TranscriptTimelineView: View {
     @ViewBuilder private var currentLiveRows: some View {
         if !state.text.isEmpty { Divider(); Text(L10n.text("本次实时识别 · 未定稿")).font(AppTypography.secondary).foregroundStyle(.secondary) }
         ForEach(state.recordingLiveUtterances) { row in liveRow(row) }
-        if !state.livePartial.isEmpty {
+        if !state.displayedLivePartial.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.text("正在识别 · 可能修订")).font(AppTypography.secondary).foregroundStyle(.secondary)
-                Text(state.livePartial).font(AppTypography.transcript).lineSpacing(7).foregroundStyle(.secondary).textSelection(.enabled)
+                Text(state.displayedLivePartial).font(AppTypography.transcript).lineSpacing(7).foregroundStyle(.secondary).textSelection(.enabled)
             }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.04), in: RoundedRectangle(cornerRadius: 8))
         } else if state.recordingLiveUtterances.isEmpty {
             Text(L10n.text(state.liveStatus.isEmpty ? "等待语音，识别文字会持续出现…" : state.liveStatus)).font(AppTypography.body).foregroundStyle(.secondary).padding(.vertical, 12)
@@ -247,9 +250,9 @@ struct TranscriptTimelineView: View {
                 Divider()
             }
             ForEach(record.liveUtterances) { row in liveRow(row) }
-            if state.recording && !state.livePartial.isEmpty { Text(state.livePartial).font(AppTypography.transcript).foregroundStyle(.secondary) }
+            if selectedRecording && !state.displayedLivePartial.isEmpty { Text(state.displayedLivePartial).font(AppTypography.transcript).foregroundStyle(.secondary) }
         } else {
-            Text(state.liveText.isEmpty ? L10n.text("这场会议没有实时识别历史。") : state.liveText).font(AppTypography.transcript).lineSpacing(7).textSelection(.enabled)
+            Text(state.displayedLiveText.isEmpty ? L10n.text("这条录音没有实时识别历史。") : state.displayedLiveText).font(AppTypography.transcript).lineSpacing(7).textSelection(.enabled)
         }
     }
     private func liveRow(_ row: LiveUtterance) -> some View {

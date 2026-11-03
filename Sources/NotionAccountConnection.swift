@@ -104,8 +104,8 @@ final class NotionAccountConnection: ObservableObject {
         let receipt = try await store.sync(title: title, text: text)
         let pageURL = receipt.structuredContent.flatMap { Self.pageURL($0) } ?? Self.pageURLFromText(receipt.result)
         if let pageURL {
-            status = "会议已保存到 Notion"
-            return MCPSyncReceipt(tool: "Notion 私人页面", result: "会议页面已创建。工作区：" + accountDisplay, remoteURL: pageURL)
+            status = "录音已保存到 Notion"
+            return MCPSyncReceipt(tool: "Notion 私人页面", result: "录音页面已创建。工作区：" + accountDisplay, remoteURL: pageURL)
         }
         return MCPSyncReceipt(tool: "Notion 私人页面", result: "Notion 已返回创建结果，但未返回可确认的页面链接。请到工作区查看，勿重复同步。", remoteURL: nil,
             warning: "页面创建结果待核对，未自动重试。")

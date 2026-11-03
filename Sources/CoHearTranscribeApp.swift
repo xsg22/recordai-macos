@@ -58,7 +58,7 @@ struct CoHearTranscribeApp: App {
         MenuBarExtra(isInserted: Binding(get: { state.miniMode || state.recording || state.preparing || state.busy || state.recoveryBusy }, set: { _ in })) {
             RecordingMenuBarView(state: state)
         } label: {
-            Label(L10n.text(state.recording ? (state.paused ? "录音已暂停" : "正在录音") : state.locked ? "正在处理录音" : "倾听转录"), systemImage: state.recording ? (state.paused ? "pause.circle" : "record.circle") : "waveform")
+            Label(L10n.text(state.recording ? (state.paused ? "录音已暂停" : state.recordingIsMuted ? "静音录制" : "正在录音") : state.locked ? "正在处理录音" : "倾听转录"), systemImage: state.recording ? (state.paused ? "pause.circle" : "record.circle") : "waveform")
         }
         Settings {
             RecordingAppConfigurationView(state: state)
@@ -111,6 +111,15 @@ struct MainView: View {
                     filterRow("回收站", symbol: "trash", count: state.trashedHistory.count)
                 }.padding(.top, 4)
                 organizationFilters
+                if state.recording && !state.isViewingRecording {
+                    Button {
+                        filter = "全部"
+                        state.returnToRecording()
+                    } label: {
+                        Label(L10n.text("返回正在录音"), systemImage: "record.circle.fill")
+                            .font(AppTypography.secondary).foregroundStyle(.red).frame(maxWidth: .infinity, alignment: .leading)
+                    }.buttonStyle(.plain).padding(.horizontal, 10).accessibilityLabel(L10n.text("返回正在录音"))
+                }
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").font(.system(size: 10)).foregroundStyle(RecordAITheme.muted).accessibilityHidden(true)
                     TextField(L10n.text("搜索录音名称或内容…"), text: $state.search).textFieldStyle(.plain).font(.system(size: 13))
@@ -136,19 +145,21 @@ struct MainView: View {
                                     .labelsHidden().toggleStyle(.checkbox).disabled(state.locked)
                             }
                             Button { if filter == "回收站" { filter = "全部" }; state.select(record.id) } label: {
-                                RecordingLibraryRow(record: record, selected: state.selection == record.id, metadata: libraryMetadata(record))
-                            }.buttonStyle(.plain)
-                        }.contextMenu { organizeMenu(ids: [record.id]) }.accessibilityAddTraits(state.selection == record.id ? .isSelected : [])
-                            .accessibilityLabel(record.title + ", " + L10n.text(record.status == .completed ? "已完成，" : "待处理，") + libraryMetadata(record))
+                                RecordingLibraryRow(record: record, selected: state.selection == record.id, metadata: libraryMetadata(record), groupName: state.organization.group(record.groupID)?.name)
+                            }.buttonStyle(.plain).frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .contextMenu { recordingMenu(record) }
+                        }.accessibilityAddTraits(state.selection == record.id ? .isSelected : [])
+                            .accessibilityLabel(record.title + ", " + L10n.text(record.status == .completed ? "已完成，" : "待处理，") + libraryMetadata(record) + (state.organization.group(record.groupID).map { ", " + $0.name } ?? ""))
                     }
                     }
-                }.focusable().onMoveCommand { direction in
-                    guard !state.locked, !visibleHistory.isEmpty else { return }
+                }.focusable().focusEffectDisabled().onMoveCommand { direction in
+                    guard state.canBrowseRecordings, !visibleHistory.isEmpty else { return }
                     let current = visibleHistory.firstIndex(where: { $0.id == state.selection }) ?? -1
                     if direction == .down { state.select(visibleHistory[min(visibleHistory.count - 1, current + 1)].id) }
                     if direction == .up { state.select(visibleHistory[max(0, current - 1)].id) }
                 }.frame(minHeight: 0, maxHeight: .infinity).layoutPriority(-1)
-                    .disabled(state.recording || state.preparing || state.recoveryBusy)
+                    .disabled(!state.canBrowseRecordings)
                 HStack(spacing: 16) {
                     SettingsLink { Label(L10n.text("设置"), systemImage: "gearshape").frame(maxWidth: .infinity, minHeight: 32, alignment: .leading) }
                         .buttonStyle(.plain).help(L10n.text("转录、同步账号与本机Agent"))
@@ -184,7 +195,7 @@ struct MainView: View {
                     if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution && !showingOrganization {
                         RecordAICard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
                     }
-                    if let issue = state.recordingIssue {
+                    if let issue = state.recordingIssue, state.isViewingRecording {
                         HStack(spacing: 16) {
                             Label(L10n.text(issue), systemImage: "exclamationmark.triangle")
                             Text(L10n.text("已有录音已保留。"))
@@ -193,7 +204,7 @@ struct MainView: View {
                             Spacer(minLength: 0)
                         }.font(AppTypography.secondary).foregroundStyle(.orange).padding(14)
                             .background(Color.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
-                    } else if state.busy {
+                    } else if state.busy && state.isViewingActiveTask {
                         HStack(spacing: 12) {
                             ProgressView().controlSize(.small)
                             Text(L10n.processingStatus(state.status) + L10n.text(" · 音频已保存，可取消处理后稍后重试。"))
@@ -202,7 +213,7 @@ struct MainView: View {
                         }.font(AppTypography.secondary).foregroundStyle(accent).padding(14)
                             .background(accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
                     }
-                    if let message = state.current?.recoveryMessage ?? state.current?.captureWarnings.last, !message.isEmpty, !state.recording {
+                    if let message = state.current?.recoveryMessage ?? state.current?.captureWarnings.last, !message.isEmpty, !state.isViewingRecording {
                         HStack(alignment: .top) {
                             Label(L10n.text(message), systemImage: "exclamationmark.circle").font(AppTypography.secondary).foregroundStyle(.secondary)
                             Spacer()
@@ -244,8 +255,10 @@ struct MainView: View {
             }.padding(28).frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity).background(RecordAITheme.surface)
         }
         .overlay(alignment: .bottom) {
-            if state.recording && !state.miniMode && !missingMicrophone, let controller = state.miniController {
+            if state.recording && !state.miniMode && (state.showsInlineRecorder || emptyFilter || filter == "回收站") && !missingMicrophone, let controller = state.miniController {
                 MiniRecordingView(state: state, controller: controller, inline: true).padding(.bottom, 28)
+                    .onAppear { state.setInlineRecorderVisible(true) }
+                    .onDisappear { state.setInlineRecorderVisible(false) }
             }
         }
         .buttonStyle(RecordAISecondaryButtonStyle())
@@ -256,6 +269,7 @@ struct MainView: View {
                 .onChange(of: geometry.size.width) { _, width in windowWidth = width }
         })
         .onAppear { state.openRecordingWindow = { openWindow(id: "recordings") } }
+        .onChange(of: state.recordingNavigationRevision) { filter = "全部"; batchMode = false }
         .sheet(isPresented: $managingCollections) { CollectionManager(state: state) }
         .onChange(of: state.history.map(\.id)) { batchIDs.formIntersection(Set(state.history.map(\.id))) }
         .sheet(isPresented: $recovering) { CaptureRecoveryView(state: state) }
@@ -285,12 +299,12 @@ struct MainView: View {
                 Text(L10n.text("所有分组")).tag("")
                 Text(L10n.text("未分组")).tag("ungrouped")
                 ForEach(state.organization.groups) { Text($0.name).tag($0.id.uuidString) }
-            }.pickerStyle(.menu).labelsHidden().accessibilityLabel(L10n.text("分组筛选")).frame(maxWidth: .infinity)
+            }.pickerStyle(.menu).labelsHidden().accessibilityLabel(L10n.text("分组筛选")).frame(maxWidth: .infinity).disabled(!state.canBrowseRecordings)
             if !state.groupFilter.isEmpty {
                 Button { state.groupFilter = "" } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).accessibilityLabel(L10n.text("清除分组筛选"))
             }
-            Button { managingCollections = true } label: { Image(systemName: "folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(L10n.text("管理分组"))
-        }.font(AppTypography.secondary).disabled(state.locked)
+            Button { managingCollections = true } label: { Image(systemName: "folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(L10n.text("管理分组")).disabled(state.locked)
+        }.font(AppTypography.secondary)
     }
     @ViewBuilder private var batchToolbar: some View {
         if batchMode {
@@ -305,6 +319,36 @@ struct MainView: View {
         Button(L10n.text("未分组")) { _ = state.setGroup(nil, recordIDs: ids) }
         ForEach(state.organization.groups) { group in Button(group.name) { _ = state.setGroup(group.id, recordIDs: ids) } }
     }
+    @ViewBuilder private func recordingMenu(_ record: MeetingRecord) -> some View {
+        if state.trashedHistory.contains(where: { $0.id == record.id }) {
+            Button(L10n.text("恢复录音")) { _ = state.restoreTrash(record.id) }.disabled(state.locked)
+        } else {
+            Button(L10n.text(record.isStarred ? "取消星标" : "添加星标")) { state.toggleStar(recordingID: record.id) }.disabled(state.locked)
+            Menu(L10n.text("移动到分组")) {
+                Button { _ = state.setGroup(nil, recordIDs: [record.id]) } label: {
+                    Label(L10n.text("未分组"), systemImage: record.groupID == nil ? "checkmark" : "folder")
+                }
+                ForEach(state.organization.groups) { group in
+                    Button { _ = state.setGroup(group.id, recordIDs: [record.id]) } label: {
+                        Label(group.name, systemImage: record.groupID == group.id ? "checkmark" : "folder")
+                    }
+                }
+                Divider()
+                Button(L10n.text("管理分组")) { managingCollections = true }
+            }.disabled(state.locked)
+            Menu(L10n.text("导出")) {
+                ForEach(["文本", "Markdown", "JSON", "字幕"], id: \.self) { kind in
+                    Button(L10n.text(kind == "字幕" ? "原始 SRT" : kind == "文本" ? "TXT" : kind)) {
+                        state.export(kind: kind, recordingID: record.id)
+                    }.disabled(kind == "字幕" && record.subtitles.isEmpty)
+                }
+                Divider()
+                Button(L10n.text("全部音频")) { state.exportAudio(recordingID: record.id) }.disabled(record.audioFiles.isEmpty)
+            }.disabled(state.locked)
+            Divider()
+            Button(L10n.text("移到回收站…"), role: .destructive) { state.requestTrash(record.id) }.disabled(state.locked)
+        }
+    }
 
     private func filterRow(_ title: String, symbol: String, count: Int) -> some View {
         Button { if title == "回收站" { state.select(nil) }; filter = title } label: {
@@ -317,7 +361,7 @@ struct MainView: View {
                 .padding(.horizontal, 12).padding(.vertical, 12)
                 .contentShape(Rectangle())
                 .background(filter == title ? RecordAITheme.selection : .clear, in: RoundedRectangle(cornerRadius: 9))
-        }.buttonStyle(.plain).foregroundStyle(filter == title ? accent : .primary).disabled(state.locked)
+        }.buttonStyle(.plain).foregroundStyle(filter == title ? accent : .primary).disabled(!state.canBrowseRecordings)
     }
 
     private var missingMicrophoneView: some View {
@@ -383,7 +427,7 @@ struct MainView: View {
                 if let record = state.current {
                     HStack(spacing: 10) {
                         Text(record.created, format: .dateTime.year().month().day().locale(L10n.locale))
-                        if state.recording {
+                        if state.isViewingRecording {
                             Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale))
                             Text(L10n.text("· 录音中"))
                         } else {
@@ -396,6 +440,9 @@ struct MainView: View {
         }
     }
     private func libraryMetadata(_ record: MeetingRecord) -> String {
+        if state.recording, record.id == state.activeRecordingID {
+            return L10n.text(state.paused ? "录音已暂停" : "正在录音") + " · " + recordingDurationText(Double(state.elapsed))
+        }
         let formatter = DateFormatter()
         formatter.locale = L10n.locale
         if Calendar.current.isDateInToday(record.created) { formatter.dateFormat = L10n.text("今天 HH:mm") }
@@ -405,8 +452,8 @@ struct MainView: View {
     }
     private var meetingActions: some View {
         HStack(spacing: 8) {
-            if state.recording {
-                LiveWaveformView(samples: Array(state.liveLevels.suffix(5)), tint: state.paused ? .secondary : .red).frame(width: 24, height: 22)
+            if state.isViewingRecording {
+                LiveWaveformView(samples: Array(state.liveLevels.suffix(5)), tint: state.paused || state.recordingIsMuted ? .secondary : .red).frame(width: 24, height: 22)
                 Button { state.showMiniRecorder() } label: { Image(systemName: "pip.enter") }
                     .help(L10n.text("收起为 mini")).accessibilityLabel(L10n.text("收起为 mini"))
             }
@@ -559,7 +606,7 @@ struct SyncReviewView: View {
     @State private var showingReceipt = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: L10n.text("同步这场会议"), subtitle: state.current?.title ?? "") { Button(L10n.text("关闭")) { close() }.disabled(state.syncing).keyboardShortcut(.cancelAction) }
+            RecordAIPageHeader(title: L10n.text("同步这条录音"), subtitle: state.current?.title ?? "") { Button(L10n.text("关闭")) { close() }.disabled(state.syncing).keyboardShortcut(.cancelAction) }
             RecordAISegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination).disabled(state.syncing)
             AccountConnectionPanel(state: state, compact: true)
             SyncContentPreview(state: state)

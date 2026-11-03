@@ -33,7 +33,7 @@ struct CollectionManager: View {
     private var rows: [RecordingCollection] { state.organization.groups }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            RecordAIPageHeader(title: L10n.text("管理分组"), subtitle: L10n.text("将录音归档到分组。移除分组后录音回到未分组，原音和正文保留。")) { Button(L10n.text("完成")) { dismiss() } }
+            RecordAIPageHeader(title: L10n.text("管理分组"), subtitle: L10n.text("创建后，右键录音选择“移动到分组”。移除分组不会删除录音。")) { Button(L10n.text("完成")) { dismiss() } }
             HStack {
                 TextField(L10n.text(editingID == nil ? "新建名称（最多 40 字）" : "修改名称"), text: $name).textFieldStyle(.roundedBorder).onSubmit(save)
                 Button(L10n.text(editingID == nil ? "创建" : "保存名称"), action: save).disabled(state.locked || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -46,6 +46,7 @@ struct CollectionManager: View {
                     ForEach(rows) { row in
                         HStack {
                             Label(row.name, systemImage: "folder").frame(maxWidth: .infinity, alignment: .leading)
+                            Text(L10n.text("\(state.history.filter { $0.groupID == row.id }.count) 条录音")).foregroundStyle(.secondary)
                             Button(L10n.text("重命名")) { editingID = row.id; name = row.name }
                             Button(L10n.text("移除")) { removing = row }
                         }.padding(12).background(RecordAITheme.tabs, in: RoundedRectangle(cornerRadius: 8))

@@ -3,6 +3,7 @@ import CryptoKit
 
 @main struct OrganizationSmoke {
     @MainActor static func main() throws {
+        try unselectedCardActions()
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent("recordai-organization-test-" + UUID().uuidString)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
@@ -125,5 +126,64 @@ import CryptoKit
         var edited = brief[0]; edited.text = "页"; edited.previousSpeakerIDs = []
         precondition(TranscriptReadability.groups([edited,brief[1]]).count == 2, "人工归属不能被合并掩盖")
         print("PASS: 分组批量整理与筛选、时间点移除兼容与重启、Agent 独立版本、删除分类与回收站恢复、原音保全、写盘失败及阅读分组。")
+    }
+
+    @MainActor static func unselectedCardActions() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.appendingPathComponent("recordai-card-actions-" + UUID().uuidString)
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+        let library = try MeetingLibrary(root: root)
+        let selected = MeetingRecord(title: "正在浏览", text: "当前页面的正文", status: .completed)
+        _ = try library.save(selected)
+        var target = MeetingRecord(title: "右键目标", text: "应被导出的内容", duration: 3, status: .completed)
+        target.subtitles = "1\n00:00:00,000 --> 00:00:03,000\n应被导出的内容\n"
+        let source = root.appendingPathComponent("source.wav")
+        let bytes = Data("target-audio-preserved".utf8)
+        try bytes.write(to: source)
+        _ = try library.importAudio(source, into: &target)
+        _ = try library.save(target)
+        let state = AppState(storageURL: root, connectionNamespace: "card-actions-" + UUID().uuidString)
+        state.select(selected.id)
+        state.title = "当前页面已改名"
+        precondition(state.saveCollection(name: "学习"))
+        let group = state.organization.groups[0]
+        precondition(state.setGroup(group.id, recordIDs: [target.id]))
+        precondition(state.selection == selected.id && state.current?.groupID == nil)
+        precondition(state.organization.group(state.history.first { $0.id == target.id }?.groupID)?.name == "学习")
+        for kind in ["文本", "Markdown", "JSON", "字幕"] {
+            let document = state.exportDocument(kind: kind, recordingID: target.id)!
+            precondition(document.name.hasPrefix(target.title + "."))
+            precondition(document.content.contains(target.text) && !document.content.contains(selected.text))
+            if kind == "字幕" { precondition(document.content == target.subtitles) }
+        }
+        precondition((try? library.load(selected.id).title) == "当前页面已改名", "导出另一条前保存当前编辑")
+        precondition(state.exportDocument(kind: "文本", recordingID: UUID()) == nil, "失效目标不能回退为当前录音")
+        let destination = try state.exportAudio(to: root, recordingID: target.id)
+        let exports = try fm.contentsOfDirectory(at: destination, includingPropertiesForKeys: nil)
+        precondition(exports.count == 1)
+        precondition((try? Data(contentsOf: exports[0])) == bytes, "导出明确目标的原音")
+        state.toggleStar(recordingID: target.id)
+        precondition(state.current?.isStarred == false && state.history.first { $0.id == target.id }?.isStarred == true)
+        state.recording = true
+        state.requestTrash(target.id)
+        precondition(state.deletionRequest == nil && !state.setGroup(nil, recordIDs: [target.id]))
+        precondition(state.exportDocument(kind: "文本", recordingID: target.id) == nil)
+        state.recording = false
+        state.requestTrash(target.id)
+        precondition(state.deletionRequest?.id == target.id && state.selection == selected.id)
+        precondition(!state.confirmTrash(selected.id), "确认不能删除其他录音")
+        state.deletionRequest = nil
+        precondition(state.history.contains { $0.id == target.id }, "取消不删除")
+        state.requestTrash(target.id)
+        precondition(state.confirmTrash(target.id))
+        precondition(state.selection == selected.id && state.text == selected.text && state.title == "当前页面已改名")
+        precondition(state.history.count == 1 && state.trashedHistory.first?.id == target.id)
+        let restored = try library.restoreTrashed(target.id)
+        let restoredAudio = try library.audioURLs(for: restored)
+        precondition(restored.groupID == group.id && restored.text == target.text)
+        precondition((try? Data(contentsOf: restoredAudio[0])) == bytes)
+        precondition((try? Data(contentsOf: source)) == bytes)
+        print("PASS: 未选中录音的分组、星标、TXT/Markdown/JSON/SRT及原音导出、删除确认与取消、恢复和录音中写保护；当前页面保持不变。")
     }
 }

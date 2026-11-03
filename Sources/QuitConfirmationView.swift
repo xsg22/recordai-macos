@@ -8,8 +8,6 @@ struct QuitConfirmationView: View {
     let confirm: () -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Image(systemName: "mic").font(.system(size: 28)).foregroundStyle(RecordAITheme.ink)
-                .frame(width: 64, height: 64).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 15))
             Text(L10n.text(activity.title)).font(.system(size: 24, weight: .semibold))
             Text(L10n.text(activity.detail)).font(AppTypography.secondary).foregroundStyle(.secondary).lineSpacing(5).fixedSize(horizontal: false, vertical: true)
             HStack {
@@ -26,7 +24,7 @@ struct QuitConfirmationView: View {
     private static var activeWindow: QuitConfirmationWindow?
     static func present(_ activity: QuitActivity, parent: NSWindow?, completion: @escaping (Bool) -> Void) {
         guard activeWindow == nil else { completion(false); return }
-        let panel = QuitConfirmationWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 360), styleMask: [.titled], backing: .buffered, defer: false)
+        let panel = QuitConfirmationWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 272), styleMask: [.titled], backing: .buffered, defer: false)
         panel.title = "RecordAI"
         panel.isOpaque = false; panel.backgroundColor = .clear; panel.hasShadow = true
         panel.isReleasedWhenClosed = false
@@ -43,7 +41,7 @@ struct QuitConfirmationView: View {
             cancel: { finish(false) }, confirm: { finish(true) }))
         panel.contentView = host
         host.layoutSubtreeIfNeeded()
-        panel.setContentSize(NSSize(width: 470, height: max(282, min(520, host.fittingSize.height))))
+        panel.setContentSize(NSSize(width: 470, height: max(220, min(520, host.fittingSize.height))))
         if let parent { parent.beginSheet(panel) }
         else { panel.center(); panel.makeKeyAndOrderFront(nil) }
     }

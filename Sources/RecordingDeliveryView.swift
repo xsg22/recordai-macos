@@ -7,7 +7,7 @@ struct RecordingCanvasView: View {
     @ObservedObject var state: AppState
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if state.recording && (state.compactRecordingUI || !state.activeRecordingProfile.usesLiveASR) {
+            if state.isViewingRecording && (state.compactRecordingUI || !state.activeRecordingProfile.usesLiveASR) {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L10n.text(state.paused ? "录音已暂停" : "后台录音中")).font(AppTypography.heading).padding(.bottom, 6)
                     Text(L10n.text(state.activeRecordingProfile.usesLiveASR ? "实时识别继续运行。可展开正文查看最新文字。" : "当前不加载实时识别模型，停止并保存后自动生成转录。"))
@@ -22,7 +22,7 @@ struct RecordingCanvasView: View {
             } else {
                 TranscriptTimelineView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
-                if state.recording && state.activeRecordingProfile == .backgroundRealtime {
+                if state.isViewingRecording && state.activeRecordingProfile == .backgroundRealtime {
                     Button(L10n.text("收起实时正文")) { state.expandedRealtime = false }
                 }
             }

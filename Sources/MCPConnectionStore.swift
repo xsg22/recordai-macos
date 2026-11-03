@@ -96,7 +96,7 @@ final class MCPConnectionStore: NSObject, ObservableObject {
         if tools.contains(where: { ["batch_send_robot_msg_to_users", "create_robot", "send_message_by_custom_robot"].contains($0.name) }) {
             return "当前连接的是机器人消息服务，发送还需要指定机器人和接收人，它不能直接保存到你的个人文档。请连接支持个人文档的服务；软件不会替你选择批量发送或群广播。"
         }
-        return "当前服务的个人保存接口尚未适配。连接成功不代表已能保存会议；无需猜工具或填写 JSON。接入适配完成后，这里会显示保存方式。"
+        return "当前服务的个人保存接口尚未适配。连接成功不代表已能保存录音；无需猜工具或填写 JSON。接入适配完成后，这里会显示保存方式。"
     }
     var selectedTool: MCPTool? { tools.first { $0.name == configuration.tool } }
     var targetDescription: String { "\(configuration.name) · \(URL(string: configuration.endpoint)?.host ?? "未设置地址") · \(configuration.tool.isEmpty ? "保存位置尚未设置" : "已设置保存方式")" }
@@ -242,8 +242,8 @@ final class MCPConnectionStore: NSObject, ObservableObject {
 
     /// Callers must gate on a completed meeting and pass a stable final-transcript snapshot.
     func sync(title: String, text: String) async throws -> MCPSyncReceipt {
-        guard !busy, connected, connectedEndpoint == configuration.endpoint.trimmingCharacters(in: .whitespacesAndNewlines), let client, selectedTool != nil else { throw MCPError.message("请先连接 MCP，并明确选择用于保存会议的工具。") }
-        guard configuration.argumentTemplate.contains("{{text}}") else { throw MCPError.message("参数模板必须包含 {{text}}，以明确同步会议正文。") }
+        guard !busy, connected, connectedEndpoint == configuration.endpoint.trimmingCharacters(in: .whitespacesAndNewlines), let client, selectedTool != nil else { throw MCPError.message("请先连接 MCP，并明确选择用于保存录音的工具。") }
+        guard configuration.argumentTemplate.contains("{{text}}") else { throw MCPError.message("参数模板必须包含 {{text}}，以明确同步录音正文。") }
         let arguments = try MCPClient.arguments(template: configuration.argumentTemplate, title: title, text: text)
         if let required = selectedTool?.inputSchema["required"] as? [String], required.contains(where: { arguments[$0] == nil }) {
             throw MCPError.message("参数模板缺少工具必填字段，请核对 JSON Schema。")

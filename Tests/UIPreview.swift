@@ -240,7 +240,7 @@ import CryptoKit
         case 5: state.select(nil)
         case 6...8, 10, 12...14, 43:
             state.recordingProfile = number == 8 ? .backgroundRealtime : .realtime
-            state.prepareRecordingProfile(); state.recording = true; state.elapsed = 122
+            state.prepareRecordingProfile(); state.bindRecordingContext(to: demoID); state.recording = true; state.elapsed = 122
             state.level = 0.28; state.liveLevels = (0..<72).map { Float(abs(sin(Double($0) * 0.4)) * 0.4) }
             state.liveText = "这是隔离演示资料，用于核对实时转写。"
             state.livePartial = "预计本周五完成设计交付。"

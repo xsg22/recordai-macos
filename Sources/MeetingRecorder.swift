@@ -12,7 +12,7 @@ enum MeetingRecordingMode: String, CaseIterable, Identifiable {
         switch self {
         case .microphone: return L10n.text("麦克风")
         case .systemAudio: return L10n.text("系统声音")
-        case .meeting: return L10n.text("会议 · 麦克风和系统声音")
+        case .meeting: return L10n.text("麦克风 + 系统声音")
         }
     }
     var needsMicrophone: Bool { self != .systemAudio }
@@ -59,6 +59,11 @@ final class MeetingRecorder {
     var onAudio: (([Float]) -> Void)?
     private var engine: AVAudioEngine?
     private var stream: SCStream?
+    private var systemDelegate: MeetingSystemAudioDelegate?
+    private var sessionID = UUID()
+    private var sourceSwitchID: UUID?
+    private(set) var activeSources = RecordingSources.muted
+    private var microphoneStarted: TimeInterval = 0
     private var sink: MeetingAudioSink?
     private var timer: Timer?
     private var recordingActivity: NSObjectProtocol?
@@ -77,10 +82,18 @@ final class MeetingRecorder {
     func start(mode: MeetingRecordingMode, directory root: URL,
                sessionMode: RecordingSessionMode = .conference,
                segmenter: ContinuousRecordingSegmenter? = nil) async throws {
+        try await start(sources: RecordingSources(mode: mode), directory: root, sessionMode: sessionMode, segmenter: segmenter)
+    }
+
+    func start(sources: RecordingSources, directory root: URL,
+               sessionMode: RecordingSessionMode = .conference,
+               segmenter: ContinuousRecordingSegmenter? = nil) async throws {
         guard state == .idle else { throw MeetingRecorderError.message("已有录音正在进行。") }
         state = .preparing
+        sessionID = UUID()
+        activeSources = sources
         do {
-            if mode.needsMicrophone {
+            if sources.microphone {
                 try Self.requireMicrophone()
                 guard await AVCaptureDevice.requestAccess(for: .audio) else {
                     throw MeetingRecorderError.message("请在系统设置 → 隐私与安全性 → 麦克风中允许录音。")
@@ -88,7 +101,7 @@ final class MeetingRecorder {
             }
             // 先获取系统录音权限和目标，避免系统权限失败后留下正在录制的麦克风。
             var filter: SCContentFilter?
-            if mode.needsSystemAudio {
+            if sources.systemAudio {
                 let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
                 guard let display = content.displays.first else {
                     throw MeetingRecorderError.message("没有可用显示器，无法采集系统声音。")
@@ -103,7 +116,8 @@ final class MeetingRecorder {
             pausedAt = nil
             pausedDuration = 0
             started = MeetingCaptureTimeline.now
-            recordingActivity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .idleSystemSleepDisabled], reason: "正在本地录制会议音频")
+            recordingActivity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .idleSystemSleepDisabled], reason: "正在本地录音")
+            let mode: MeetingRecordingMode = sources.microphone ? (sources.systemAudio ? .meeting : .microphone) : .systemAudio
             let sink = MeetingAudioSink(directory: directory, started: started, mode: mode, sessionMode: sessionMode, segmenter: segmenter, onAudio: onAudio) { [weak self] error in
                 Task { @MainActor in
                     guard let self, self.state == .preparing || self.state == .recording || self.state == .paused else { return }
@@ -111,6 +125,7 @@ final class MeetingRecorder {
                 }
             }
             self.sink = sink
+            if sources.isMuted { sink.setSources(.muted, at: started) }
             if let filter {
                 let configuration = SCStreamConfiguration()
                 configuration.capturesAudio = true
@@ -120,12 +135,15 @@ final class MeetingRecorder {
                 configuration.width = 2
                 configuration.height = 2
                 configuration.minimumFrameInterval = CMTime(value: 1, timescale: 1)
-                let stream = SCStream(filter: filter, configuration: configuration, delegate: sink)
+                let delegate = makeSystemDelegate()
+                let stream = SCStream(filter: filter, configuration: configuration, delegate: delegate)
                 try stream.addStreamOutput(sink, type: .audio, sampleHandlerQueue: sink.queue)
                 self.stream = stream
+                systemDelegate = delegate
                 try await stream.startCapture()
+                if let error = delegate.lastError { throw error }
             }
-            if mode.needsMicrophone {
+            if sources.microphone {
                 try startMicrophoneCapture(sink: sink)
             }
             if let failure { throw failure }
@@ -133,12 +151,13 @@ final class MeetingRecorder {
             timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
                 Task { @MainActor in
                     guard let self else { return }
-                    if self.state == .recording, mode.needsMicrophone,
-                       CaptureHealth.microphoneStalled(started: self.started, lastFrame: self.sink?.lastFrame(for: .microphone), now: MeetingCaptureTimeline.now) {
+                    if self.state == .recording, self.activeSources.microphone,
+                       CaptureHealth.microphoneStalled(started: self.microphoneStarted, lastFrame: self.sink?.lastFrame(for: .microphone), now: MeetingCaptureTimeline.now) {
                         self.canRetryMicrophone = true
                         self.reportFailure(MeetingRecorderError.microphoneStalled)
                     }
-                    self.onUpdate?(self.seconds, self.state == .paused ? 0 : self.sink?.level ?? 0)
+                    if self.state == .recording { self.sink?.advance(to: MeetingCaptureTimeline.now) }
+                    self.onUpdate?(self.seconds, self.state == .paused || self.activeSources.isMuted ? 0 : self.sink?.level ?? 0)
                 }
             }
         } catch {
@@ -147,12 +166,90 @@ final class MeetingRecorder {
             engine = nil
             if let stream { try? await stream.stopCapture() }
             stream = nil
+            systemDelegate = nil
+            activeSources = .muted
             sink?.finish()
             sink = nil
             if let recordingActivity { ProcessInfo.processInfo.endActivity(recordingActivity) }
             recordingActivity = nil
             state = .idle
             throw error
+        }
+    }
+
+    private func makeSystemDelegate() -> MeetingSystemAudioDelegate {
+        let session = sessionID
+        return MeetingSystemAudioDelegate { [weak self] source, error in
+            Task { @MainActor in
+                guard let self, self.sessionID == session, self.stream === source,
+                      self.activeSources.systemAudio, self.state == .recording || self.state == .paused else { return }
+                self.reportFailure(error)
+            }
+        }
+    }
+
+    /// Enabling prepares the new source before committing; a failed permission
+    /// request leaves the old sources running. Stopping invalidates this work.
+    func toggleSource(_ kind: MeetingAudioTrack.Kind) async throws {
+        guard (state == .recording || state == .paused), sourceSwitchID == nil, failure == nil, let sink else {
+            throw MeetingRecorderError.message("当前无法切换录音音源。")
+        }
+        let session = sessionID, operation = UUID()
+        sourceSwitchID = operation
+        defer { if sourceSwitchID == operation { sourceSwitchID = nil } }
+        let target = activeSources.toggling(kind)
+        func checkSession() throws {
+            guard sessionID == session, sourceSwitchID == operation,
+                  state == .recording || state == .paused else { throw CancellationError() }
+        }
+        if target.contains(kind) {
+            if kind == .microphone {
+                try Self.requireMicrophone()
+                let allowed = await AVCaptureDevice.requestAccess(for: .audio)
+                try checkSession()
+                guard allowed else { throw MeetingRecorderError.message("请在系统设置 → 隐私与安全性 → 麦克风中允许录音。") }
+                try startMicrophoneCapture(sink: sink)
+            } else {
+                let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+                try checkSession()
+                guard let display = content.displays.first else { throw MeetingRecorderError.message("没有可用显示器，无法采集系统声音。") }
+                let config = SCStreamConfiguration()
+                config.capturesAudio = true; config.excludesCurrentProcessAudio = true
+                config.sampleRate = 48_000; config.channelCount = 2
+                config.width = 2; config.height = 2; config.minimumFrameInterval = CMTime(value: 1, timescale: 1)
+                let delegate = makeSystemDelegate()
+                let candidate = SCStream(filter: SCContentFilter(display: display, excludingWindows: []), configuration: config, delegate: delegate)
+                try candidate.addStreamOutput(sink, type: .audio, sampleHandlerQueue: sink.queue)
+                do {
+                    try await candidate.startCapture(); try checkSession()
+                    if let error = delegate.lastError { throw error }
+                }
+                catch { try? await candidate.stopCapture(); throw error }
+                stream = candidate; systemDelegate = delegate
+            }
+            activeSources = target
+            sink.setSources(target)
+        } else {
+            // Gate callbacks before releasing hardware. Delayed buffers are
+            // clipped at this boundary and cannot leak into a muted interval.
+            activeSources = target
+            sink.setSources(target)
+            if kind == .microphone {
+                removeConfigurationObserver()
+                if let engine { engine.inputNode.removeTap(onBus: 0); engine.stop() }
+                engine = nil
+            } else {
+                let previous = stream
+                stream = nil; systemDelegate = nil
+                if let previous {
+                    do { try await previous.stopCapture() }
+                    catch {
+                        try checkSession()
+                        throw MeetingRecorderError.message("系统声音已关闭，但停止系统采集时发生错误：\(error.localizedDescription)")
+                    }
+                }
+                try checkSession()
+            }
         }
     }
 
@@ -221,6 +318,7 @@ final class MeetingRecorder {
         engine.prepare()
         do {
             try engine.start()
+            microphoneStarted = MeetingCaptureTimeline.now
         } catch {
             input.removeTap(onBus: 0)
             engine.stop()
@@ -229,7 +327,7 @@ final class MeetingRecorder {
         }
         configurationObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
             Task { @MainActor in
-                guard let self, self.state == .recording else { return }
+                guard let self, self.state == .recording, self.activeSources.microphone, self.engine === engine else { return }
                 self.reportFailure(MeetingRecorderError.message("输入设备或采样率已变化，已有录音已保留。请保存后重新开始。"))
             }
         }
@@ -241,6 +339,7 @@ final class MeetingRecorder {
             throw MeetingRecorderError.message("没有正在进行的录音。")
         }
         let duration = seconds
+        sessionID = UUID(); sourceSwitchID = nil
         removeConfigurationObserver()
         state = .finishing
         sink.setPaused(true) // 停止边界之后抵达的音频不能再延长最终文件。
@@ -253,12 +352,14 @@ final class MeetingRecorder {
             do { try await stream.stopCapture() } catch { stopFailure = error }
         }
         stream = nil
-        let tracks = sink.finish()
+        systemDelegate = nil
+        let tracks = sink.finish(duration: duration)
         self.sink = nil
         defer {
             if let recordingActivity { ProcessInfo.processInfo.endActivity(recordingActivity) }
             recordingActivity = nil
             state = .idle
+            activeSources = .muted
         }
         let captureWarning = (failure ?? stopFailure ?? sink.recordingError)?.localizedDescription
         guard !tracks.isEmpty else {
@@ -281,6 +382,20 @@ struct MeetingAudioTrack: Codable, Sendable {
     let kind: Kind
     let url: URL
     let offset: TimeInterval
+}
+
+/// Per-stream errors are delivered only while that stream belongs to the active
+/// session. Expected stops and failed candidate streams never poison the sink.
+private final class MeetingSystemAudioDelegate: NSObject, SCStreamDelegate, @unchecked Sendable {
+    private let lock = NSLock()
+    private var storedError: Error?
+    var lastError: Error? { lock.lock(); defer { lock.unlock() }; return storedError }
+    let onError: (SCStream, Error) -> Void
+    init(onError: @escaping (SCStream, Error) -> Void) { self.onError = onError }
+    func stream(_ stream: SCStream, didStopWithError error: Error) {
+        lock.lock(); storedError = error; lock.unlock()
+        onError(stream, error)
+    }
 }
 
 /// 麦克风 hostTime 与 ScreenCaptureKit PTS 都使用 CoreMedia host clock；禁止用回调抵达时间对齐。
@@ -338,6 +453,8 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
     var recordingError: Error? { queue.sync { storedError } }
     private var meter: Float = 0
     private var timeline: MeetingCaptureTimeline
+    private var sourceTimeline: RecordingSourceTimeline
+    private var hasIntentionalSilence = false
     private var live: MeetingLiveAudioMixer?
     private var livePaused = false
     private var resamplers: [MeetingAudioTrack.Kind: MeetingLiveResampler] = [:]
@@ -360,6 +477,7 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
          onAudio: (([Float]) -> Void)? = nil, onError: @escaping (Error) -> Void) {
         self.directory = directory
         self.timeline = MeetingCaptureTimeline(started: started)
+        self.sourceTimeline = RecordingSourceTimeline(started: started, sources: RecordingSources(mode: mode))
         self.onError = onError
         let activeSegmenter = sessionMode == .continuous ? segmenter : nil
         self.segmenter = activeSegmenter
@@ -368,6 +486,27 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
                 onAudio?(samples)
                 activeSegmenter?.append(samples, at: offset)
             }
+        }
+    }
+
+    func setSources(_ sources: RecordingSources, at timestamp: TimeInterval = MeetingCaptureTimeline.now) {
+        queue.sync {
+            sourceTimeline.setSources(sources, at: timestamp)
+            live?.setTrackCount((sources.microphone ? 1 : 0) + (sources.systemAudio ? 1 : 0))
+            hasIntentionalSilence = hasIntentionalSilence || sources.isMuted
+            healthLock.lock(); meter = 0; healthLock.unlock()
+            do { try JSONEncoder().encode(sourceTimeline.events).write(to: directory.appendingPathComponent("sources.json"), options: .atomic) }
+            catch { report(error) }
+        }
+    }
+
+    /// Keeps the ASR/continuous-segment clock moving through intentional mute,
+    /// without waiting for either hardware source to deliver its next frame.
+    func advance(to timestamp: TimeInterval) {
+        queue.async {
+            guard !self.finished, !self.failed, !self.livePaused else { return }
+            let slices = self.timeline.slices(at: timestamp, frames: 1, sampleRate: 16_000)
+            if let offset = slices.first?.offset { self.live?.advance(to: offset) }
         }
     }
 
@@ -392,6 +531,11 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
         healthLock.lock(); lastFrames[.microphone] = MeetingCaptureTimeline.now; healthLock.unlock()
         guard let copy = Self.copy(buffer, frames: 0..<Int(buffer.frameLength)) else { return }
         queue.async { self.write(copy, kind: .microphone, at: timestamp) }
+    }
+
+    func appendSystemAudio(_ buffer: AVAudioPCMBuffer, at timestamp: TimeInterval) {
+        guard let copy = Self.copy(buffer, frames: 0..<Int(buffer.frameLength)) else { return }
+        queue.async { self.write(copy, kind: .system, at: timestamp) }
     }
 
     private static func copy(_ buffer: AVAudioPCMBuffer, frames: Range<Int>) -> AVAudioPCMBuffer? {
@@ -431,6 +575,13 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
 
     private func write(_ buffer: AVAudioPCMBuffer, kind: MeetingAudioTrack.Kind, at timestamp: TimeInterval) {
         guard !finished, !failed, buffer.frameLength > 0 else { return }
+        for range in sourceTimeline.slices(kind: kind, at: timestamp, frames: Int(buffer.frameLength), sampleRate: buffer.format.sampleRate) {
+            guard let allowed = Self.copy(buffer, frames: range) else { continue }
+            writeAllowed(allowed, kind: kind, at: timestamp + Double(range.lowerBound) / buffer.format.sampleRate)
+        }
+    }
+
+    private func writeAllowed(_ buffer: AVAudioPCMBuffer, kind: MeetingAudioTrack.Kind, at timestamp: TimeInterval) {
         for slice in timeline.slices(at: timestamp, frames: Int(buffer.frameLength), sampleRate: buffer.format.sampleRate) {
             guard let active = Self.copy(buffer, frames: slice.frames) else { continue }
             writeActive(active, kind: kind, offset: slice.offset)
@@ -510,8 +661,23 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
         onError(error)
     }
 
-    @discardableResult func finish() -> [MeetingAudioTrack] {
+    @discardableResult func finish(duration: TimeInterval? = nil) -> [MeetingAudioTrack] {
         queue.sync {
+            if tracks.isEmpty, hasIntentionalSilence, let duration, duration > 0 {
+                // A deliberately muted session is a valid silent recording;
+                // a session with unavailable hardware still fails as before.
+                let format = AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)!
+                var remaining = Int((duration * 16_000).rounded())
+                var offset = 0
+                while remaining > 0, !failed {
+                    let count = min(8192, remaining)
+                    let silence = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count))!
+                    silence.frameLength = AVAudioFrameCount(count)
+                    memset(silence.floatChannelData![0], 0, count * MemoryLayout<Float>.size)
+                    writeActive(silence, kind: .microphone, offset: Double(offset) / 16_000)
+                    offset += count; remaining -= count
+                }
+            }
             for (kind, resampler) in resamplers {
                 do {
                     let tail = try resampler.finish()
@@ -595,13 +761,21 @@ final class MeetingLiveAudioMixer {
     private var sources = [UInt8](repeating: 0, count: 8000)
     private var cursor = 0
     private var latest = 0
-    private let gain: Float
+    private var gain: Float
     private let onAudio: ([Float], TimeInterval) -> Void
     var bufferedFrames: Int { min(capacity, max(0, latest - cursor)) }
 
     init(trackCount: Int, onAudio: @escaping ([Float], TimeInterval) -> Void) {
         gain = 0.9 / Float(max(1, trackCount))
         self.onAudio = onAudio
+    }
+
+    func setTrackCount(_ count: Int) {
+        let next: Float = 0.9 / Float(max(1, count))
+        guard next != gain else { return }
+        let scale = next / gain
+        for index in ring.indices { ring[index] *= scale }
+        gain = next
     }
 
     func append(_ samples: [Float], kind: MeetingAudioTrack.Kind, offset: TimeInterval) {
@@ -624,6 +798,12 @@ final class MeetingLiveAudioMixer {
     }
 
     func flush() { emit(until: latest) }
+
+    func advance(to offset: TimeInterval) {
+        guard offset.isFinite, offset >= 0 else { return }
+        latest = max(latest, Int((offset * 16_000).rounded()))
+        emit(until: max(cursor, latest - holdback))
+    }
 
     private func emit(until ending: Int) {
         while cursor < ending {

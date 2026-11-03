@@ -49,7 +49,7 @@ struct RecordingMenuBarView: View {
         }
         if let issue = state.recordingIssue { Text(issue) }
         Divider()
-        Button("打开录音窗口") { state.showRecordingWindow() }
+        Button("打开录音窗口") { if state.recording { state.returnToRecording() } else { state.showRecordingWindow() } }
         Button("显示 mini 录音条") { state.showMiniRecorder() }
         if !state.locked && state.miniMode { Button("开始新录音") { state.toggleRecording() } }
         if state.recording {

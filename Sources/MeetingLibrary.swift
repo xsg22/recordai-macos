@@ -193,11 +193,11 @@ enum MeetingLibraryError: LocalizedError {
     case unsafeAudioPath, missingAudio, missingAttachment, invalidTitle, missingMeeting
     var errorDescription: String? {
         switch self {
-        case .unsafeAudioPath: return "会议音频路径无效，无法访问会议目录以外的文件。"
+        case .unsafeAudioPath: return "录音文件路径无效，无法访问录音目录以外的文件。"
         case .missingAudio: return "找不到音频文件，请重新导入。"
         case .missingAttachment: return "找不到本地附件，请重新添加。"
-        case .invalidTitle: return "会议标题不能为空。"
-        case .missingMeeting: return "找不到这条会议记录。"
+        case .invalidTitle: return "录音标题不能为空。"
+        case .missingMeeting: return "找不到这条录音记录。"
         }
     }
 }
@@ -271,7 +271,7 @@ final class MeetingLibrary {
                 let record = try load(id)
                 let search = [record.title, record.text].joined(separator: "\n")
                 if query.isEmpty || search.localizedStandardContains(query) { result.append(record) }
-            } catch { warnings.append("会议 \(id.uuidString) 读取失败：\(error.localizedDescription)") }
+            } catch { warnings.append("录音 \(id.uuidString) 读取失败：\(error.localizedDescription)") }
         }
         return result.sorted { $0.created > $1.created }
     }
@@ -293,7 +293,7 @@ final class MeetingLibrary {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(saved).write(to: directory.appendingPathComponent("meeting.json"), options: .atomic)
         do { try publisher.publish(saved, libraryRoot: root); publicationError = nil }
-        catch { publicationError = "本机Agent快照更新失败，会议原件已保存：\(error.localizedDescription)" }
+        catch { publicationError = "本机Agent快照更新失败，录音原件已保存：\(error.localizedDescription)" }
         return saved
     }
 
@@ -512,7 +512,7 @@ final class MeetingLibrary {
         try manager.createDirectory(at: trashDirectory, withIntermediateDirectories: true)
         try manager.moveItem(at: directory(for: id), to: trashDirectory.appendingPathComponent(id.uuidString, isDirectory: true))
         do { try publisher.remove(id); publicationError = nil }
-        catch { publicationError = "会议已移入回收站，本机Agent快照清理失败，请重新发布。" }
+        catch { publicationError = "录音已移入回收站，本机Agent快照清理失败，请重新发布。" }
     }
 
     @discardableResult func restoreTrashed(_ id: UUID) throws -> MeetingRecord {
@@ -549,7 +549,7 @@ final class MeetingLibrary {
             }
             for record in records { try publisher.publish(record, libraryRoot: root) }
             publicationError = nil
-        } catch { publicationError = "本机Agent快照更新失败，会议原件已保留：\(error.localizedDescription)" }
+        } catch { publicationError = "本机Agent快照更新失败，录音原件已保留：\(error.localizedDescription)" }
     }
 
     private func migrateLegacyHistory() throws {

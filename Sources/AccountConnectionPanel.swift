@@ -144,9 +144,9 @@ struct NotionConnectionCard: View {
     let compact: Bool
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            AccountCardHeader(title: "Notion · 私人会议页面", status: L10n.text(account.status) + (account.connected && !account.accountDisplay.isEmpty ? " · " + account.accountDisplay : ""), connected: account.connected, notion: true)
+            AccountCardHeader(title: "Notion · 私人录音页面", status: L10n.text(account.status) + (account.connected && !account.accountDisplay.isEmpty ? " · " + account.accountDisplay : ""), connected: account.connected, notion: true)
             if !compact {
-                Text(L10n.text("使用 Notion 官方授权页面连接工作区，会议保存为私人页面。同步前可预览正文，原始音频保留在本机。"))
+                Text(L10n.text("使用 Notion 官方授权页面连接工作区，录音保存为私人页面。同步前可预览正文，原始音频保留在本机。"))
                     .font(AppTypography.secondary).lineSpacing(6).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 HStack {
                     if account.busy { ProgressView().controlSize(.small) }

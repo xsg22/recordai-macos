@@ -90,7 +90,7 @@ struct AppStateSmoke {
         state.select(original.id)
         let unchangedTitle = state.title
         state.retryLastError()
-        precondition(state.title == unchangedTitle && state.errorRetry == nil && state.error?.contains("会议已改变") == true)
+        precondition(state.title == unchangedTitle && state.errorRetry == nil && state.error?.contains("录音已改变") == true)
         state.select(importedID)
         print("PASS: AppState旧库迁移/历史内容保全/空标题保护/新转录不被旧编辑覆盖/全文搜索/转录导出，仅临时数据。")
     }

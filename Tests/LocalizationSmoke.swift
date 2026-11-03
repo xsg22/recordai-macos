@@ -7,6 +7,10 @@ import Foundation
         defer { language.selection = previous }
         language.selection = .english
         precondition(L10n.text("开始新录音") != "开始新录音", "Bundle catalog must be loaded")
+        precondition(RecordingSessionMode.conference.title == "Full recording")
+        precondition(MeetingRecordingMode.meeting.title == "Microphone + system audio")
+        precondition(L10n.text("录音 ") == "Recording ")
+        precondition(RecordingSessionMode.conference.rawValue == "conference", "Display terminology must not rename persisted session modes")
         precondition(L10n.processingStatus("正在区分发言人 · 第 1/2 段录音 · 正文已保存") == "Identifying speakers · Audio part 1/2 · Transcript saved")
         precondition(L10n.text("录音原轨已保存至 完成{1}，合成失败：保存{0}") == "Original tracks saved to 完成{1}. Mixing failed: 保存{0}")
         precondition(L10n.format("{0} 个录音", "完成{1}").contains("完成{1}"))
@@ -34,6 +38,8 @@ import Foundation
         precondition(english.contains("## Transcript") && english.contains("# 完成{1}") && english.contains("保存。"))
         language.selection = .simplifiedChinese
         precondition(L10n.text("开始新录音") == "开始新录音")
+        precondition(RecordingSessionMode.conference.title == "整段录音")
+        precondition(MeetingRecordingMode.meeting.title == "麦克风 + 系统声音")
         precondition(record.displaySpeakerName("0") == "发言人 1")
         let afterSwitch = try AgentCodec.encoder().encode(AgentDataPublisher.snapshot(record, libraryRoot: root))
         precondition(afterSwitch == canonical)

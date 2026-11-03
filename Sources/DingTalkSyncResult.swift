@@ -24,7 +24,7 @@ enum DingTalkSyncResult {
             throw MCPError.message("钉钉身份不匹配，已停止消息提醒，文档不受影响。")
         }
         let safeTitle = String(title.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ").prefix(150))
-        let text = "会议已同步到钉钉文档：" + safeTitle + "\n" + (url?.absoluteString ?? "可在钉钉“我的文档”中查看。")
+        let text = "录音已同步到钉钉文档：" + safeTitle + "\n" + (url?.absoluteString ?? "可在钉钉“我的文档”中查看。")
         // --yes的边界是产品同步确认页里明确勾选的“通知我”，不额外发送给其他人或群。
         return ["chat", "+messages-send", "--as", "user", "--user", user, "--text", text,
                 "--idempotency-key", idempotencyKey, "--profile", profile, "--timeout", "20", "--format", "json", "--yes"]

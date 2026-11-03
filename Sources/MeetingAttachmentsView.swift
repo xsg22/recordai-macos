@@ -28,7 +28,7 @@ struct MeetingAttachmentsView: View {
                 }.padding(12).background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 9))
             }
             if state.current?.attachments.isEmpty == true {
-                Text(L10n.text("添加会议相关的本地文件。")).font(AppTypography.secondary).foregroundStyle(.secondary)
+                Text(L10n.text("添加录音相关的本地文件。")).font(AppTypography.secondary).foregroundStyle(.secondary)
             }
         }
     }

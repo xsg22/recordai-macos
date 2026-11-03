@@ -45,7 +45,7 @@ final class MiniRecordingController: NSObject, NSWindowDelegate {
     func show() {
         guard let state else { return }
         if panel == nil {
-            let panel = MiniRecorderPanel(contentRect: NSRect(x: 0, y: 0, width: 660, height: 76), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+            let panel = MiniRecorderPanel(contentRect: NSRect(x: 0, y: 0, width: 525, height: 76), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
             panel.title = "mini 录音条"
             panel.setAccessibilityLabel("mini 录音条")
             panel.isFloatingPanel = true; panel.hidesOnDeactivate = false
@@ -58,7 +58,7 @@ final class MiniRecordingController: NSObject, NSWindowDelegate {
             let screen = state.mainWindow?.screen ?? NSScreen.main
             let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1024, height: 768)
             let stored = defaults.array(forKey: positionKey) as? [Double]
-            let origin = stored?.count == 2 ? NSPoint(x: stored![0], y: stored![1]) : NSPoint(x: visible.maxX - 684, y: visible.minY + 24)
+            let origin = stored?.count == 2 ? NSPoint(x: stored![0], y: stored![1]) : NSPoint(x: visible.maxX - 549, y: visible.minY + 24)
             panel.setFrame(Self.constrainedFrame(NSRect(origin: origin, size: panel.frame.size), screens: NSScreen.screens.map(\.visibleFrame)), display: false)
         }
         panel?.level = pinned ? .floating : .normal
@@ -132,10 +132,10 @@ struct MiniRecordingView: View {
     private var surface: Color { RecordAITheme.surface.opacity(0.96) }
     private var mutedInk: Color { ink.opacity(contrast == .increased ? 0.82 : 0.70) }
     private var profile: RecordingProfile { state.locked ? state.activeRecordingProfile : state.recordingProfile }
-    private var hasSession: Bool { state.miniSessionID != nil && state.miniSessionID == state.current?.id }
+    private var hasSession: Bool { state.miniSessionID != nil && state.miniSessionID == (state.recording ? state.recordingRecord?.id : state.current?.id) }
     private var headline: String {
         if state.preparing { return state.recording ? "正在保存录音" : "正在准备录音" }
-        if state.recording { return state.paused ? "录音已暂停" : "正在录音" }
+        if state.recording { return state.paused ? "录音已暂停" : state.recordingIsMuted ? "静音录制" : "正在录音" }
         if state.busy {
             switch state.transcriptPhase {
             case .diarizing: return "音频已保存 · 正在区分发言人"
@@ -149,40 +149,40 @@ struct MiniRecordingView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 14) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.text(headline)).font(.system(size: 11, weight: .medium)).lineLimit(1)
+                        .foregroundStyle(state.recording && !state.paused && !state.recordingIsMuted ? Color.red : mutedInk)
+                    Text(L10n.text(state.recording ? clock(state.elapsed) : hasSession ? "已保存到本机" : "准备就绪"))
+                        .font(.system(size: 16, weight: .semibold)).monospacedDigit().foregroundStyle(ink)
+                }.frame(width: 75, alignment: .leading).overlay { if !inline { MiniWindowDragRegion() } }.help(L10n.text("拖动此处移动录音条"))
+                Group {
+                    if state.miniShowsCaptions { captions }
+                    else if state.recording {
+                    if reduceMotion { ProgressView(value: state.paused || state.recordingIsMuted ? 0 : Double(state.level)).tint(accent) }
+                    else {
+                        LiveWaveformView(samples: state.paused || state.recordingIsMuted ? [Float](repeating: 0, count: 22) : Array(state.liveLevels.suffix(22)), tint: state.paused || state.recordingIsMuted ? mutedInk : accent)
+                            .frame(height: 30).accessibilityLabel(L10n.text("录音声波"))
+                    }
+                    } else { Text(state.current?.title ?? L10n.text("准备开始录音")).font(.system(size: 12)).lineLimit(2) }
+                }.frame(width: 180, alignment: .leading)
+                Spacer(minLength: 0)
                 if state.recording {
-                    icon("stop.fill", label: "停止并保存") { state.toggleRecording() }
-                        .disabled(state.preparing || state.quitting)
+                    RecordingSourceToggle(state: state, kind: .microphone, compact: true)
+                    RecordingSourceToggle(state: state, kind: .system, compact: true)
+                }
+                icon("captions.bubble", label: state.miniShowsCaptions ? "切换为声波" : "显示实时字幕") { state.miniShowsCaptions.toggle() }
+                if state.recording {
                     icon(state.paused ? "play.fill" : "pause.fill", label: state.paused ? (state.canRetryMicrophone ? "重试麦克风并继续录音" : "继续录音") : "暂停录音") { state.pauseRecording() }
                         .disabled(state.preparing || state.quitting || (state.recordingIssue != nil && !state.canRetryMicrophone))
+                    icon("stop.fill", label: "停止并保存") { state.toggleRecording() }
+                        .disabled(state.preparing || state.quitting)
                 } else if !state.locked && !hasSession {
                     Button(L10n.text("开始录音")) { state.toggleRecording() }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.syncing)
                 } else if state.busy || state.preparing { ProgressView().controlSize(.small) }
-                Rectangle().fill(ink.opacity(0.1)).frame(width: 1, height: 26)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.text(headline)).font(.system(size: 11, weight: .medium)).foregroundStyle(state.recording && !state.paused ? Color.red : mutedInk)
-                    Text(L10n.text(state.recording ? clock(state.elapsed) : hasSession ? "已保存到本机" : "准备就绪"))
-                        .font(.system(size: 16, weight: .semibold)).monospacedDigit().foregroundStyle(ink)
-                }.fixedSize().overlay { if !inline { MiniWindowDragRegion() } }.help(L10n.text("拖动此处移动录音条"))
-                if state.recording {
-                    if reduceMotion { ProgressView(value: state.paused ? 0 : Double(state.level)).tint(accent).frame(width: 130) }
-                    else {
-                        LiveWaveformView(samples: state.paused ? [Float](repeating: 0, count: 22) : Array(state.liveLevels.suffix(22)), tint: state.paused ? mutedInk : accent)
-                            .frame(width: 130, height: 30).accessibilityLabel(L10n.text("录音声波"))
-                    }
+                icon(inline ? "arrow.uturn.backward" : "arrow.up.right", label: inline ? "返回正在录音" : "展开录音窗口") {
+                    if state.recording { state.returnToRecording() } else { state.showRecordingWindow() }
                 }
-                Spacer(minLength: 0)
-                VStack(alignment: .leading, spacing: 3) {
-                    Label(L10n.text(state.recordingMode.title), systemImage: "mic").lineLimit(1)
-                    if let title = state.current?.title { Text(title).lineLimit(1) }
-                }.font(.system(size: 11)).foregroundStyle(mutedInk).frame(maxWidth: 150, alignment: .leading)
-                    .overlay { if !inline { MiniWindowDragRegion() } }
-                icon(inline ? "chevron.up" : "arrow.up.right", label: inline ? "收起为 mini" : "展开录音窗口") {
-                    if inline { state.showMiniRecorder() } else { state.showRecordingWindow() }
-                }
-                Menu { options } label: { Image(systemName: "ellipsis").frame(width: 28, height: 36).contentShape(Rectangle()) }
-                    .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-                    .help(L10n.text("更多录音操作")).accessibilityLabel(L10n.text("更多录音操作"))
             }.frame(height: 48)
             if let issue = state.recordingIssue ?? state.error {
                 HStack(alignment: .center, spacing: 10) {
@@ -192,17 +192,30 @@ struct MiniRecordingView: View {
                     if state.canRetryMicrophone { Button(L10n.text("重试并继续")) { state.pauseRecording() }.buttonStyle(RecordAISecondaryButtonStyle()) }
                 }.padding(12).frame(height: 65).background(Color.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
             }
-        }.padding(.horizontal, 18).padding(.vertical, 14)
-            .frame(width: 660, height: state.error != nil || state.recordingIssue != nil ? 168 : 76)
+        }.padding(.horizontal, 14).padding(.vertical, 14)
+            .frame(width: 525, height: state.error != nil || state.recordingIssue != nil ? 168 : 76)
             .background {
                 RoundedRectangle(cornerRadius: 20, style: .continuous).fill(.ultraThinMaterial)
                 RoundedRectangle(cornerRadius: 20, style: .continuous).fill(surface)
             }
             .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(ink.opacity(contrast == .increased ? 0.35 : 0.1), lineWidth: 1))
             .clipShape(RoundedRectangle(cornerRadius: 20))
+            .contextMenu { options }
+    }
+    private var captions: some View {
+        let preview = state.miniTranscriptPreview
+        return VStack(alignment: .leading, spacing: 3) {
+            if !preview.confirmed.isEmpty { Text(preview.confirmed).foregroundStyle(ink) }
+            if !preview.partial.isEmpty { Text(preview.partial).foregroundStyle(mutedInk) }
+            else if preview.confirmed.isEmpty {
+                Text(L10n.text(!state.liveEnabled ? "仅录音 · 停止后转录" : state.liveStatus.isEmpty ? "等待语音…" : state.liveStatus)).foregroundStyle(mutedInk)
+            }
+        }.font(.system(size: 12)).lineLimit(1).truncationMode(.head)
+            .opacity(state.paused || state.recordingIsMuted ? 0.65 : 1)
+            .accessibilityElement(children: .contain).accessibilityLabel(L10n.text("实时转录预览"))
     }
     @ViewBuilder private var options: some View {
-        Button(L10n.text("显示完整录音")) { state.showRecordingWindow() }
+        Button(L10n.text("显示完整录音")) { if state.recording { state.returnToRecording() } else { state.showRecordingWindow() } }
         if !state.locked {
             Picker(L10n.text("录音模式"), selection: $state.recordingProfile) {
                 ForEach(RecordingProfile.allCases) { Text($0.title).tag($0) }
@@ -227,10 +240,10 @@ struct MiniRecordingView: View {
         let hovered = hoveredControl == symbol
         return Button(action: action) {
             Image(systemName: symbol).font(.system(size: primary ? 10 : 13, weight: .medium))
-                .foregroundStyle(primary ? Color.white : bare ? mutedInk : ink.opacity(0.85))
-                .frame(width: primary ? 42 : 36, height: primary ? 42 : 36)
-                .background(primary ? Color(red: 1, green: 0.34, blue: 0.36) : ink.opacity(hovered ? 0.1 : 0.04), in: Circle())
-                .frame(width: 44, height: 44).contentShape(Rectangle())
+                .foregroundStyle(primary ? accent : bare ? mutedInk : ink.opacity(0.85))
+                .frame(width: 30, height: 32)
+                .background(primary || (symbol == "captions.bubble" && state.miniShowsCaptions) ? accent.opacity(0.12) : ink.opacity(hovered ? 0.1 : 0.02), in: RoundedRectangle(cornerRadius: 8))
+                .contentShape(Rectangle())
         }.buttonStyle(MiniControlPressStyle()).help(L10n.text(label)).accessibilityLabel(L10n.text(label))
             .onHover { inside in
                 if inside { hoveredControl = symbol }
@@ -239,7 +252,7 @@ struct MiniRecordingView: View {
             .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovered)
     }
     private func clock(_ seconds: Int) -> String {
-        String(format: "%02d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60)
+        seconds >= 3600 ? String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60) : String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 }
 

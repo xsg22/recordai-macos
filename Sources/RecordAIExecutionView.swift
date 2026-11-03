@@ -18,7 +18,7 @@ struct RecordAIExecutionView: View {
         return [
             ("音频采集", capture, captureDetail),
             ("实时 ASR", live, liveDetail),
-            ("片段队列", state.activeRecordingSessionMode == .continuous ? "已启用" : "未启用", state.activeRecordingSessionMode == .continuous ? "已完成 \(state.continuousProcessingCount) · 待处理 \(state.continuousQueuedCount) · 失败 \(state.continuousFailedCount)" : "会议模式保留完整音频"),
+            ("片段队列", state.activeRecordingSessionMode == .continuous ? "已启用" : "未启用", state.activeRecordingSessionMode == .continuous ? "已完成 \(state.continuousProcessingCount) · 待处理 \(state.continuousQueuedCount) · 失败 \(state.continuousFailedCount)" : "整段模式保留完整音频"),
             ("最终转录", final, finalDetail),
             ("发言人 / 对齐", speakerStatus, phaseDetail),
             ("Agent 发布", state.current == nil ? "等待录音" : state.agentPublicationError == nil ? "已就绪" : "待修复", state.agentPublicationError ?? "已保存快照可供本机工具读取")

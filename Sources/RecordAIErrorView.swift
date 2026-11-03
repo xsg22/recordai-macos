@@ -7,8 +7,6 @@ struct RecordAIErrorView: View {
     var retry: (() -> Void)? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Image(systemName: "exclamationmark.triangle").font(.system(size: 30)).foregroundStyle(.orange)
-                .frame(width: 64, height: 64).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 15))
             Text(L10n.text("操作未能完成")).font(.system(size: 24, weight: .semibold))
             Text(L10n.text(message)).font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
                 .lineSpacing(5).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)

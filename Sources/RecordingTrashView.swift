@@ -32,6 +32,8 @@ struct RecordingTrashView: View {
                                     Button(L10n.text("恢复录音")) { if state.restoreTrash(record.id) { restored() } }
                                         .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked)
                                 }.frame(minHeight: 92)
+                            }.contentShape(Rectangle()).contextMenu {
+                                Button(L10n.text("恢复录音")) { if state.restoreTrash(record.id) { restored() } }.disabled(state.locked)
                             }
                         }
                     }
@@ -48,10 +50,9 @@ struct ConfirmTrashView: View {
     @State private var issue = false
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Image(systemName: "trash").font(.system(size: 28)).foregroundStyle(.orange)
-                .frame(width: 64, height: 64).background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 15))
             Text(L10n.text("移到回收站？")).font(.system(size: 24, weight: .semibold))
-            Text(L10n.text("会议文本、托管音频和附件一起移入回收站，可以恢复；导入前的源文件保留。"))
+            Text(record.title).font(.system(size: 14, weight: .medium)).lineLimit(2)
+            Text(L10n.text("转录文本、托管音频和附件一起移入回收站，可以恢复；导入前的源文件保留。"))
                 .font(AppTypography.secondary).foregroundStyle(.secondary).lineSpacing(7).fixedSize(horizontal: false, vertical: true)
             if issue { RecordAIInfo(text: L10n.text("操作尚未完成，请检查错误提示后重试。"), warning: true) }
             HStack {

@@ -57,7 +57,7 @@ struct PlaybackWaveformView: View {
                     Slider(value: Binding(get: { min(duration, max(0, state.playbackTime)) }, set: { state.seek($0) }), in: 0...duration)
                         .labelsHidden().focused($seeking).opacity(0.015).accessibilityLabel(L10n.text("音频波形播放进度"))
                         .accessibilityValue(L10n.text("\(Int(state.playbackTime)) 秒，共 \(Int(duration)) 秒"))
-                        .disabled(state.recording || state.preparing)
+                        .disabled(!state.canPlayCurrentRecording)
                 }
             }.frame(height: 78).overlay(RoundedRectangle(cornerRadius: 6).stroke(seeking ? accent : .clear, lineWidth: 2))
             if loading { Text(L10n.text("声波正在生成，可直接播放")).font(AppTypography.secondary).foregroundStyle(.secondary) }

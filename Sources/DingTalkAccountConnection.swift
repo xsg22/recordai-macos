@@ -44,7 +44,7 @@ final class DingTalkAccountConnection: ObservableObject {
             status = "请在浏览器中登录并授权钉钉…"
             _ = try await AccountCommandRunner.run(executable: executable, arguments: ["auth", "login", "--format", "json"])
             try await identify()
-            guard connected else { throw MCPError.message("请从已登录账号中选择保存会议的账号。") }
+            guard connected else { throw MCPError.message("请从已登录账号中选择保存录音的账号。") }
         } catch { connected = false; self.error = MCPConnectionStore.safeError(error); status = "连接未完成" }
     }
     func selectAccount(_ profile: String) {
@@ -65,7 +65,7 @@ final class DingTalkAccountConnection: ObservableObject {
             selectedProfile = rows.first(where: { $0["isCurrent"] as? Bool == true && $0["status"] as? String == "active" })?["profile"] as? String ?? ""
         }
         guard identities.contains(where: { $0.profile == selectedProfile }) else {
-            connected = false; status = identities.isEmpty ? "未登录钉钉" : "请选择保存会议的账号"; return
+            connected = false; status = identities.isEmpty ? "未登录钉钉" : "请选择保存录音的账号"; return
         }
         let auth = try await AccountCommandRunner.run(executable: executable, arguments: ["auth", "status", "--profile", selectedProfile, "--format", "json"])
         guard auth["authenticated"] as? Bool == true,

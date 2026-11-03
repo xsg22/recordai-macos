@@ -111,7 +111,7 @@ final class FeishuAccountConnection: ObservableObject {
             // 命令超时之后仍可能已落盘，先检查状态，不要求用户重复授权。
             if (try? await queryStatus()) != nil, connected { clearPending(); return }
             self.error = "授权结果暂未确认。请先点“检查授权状态”；已有申请会保留，不会自动创建新申请。"
-            status = "等待确认已有授权，会议仍保存在本机"
+            status = "等待确认已有授权，录音仍保存在本机"
         }
     }
 

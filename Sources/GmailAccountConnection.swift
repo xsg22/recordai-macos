@@ -102,7 +102,7 @@ final class GmailAccountConnection: ObservableObject {
             store.saveSyncAction()
             guard store.error == nil else { throw MCPError.message("Gmail 同步动作保存失败。") }
             defaults.set(["email": account.email, "name": account.name], forKey: metadataKey)
-            connected = true; status = "已连接 · 会议将发给自己"
+            connected = true; status = "已连接 · 录音将发给自己"
         } catch { connected = false; self.error = MCPConnectionStore.safeError(error); status = "Gmail 尚未就绪" }
     }
 
@@ -136,7 +136,7 @@ final class GmailAccountConnection: ObservableObject {
               properties["subject"]?["type"] as? String == "string",
               properties["body"]?["type"] as? String == "string",
               Set(send.inputSchema["required"] as? [String] ?? []).isSubset(of: ["to", "subject", "body", "bodyType"]) else {
-            throw MCPError.message("Pipedream 尚未返回可验证的 Gmail 个人账号与发信工具。请在 Pipedream 启用 Gmail 后重新连接；当前服务工具契约不兼容时不会发送会议。")
+            throw MCPError.message("Pipedream 尚未返回可验证的 Gmail 个人账号与发信工具。请在 Pipedream 启用 Gmail 后重新连接；当前服务工具契约不兼容时不会发送录音内容。")
         }
         return (profile, send)
     }

@@ -29,7 +29,7 @@ struct SyncSettingsView: View {
                     }.disabled(bearer.isEmpty || store.busy)
                 }
                 Divider()
-                Text(L10n.text("会议保存方式")).font(.headline)
+                Text(L10n.text("录音保存方式")).font(.headline)
                 if !store.connected {
                     Text(L10n.text("连接后，软件会检查可用的个人保存方式。")).foregroundStyle(.secondary)
                 } else if !store.personalActions.isEmpty {
@@ -53,7 +53,7 @@ struct SyncSettingsView: View {
                 }
                 DisclosureGroup(L10n.text("开发者选项：自定义服务适配")) {
                     VStack(alignment: .leading, spacing: 12) {
-                Text(L10n.text("选择保存会议的工具")).font(.headline)
+                Text(L10n.text("选择保存录音的工具")).font(.headline)
                 Text(L10n.text("先核对工具说明与输入字段。只选择写入你个人空间或发给自己的工具，不要选择群广播、删除、公开分享等工具。")).font(.caption).foregroundStyle(.secondary)
                 Picker(L10n.text("工具"), selection: $store.configuration.tool) {
                     Text(L10n.text("请选择工具")).tag("")
@@ -66,7 +66,7 @@ struct SyncSettingsView: View {
                     }
                 }
                 Text(L10n.text("参数模板")).font(.headline)
-                Text(L10n.text("{{title}} 替换成会议标题，{{text}} 替换成会议正文。收件人、文件夹等目标必须在模板中明确填写；发送前可预览实际参数。")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.text("{{title}} 替换成录音标题，{{text}} 替换成录音正文。收件人、文件夹等目标必须在模板中明确填写；发送前可预览实际参数。")).font(.caption).foregroundStyle(.secondary)
                 TextEditor(text: $store.configuration.argumentTemplate).font(.system(.body, design: .monospaced)).frame(minHeight: 150).border(.quaternary)
                 Button(L10n.text("保存同步动作")) { store.saveSyncAction() }.disabled(!store.connected || store.busy)
                 Text(L10n.text("工具和模板修改在当前连接立即生效；修改服务地址后需重新连接。不会自动同步，也不会上传原始音频。")).font(.caption).foregroundStyle(.secondary)

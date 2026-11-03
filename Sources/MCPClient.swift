@@ -80,7 +80,7 @@ actor MCPClient {
     /// The user selects the tool and reviews its argument template before this function is called.
     /// The application must pass a completed final-transcript snapshot, never live preview text.
     func sync(title: String, text: String, tool: String, argumentTemplate: String) async throws -> MCPSyncReceipt {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw MCPError.message("没有可以同步的会议文本。") }
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw MCPError.message("没有可以同步的转录文本。") }
         let arguments = try Self.arguments(template: argumentTemplate, title: title, text: text)
         try await initialize()
         let result = try await request(method: "tools/call", params: ["name": tool, "arguments": arguments])

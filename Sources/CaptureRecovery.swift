@@ -34,7 +34,7 @@ enum CaptureRecovery {
                 guard properties.isDirectory == true, properties.isSymbolicLink == false else { throw MeetingRecorderError.message("原轨目录包含不安全的符号链接或不是目录。") }
                 // Foundation枚举可能返回/private/var，而解析后的系统路径是/var；统一后再验证真实边界。
                 let directory = entry.resolvingSymlinksInPath().standardizedFileURL
-                guard directory.deletingLastPathComponent().path == root.path else { throw MeetingRecorderError.message("原轨目录超出会议范围。") }
+                guard directory.deletingLastPathComponent().path == root.path else { throw MeetingRecorderError.message("原轨目录超出录音范围。") }
                 let manifest = directory.appendingPathComponent("recording.json")
                 guard manifest.resolvingSymlinksInPath().path == manifest.path else { throw MeetingRecorderError.message("录音清单路径不安全。") }
                 let manifestSize = try fm.attributesOfItem(atPath: manifest.path)[.size] as? NSNumber

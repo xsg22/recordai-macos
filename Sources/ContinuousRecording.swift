@@ -5,10 +5,10 @@ import Foundation
 enum RecordingSessionMode: String, CaseIterable, Identifiable, Codable {
     case conference, continuous
     var id: String { rawValue }
-    var title: String { L10n.text(self == .conference ? "会议录音" : "持续录音") }
+    var title: String { L10n.text(self == .conference ? "整段录音" : "持续录音") }
     var detail: String {
         self == .conference
-            ? "保留完整会议上下文，停止后统一识别、分人和对齐。"
+            ? "保留完整录音上下文，停止后统一识别、分人和对齐。"
             : "按最长时长和连续静音自动切片；录音继续时，已关闭片段依次定稿、分人和对齐。"
     }
 }
