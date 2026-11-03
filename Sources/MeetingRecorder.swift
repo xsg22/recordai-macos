@@ -325,9 +325,11 @@ final class MeetingRecorder {
             self.engine = nil
             throw error
         }
+        let engineID = ObjectIdentifier(engine)
         configurationObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
             Task { @MainActor in
-                guard let self, self.state == .recording, self.activeSources.microphone, self.engine === engine else { return }
+                guard let self, self.state == .recording, self.activeSources.microphone,
+                      let activeEngine = self.engine, ObjectIdentifier(activeEngine) == engineID else { return }
                 self.reportFailure(MeetingRecorderError.message("输入设备或采样率已变化，已有录音已保留。请保存后重新开始。"))
             }
         }
