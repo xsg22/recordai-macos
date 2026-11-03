@@ -1,0 +1,50 @@
+{
+  "recorded_at": "2026-11-03T16:02:30.932518+00:00",
+  "app_version": "0.17.1",
+  "app_sourceDigest": "5a03993c7d9d88027ed10e245977315fd8a5855fd62cca8fd479f907a19b6bef",
+  "scope": "Actual production candidate in isolated Home; native import/main button, embedded engine, playback, correction and exports. No hardware capture.",
+  "meeting_id": "9FA5D2A0-BE07-4EDB-ACEE-DDD906EA0DCB",
+  "input_duration_seconds": 31.29625,
+  "processing_seconds": 9.143941044807434,
+  "source_audio_sha256": "5497257ed0001553b07f6fd15ae8c79179764e520f5bcfbd630d10ebfdac6f99",
+  "managed_copy_sha256": "5497257ed0001553b07f6fd15ae8c79179764e520f5bcfbd630d10ebfdac6f99",
+  "paragraph_count": 4,
+  "speaker_sequence": [
+    "0",
+    "1",
+    "0",
+    "1"
+  ],
+  "actual_text_before_edit": "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。\n设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。\n好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。\n我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。",
+  "segment_playback": {
+    "passed": true,
+    "observed_playing_seconds": 9.085125,
+    "automatic_stop_seconds": 13.85
+  },
+  "manual_correction": {
+    "saved": true,
+    "timestamps_speakers_ids_and_audio_unchanged": true,
+    "raw_subtitles_unchanged": true
+  },
+  "export": {
+    "markdown_original": true,
+    "markdown_corrected": true,
+    "speaker_and_time_markers": true,
+    "original_srt": true
+  },
+  "direct_entry_recheck": {
+    "sourceDigest": "5a03993c7d9d88027ed10e245977315fd8a5855fd62cca8fd479f907a19b6bef",
+    "direct_start_button_verified": true,
+    "clicked_direct_button": true,
+    "completed": true,
+    "speaker_analysis_completed": true,
+    "source_preserved": true,
+    "speaker_sequence": [
+      "0",
+      "1",
+      "0",
+      "1"
+    ]
+  },
+  "limits": "Synthetic sample has a recognition error corrected manually; no fresh hardware capture, OAuth/remote writes or full design sign-off."
+}

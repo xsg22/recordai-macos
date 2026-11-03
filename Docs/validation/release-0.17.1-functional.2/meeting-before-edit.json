@@ -1,0 +1,119 @@
+{
+  "actionItems" : [
+
+  ],
+  "assistantEntries" : [
+
+  ],
+  "attachments" : [
+
+  ],
+  "audioDurations" : {
+    "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav" : 31.29625
+  },
+  "audioFiles" : [
+    "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav"
+  ],
+  "captureWarnings" : [
+
+  ],
+  "continuousSegmentFiles" : [
+
+  ],
+  "created" : 815414143.599126,
+  "customSpeakerNameIDs" : [
+
+  ],
+  "duration" : 31.29625,
+  "enhancedNotes" : "",
+  "enhancedNotesCitations" : [
+
+  ],
+  "enhancedNotesContextWasTruncated" : false,
+  "id" : "9FA5D2A0-BE07-4EDB-ACEE-DDD906EA0DCB",
+  "importedCaptureSessions" : {
+
+  },
+  "isStarred" : false,
+  "language" : "auto",
+  "legacyLiveText" : "",
+  "liveUtterances" : [
+
+  ],
+  "notes" : "",
+  "pendingAudioFiles" : [
+
+  ],
+  "previewText" : "",
+  "recordingSessionMode" : "conference",
+  "seconds" : 9.143941044807434,
+  "speakerAliases" : {
+
+  },
+  "speakerAnalysisMessage" : "最多区分4位发言人；续录标签独立，可手动改名或合并。重叠与不确定片段请核对。",
+  "speakerAnalysisStatus" : "completed",
+  "speakerNames" : {
+    "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav:0" : "发言人 1",
+    "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav:1" : "发言人 2"
+  },
+  "status" : "completed",
+  "subtitles" : "1\n00:00:00,506 --> 00:00:07,404\n大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。\n\n2\n00:00:08,250 --> 00:00:14,028\n设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。\n\n3\n00:00:15,162 --> 00:00:22,380\n好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。\n\n4\n00:00:23,162 --> 00:00:30,476\n我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。\n\n",
+  "summaryCitations" : [
+
+  ],
+  "summaryContextWasTruncated" : false,
+  "text" : "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。\n设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。\n好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。\n我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。",
+  "title" : "Product-weekly-demo",
+  "transcriptParagraphs" : [
+    {
+      "audioFile" : "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav",
+      "end" : 7.306,
+      "id" : "E39B155C-5417-4B3F-A205-FE07C24C273A",
+      "localStart" : 0.506,
+      "separator" : "",
+      "speakerIDs" : [
+        "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav:0"
+      ],
+      "start" : 0.506,
+      "text" : "大家好，现在开始产品周会。今天重点讨论新版首页和离线转录。"
+    },
+    {
+      "audioFile" : "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav",
+      "end" : 13.85,
+      "id" : "5C5F896A-63B7-4DF7-B919-26E4855D3A1A",
+      "localStart" : 8.33,
+      "separator" : "\n",
+      "speakerIDs" : [
+        "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav:1"
+      ],
+      "start" : 8.33,
+      "text" : "设计方案已经完成评审，我会在十一月六日之前交付首页设计稿。"
+    },
+    {
+      "audioFile" : "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav",
+      "end" : 22.282,
+      "id" : "6BCF736A-6CD3-4F39-B4FB-B4EED4A2AC14",
+      "localStart" : 15.162,
+      "separator" : "\n",
+      "speakerIDs" : [
+        "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav:0"
+      ],
+      "start" : 15.162,
+      "text" : "好的，请测试组验证没有麦克风时的提示，并检查导入音频的转录效果。"
+    },
+    {
+      "audioFile" : "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav",
+      "end" : 30.282,
+      "id" : "200B8191-07EE-400E-8434-DFDB7BEEA02A",
+      "localStart" : 23.322,
+      "separator" : "\n",
+      "speakerIDs" : [
+        "CFC3F27A-2FCF-464F-9C66-C16F3C05DFFD.wav:1"
+      ],
+      "start" : 23.322,
+      "text" : "我记录了两个行动项：测试组完成首页交付，测试组验证离线流程。会议结束。"
+    }
+  ],
+  "transcriptionEngine" : "qwen3-asr-1.7b-8bit",
+  "updated" : 815414169.905453
+}

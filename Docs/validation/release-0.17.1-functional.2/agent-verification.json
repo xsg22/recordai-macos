@@ -1,0 +1,15 @@
+{
+  "recorded_at": "2026-11-03T16:02:30.932518+00:00",
+  "sourceDigest": "5a03993c7d9d88027ed10e245977315fd8a5855fd62cca8fd479f907a19b6bef",
+  "setupVersion": "0.17.1",
+  "cliAndMcpSetupEqual": true,
+  "transcriptQueryEqual": true,
+  "groupQueryAvailable": true,
+  "noRecording": true,
+  "skillFiles": [
+    "SKILL.md",
+    "agents/openai.yaml",
+    "references/connection.json"
+  ],
+  "exit_code": 0
+}
