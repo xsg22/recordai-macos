@@ -54,19 +54,29 @@ import Foundation
         // Exercise the actual recorder's timer, pause/resume and silent export
         // without requesting TCC or collecting any microphone/system audio.
         let recorder = MeetingRecorder()
+        let startBefore = MeetingCaptureTimeline.now
         try await recorder.start(sources: .muted, directory: root)
+        let startAfter = MeetingCaptureTimeline.now
         precondition(recorder.state == .recording && recorder.activeSources.isMuted)
         if (try? MeetingRecorder.requireMicrophone()) == nil {
             do { try await recorder.toggleSource(.microphone); preconditionFailure("无设备不能开启麦克风") }
             catch { precondition(recorder.state == .recording && recorder.activeSources.isMuted) }
         }
         try await Task.sleep(nanoseconds: 240_000_000)
+        let pauseBefore = MeetingCaptureTimeline.now
         recorder.pause()
+        let pauseAfter = MeetingCaptureTimeline.now
         try await Task.sleep(nanoseconds: 200_000_000)
+        let resumeBefore = MeetingCaptureTimeline.now
         precondition(recorder.resume())
+        let resumeAfter = MeetingCaptureTimeline.now
         try await Task.sleep(nanoseconds: 240_000_000)
+        let stopBefore = MeetingCaptureTimeline.now
         let recording = try await recorder.stop()
-        precondition(recording.seconds >= 0.45 && recording.seconds < 0.65, "静音计时继续，暂停时间排除")
+        let minimumActive = (pauseBefore - startAfter) + (stopBefore - resumeAfter)
+        let maximumActive = (pauseAfter - startBefore) + (stopBefore - resumeBefore) + 0.1
+        precondition(recording.seconds >= max(0.45, minimumActive - 0.05) && recording.seconds <= maximumActive,
+                     "静音计时继续，暂停时间排除：实际 \(recording.seconds)，预期 \(minimumActive)...\(maximumActive)")
         let silent = try AVAudioFile(forReading: recording.audioURL)
         let silentBuffer = AVAudioPCMBuffer(pcmFormat: silent.processingFormat, frameCapacity: AVAudioFrameCount(silent.length))!
         try silent.read(into: silentBuffer)
