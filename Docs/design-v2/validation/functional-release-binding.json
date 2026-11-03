@@ -1,7 +1,7 @@
 {
-  "recorded_at": "2026-11-02T10:28:14.158114+00:00",
-  "verifiedSourceCommit": "8d8147d3028f7e79301ec25599b5a339f5d09766",
-  "sourceDigest": "742f47495f90f6a8975c9a5d420d5643a875da9c2f666636f4977adb2dd43aad",
+  "recorded_at": "2026-11-03T15:48:09.431686+00:00",
+  "verifiedSourceCommit": "fc54757c1d356930587846335e1f57d7cc30a2c5",
+  "sourceDigest": "2bae9ab6587f1765bbf920154e9cff6ee6a56bfc2983c742be1ca622730c7531",
   "runtimeInputs": [
     "Native/AgentCLI/main.swift",
     "Native/QwenRuntime/language_policy.py",
@@ -19,6 +19,6 @@
   "runtimeInputDigest": "c1e302448989b9960da3e5f70966fb86a8ba83d6c48478212c7e5e8bb0e891e6",
   "embeddedAsrSha256": "8c402c341a8b10b8992cbb14cf74df5d8e7cb16b99bb28fd1013bef2cf123724",
   "releasePolicy": "User authorized publication after primary functional validation; functional prerelease only, without full UI sign-off.",
-  "evidenceRoot": "Docs/validation/release-0.17.0",
+  "evidenceRoot": "Docs/validation/release-0.17.1",
   "verifiedWorkingTree": "Application inputs match verifiedSourceCommit; later documentation/evidence commits must preserve these digests."
 }

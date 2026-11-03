@@ -30,6 +30,7 @@
 
   ],
   "enhancedNotesContextWasTruncated" : false,
+  "groupID" : "A97CE73C-5ABA-4DA1-A191-115E09254440",
   "id" : "FCB0A0E9-CDFD-422E-8EAB-8E4BC1FE2A5C",
   "importedCaptureSessions" : {
 
@@ -115,5 +116,5 @@
     }
   ],
   "transcriptionEngine" : "qwen3-asr-1.7b-8bit",
-  "updated" : 815412143.721407
+  "updated" : 815413110.564599
 }

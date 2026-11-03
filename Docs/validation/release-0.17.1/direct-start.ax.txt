@@ -1,0 +1,56 @@
+Window: "RecordAI", App: RecordAI.
+0 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise
+	1 split group recordings-AppWindow-1, SidebarNavigationSplitView
+		2 container
+			3 image RecordAI
+			4 text RecordAI 本地录音 · AI 转写
+			5 button 开始新录音
+			6 button 全部录音, 2
+			7 button 星标, 0
+			8 button 回收站, 0
+			9 pop up button Description: 分组筛选, 分组筛选, Value: 所有分组
+			10 button Description: 管理分组, ID: folder.badge.plus
+			11 text field (settable) 搜索录音名称或内容…
+			12 text 录音资料库
+			13 button 批量整理
+			14 menu button 过滤, Description: filter, ID: line.3.horizontal.decrease
+			15 scroll area
+				16 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					17 button (selected) Product-weekly-demo, 待处理，今天 23:43 · 31 秒
+					18 button Description: Product-weekly-demo, 已完成，今天 23:22 · 31 秒, 产品讨论, Help: 产品讨论
+			19 button Description: 设置, Help: 转录、同步账号与本机Agent
+			20 button Description: 执行追踪, Help: 查看采集、ASR、转录和Agent发布状态
+		21 splitter (disabled, settable, float) 279
+		22 container
+			23 text field (settable) Value: Product-weekly-demo, Placeholder: 录音标题
+			24 button Description: 编辑录音标题, ID: pencil
+			25 button Description: 添加星标, ID: star
+			26 text 2026年11月3日 23:43—23:43 · 31 秒
+			27 button 开始转录
+			28 button 整理
+			29 button 导出
+			30 menu button 更多, Help: 导出及更多操作, ID: ellipsis
+			31 slider (settable, float) Description: 音频波形播放进度, Value: 0, Details: 0 秒，共 31 秒
+			32 text 00:00 00:31
+			33 button Description: 后退 15 秒, ID: gobackward.15
+			34 button Description: 播放录音, ID: play.fill
+			35 button Description: 前进 15 秒, ID: goforward.15
+			36 scroll area
+				37 list Secondary Actions: AXScrollToTop, AXScrollToBottom
+					38 text 录音或导入音频后，转录正文会显示在这里。
+	39 toolbar
+		40 button Description: Hide Sidebar, Secondary Actions: Increment, Decrement, Delete, Cancel
+	41 close button
+	42 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	43 minimize button
+	44 text RecordAI
+45 menu bar
+	46 RecordAI
+	47 File
+	48 Edit
+	49 View
+	50 RecordAI
+	51 Window
+	52 Help
+
+The focused UI element is 0 standard window RecordAI, ID: recordings-AppWindow-1, Secondary Actions: Raise
