@@ -54,7 +54,9 @@ jobs:
           xcodebuild -version
           python3 --version
           if ! command -v cmake >/dev/null; then brew install cmake; fi
+          if ! command -v rg >/dev/null; then brew install ripgrep; fi
           cmake --version
+          rg --version
           df -h .
       - name: Prepare fixed account components
         run: zsh Scripts/prepare-account-components.zsh
