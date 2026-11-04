@@ -56,6 +56,15 @@ import Foundation
         state.mainWindow = nil; state.openRecordingWindow = { requestedOpen = true }
         state.showRecordingWindow()
         precondition(requestedOpen, "主窗口已关闭后，mini 展开仍能重建主窗口")
+        state.mainWindow = main
+        requestedOpen = false
+        let delegate = AppDelegate()
+        delegate.attach(state)
+        state.showMiniRecorder()
+        precondition(delegate.applicationShouldHandleReopen(NSApp, hasVisibleWindows: false) == false,
+                     "已恢复主窗口后禁止系统再次创建窗口")
+        precondition(state.mainWindow === main && !requestedOpen && main.isVisible,
+                     "点击 Dock 应恢复原有主窗口")
         controller.hide(); main.orderOut(nil)
         print("PASS: 原生mini待开始不采集、展开收起不改录音/ASR/计时、菜单栏保会话、异常尺寸、置顶持久化、副屏恢复。无硬件采集。")
     }

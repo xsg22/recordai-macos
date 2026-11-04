@@ -330,7 +330,11 @@ final class MeetingRecorder {
             Task { @MainActor in
                 guard let self, self.state == .recording, self.activeSources.microphone,
                       let activeEngine = self.engine, ObjectIdentifier(activeEngine) == engineID else { return }
-                self.reportFailure(MeetingRecorderError.message("输入设备或采样率已变化，已有录音已保留。请保存后重新开始。"))
+                // Rebuild the input engine on the same recording. If the new
+                // device is unavailable, keep the session paused and retryable.
+                self.canRetryMicrophone = true
+                self.pause()
+                _ = self.resume()
             }
         }
     }
@@ -460,6 +464,7 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
     private var live: MeetingLiveAudioMixer?
     private var livePaused = false
     private var resamplers: [MeetingAudioTrack.Kind: MeetingLiveResampler] = [:]
+    private var storageConverters: [MeetingAudioTrack.Kind: MeetingStorageConverter] = [:]
     /// 快速锁只保护采样快照，主线程不等待磁盘写入队列。
     private let healthLock = NSLock()
     private var lastFrames: [MeetingAudioTrack.Kind: TimeInterval] = [:]
@@ -616,17 +621,24 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
                 // 恢复清单先落盘，崩溃或后续磁盘满时也能找回轨道和相对起点。
                 try JSONEncoder().encode(tracks).write(to: directory.appendingPathComponent("recording.json"), options: .atomic)
             }
-            guard file.processingFormat.sampleRate == buffer.format.sampleRate,
-                  file.processingFormat.channelCount == buffer.format.channelCount else {
-                throw MeetingRecorderError.message("录音设备格式发生变化，已暂停并保留原轨。")
+            let stored: AVAudioPCMBuffer
+            if file.processingFormat == buffer.format { stored = buffer }
+            else {
+                let converter: MeetingStorageConverter
+                if let existing = storageConverters[kind], existing.matches(buffer.format, file.processingFormat) { converter = existing }
+                else {
+                    converter = try MeetingStorageConverter(source: buffer.format, target: file.processingFormat)
+                    storageConverters[kind] = converter
+                }
+                stored = try converter.convert(buffer, offset: offset)
             }
             let origin = tracks.first { $0.kind == kind }!.offset
-            let desiredFrame = AVAudioFramePosition(((offset - origin) * buffer.format.sampleRate).rounded())
+            let desiredFrame = AVAudioFramePosition(((offset - origin) * stored.format.sampleRate).rounded())
             // 设备丢帧或回调间断时补静音，不能简单拼接使后续文字时间逐渐提前。
             var gap = desiredFrame - file.length
             while gap > 0 {
                 let count = AVAudioFrameCount(min(gap, 8192))
-                guard let silence = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: count) else {
+                guard let silence = AVAudioPCMBuffer(pcmFormat: stored.format, frameCapacity: count) else {
                     throw MeetingRecorderError.message("无法创建静音缓冲区。")
                 }
                 silence.frameLength = count
@@ -637,7 +649,7 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
                 gap -= AVAudioFramePosition(count)
             }
             let overlap = Int(max(0, file.length - desiredFrame))
-            if overlap < Int(buffer.frameLength), let remaining = Self.copy(buffer, frames: overlap..<Int(buffer.frameLength)) {
+            if overlap < Int(stored.frameLength), let remaining = Self.copy(stored, frames: overlap..<Int(stored.frameLength)) {
                 try file.write(from: remaining)
             }
             if let channels = buffer.floatChannelData {
@@ -689,10 +701,48 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
             live?.flush()
             live = nil
             resamplers.removeAll()
+            storageConverters.removeAll()
             finished = true
             files.removeAll() // 关闭 AVAudioFile，刷新 CAF 头部后再交给导出器。
             return tracks
         }
+    }
+}
+
+/// Preserve the original CAF format when a replacement device uses a different format.
+final class MeetingStorageConverter {
+    private let source: AVAudioFormat
+    private let target: AVAudioFormat
+    private let converter: AVAudioConverter
+    private var expectedInput: TimeInterval?
+
+    init(source: AVAudioFormat, target: AVAudioFormat) throws {
+        self.source = source; self.target = target
+        guard let converter = AVAudioConverter(from: source, to: target) else {
+            throw MeetingRecorderError.message("无法转换新输入设备的音频格式，原录音已保留。")
+        }
+        self.converter = converter
+        converter.primeMethod = .none
+    }
+
+    func matches(_ source: AVAudioFormat, _ target: AVAudioFormat) -> Bool { self.source == source && self.target == target }
+
+    func convert(_ input: AVAudioPCMBuffer, offset: TimeInterval) throws -> AVAudioPCMBuffer {
+        if expectedInput.map({ abs(offset - $0) > 0.01 }) == true { converter.reset() }
+        expectedInput = offset + Double(input.frameLength) / source.sampleRate
+        let capacity = AVAudioFrameCount(ceil(Double(input.frameLength) * target.sampleRate / source.sampleRate) + 256)
+        guard let output = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: capacity) else {
+            throw MeetingRecorderError.message("无法创建音频格式转换缓冲区。")
+        }
+        var supplied = false
+        var error: NSError?
+        let status = converter.convert(to: output, error: &error) { _, inputStatus in
+            if supplied { inputStatus.pointee = .noDataNow; return nil }
+            supplied = true; inputStatus.pointee = .haveData
+            return input
+        }
+        guard status != .error else { throw error ?? MeetingRecorderError.message("输入设备的音频格式转换失败。") }
+        return output
     }
 }
 

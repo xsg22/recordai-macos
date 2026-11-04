@@ -55,6 +55,26 @@ struct RecorderSmoke {
         let rawBuffer = AVAudioPCMBuffer(pcmFormat: rawFile.processingFormat, frameCapacity: 120_000)!
         try rawFile.read(into: rawBuffer)
         precondition(abs(rawBuffer.floatChannelData![0][60_000]) < 0.0001)
+        // Replacement input can change both sample rate and channel count while
+        // continuing to write the same recoverable original track.
+        let changedDirectory = root.appendingPathComponent("device-change")
+        try FileManager.default.createDirectory(at: changedDirectory, withIntermediateDirectories: true)
+        let changedSink = MeetingAudioSink(directory: changedDirectory, started: 100) { error in
+            fatalError("device-change writer error: \(error)")
+        }
+        let replacementFormat = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2)!
+        let replacement = AVAudioPCMBuffer(pcmFormat: replacementFormat, frameCapacity: 441)!
+        replacement.frameLength = 441
+        for channel in 0..<2 { for frame in 0..<441 { replacement.floatChannelData![channel][frame] = 0.3 } }
+        changedSink.appendMicrophone(sourceBuffer, at: 100)
+        for index in 0..<100 { changedSink.appendMicrophone(replacement, at: 101 + Double(index) / 100) }
+        let changedTracks = changedSink.finish()
+        precondition(changedTracks.count == 1 && changedSink.recordingError == nil)
+        let changedFile = try AVAudioFile(forReading: changedTracks[0].url)
+        precondition(abs(Int(changedFile.length) - 96_000) < 512)
+        let changedAudio = AVAudioPCMBuffer(pcmFormat: changedFile.processingFormat, frameCapacity: AVAudioFrameCount(changedFile.length))!
+        try changedFile.read(into: changedAudio)
+        precondition(abs(changedAudio.floatChannelData![0][72_000]) > 0.1, "替换设备的音频必须写入原轨")
         // 无权限/目录不可写等存储失败只能回调一次，stop 仍能同步读到错误。
         let badDirectory = root.appendingPathComponent("missing/subdirectory")
         var writeFailures = 0

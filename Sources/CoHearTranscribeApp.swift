@@ -10,8 +10,9 @@ import UniformTypeIdentifiers
         if miniController == nil { miniController = MiniRecordingController(state: state) }
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        state?.showRecordingWindow()
-        return true
+        guard let state else { return true }
+        state.showRecordingWindow()
+        return false
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         state?.prepareToQuit() == false ? .terminateCancel : .terminateNow
