@@ -1,18 +1,72 @@
-# RecordAI
+# TalkTuck for macOS（原 RecordAI）
 
-RecordAI 是 macOS 本地录音与转录应用。支持简体中文与 English 界面，界面语言与中文、英语、中英自动转录分别设置。它在本机处理音频，并提供 CLI 和 stdio MCP 接口供本机工具读取录音与转录结果。
+把声音留下来，把转录交给你习惯的 Agent。
 
-[个人主页](http://47.117.186.93/)
+**本仓库公开的是 TalkTuck 的 Mac 版（macOS 原生客户端）源码、构建脚本和相关文档。** iPhone 与 Apple Watch 版属于独立工程，不包含在本仓库中。
 
-**[下载 0.17.0 功能验证版](https://github.com/xsg22/recordai-macos/releases/tag/v0.17.0-functional.1)** · [DMG](https://github.com/xsg22/recordai-macos/releases/download/v0.17.0-functional.1/RecordAI-0.17.0-arm64.dmg) · [PKG](https://github.com/xsg22/recordai-macos/releases/download/v0.17.0-functional.1/RecordAI-0.17.0-arm64.pkg)
+TalkTuck 是 macOS 本地录音与转录应用。支持录音、音频导入、原音回听、转录校正和分组，并通过 CLI / MCP 让本机 Agent 查询转录内容。支持简体中文与 English 界面，界面语言与转录语言分别设置。
 
-以下为 0.17.0 原生客户端的实际截图，使用合成英文与中英混合语音及隔离演示资料。本版聚焦录音、转录与分组，分析交给外部 Agent；完整 UI 设计稿的逐页验收尚未全部完成。
+**This repository contains the macOS client source code for TalkTuck, formerly RecordAI.**
 
-![RecordAI 中英混合转录与英文界面](Docs/images/recordai-library-0170.jpg)
+[产品介绍](https://xueshengguo.com/apps/talktuck/) · [个人主页](https://xueshengguo.com/) · [GitHub Releases](https://github.com/xsg22/talktuck/releases)
 
-![独立设置界面语言和转录语言](Docs/images/recordai-settings-0170.jpg)
+**[下载 Mac 0.17.1 功能验证版](https://github.com/xsg22/talktuck/releases/tag/v0.17.1-functional.6)** · [DMG](https://github.com/xsg22/talktuck/releases/download/v0.17.1-functional.6/RecordAI-0.17.1-arm64.dmg) · [PKG](https://github.com/xsg22/talktuck/releases/download/v0.17.1-functional.6/RecordAI-0.17.1-arm64.pkg)
 
-[完整设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [下载安装包](https://github.com/xsg22/recordai-macos/releases)
+适用于 Apple Silicon、macOS 14 或更新版本。当前公开安装包仍使用 RecordAI 名称和文件名；首次使用需下载语音模型。该包是功能验证预发布，采用临时签名，尚未经过 Apple 公证。
+
+## 在 Mac 上可以做什么
+
+- **mini 悬浮窗**：工作时查看双行实时字幕，随时暂停、继续或结束录音。
+- **音源切换**：选择麦克风、系统声音或两路一起录，录音中可分别开关。
+- **录音分组**：按工作、学习、访谈等方式整理资料，配合搜索和星标找回内容。
+- **转录与回听**：导入已有音频，按段落定位原音，校正文字并导出 Markdown / SRT。
+- **Agent 接入**：让 Codex、Claude Code 等本机 Agent 通过 Skill、CLI 或 MCP 查询录音和转录，按需整理重点。
+
+## 产品实拍 · macOS
+
+以下为 Mac 原生客户端截图，使用合成音频或隔离演示资料，不含私人录音。部分来自开发预览，图片保留截图时的 RecordAI 名称；它与 TalkTuck 是同一个产品。主功能与具体包的验证范围见[验证记录](Docs/validation/release-0.17.1-functional.2/README.md)。
+
+### 录音资料库与 Agent 接入
+
+录音、转录和原音放在一起；复制接入提示词，让习惯的 Agent 继续处理内容。
+
+![TalkTuck Mac 录音资料库、紧凑转录与 Agent 接入引导（隔离演示资料，开发预览）](Docs/images/talktuck-macos/library-agent.png)
+
+### 录音中分别控制声音来源
+
+麦克风和系统声音独立开关，实时文字显示在录音页下方。
+
+![TalkTuck macOS 录音页：麦克风与系统声音开关、实时字幕和录音控制（开发预览）](Docs/images/talktuck-macos/recording-sources.png)
+
+### mini 悬浮窗
+
+缩成小窗后仍可查看双行字幕、控制音源和暂停录音。
+
+![TalkTuck mini 录音悬浮窗：双行字幕、音源开关、暂停与停止（开发预览）](Docs/images/talktuck-macos/mini.png)
+
+### 按工作、学习等分组管理
+
+创建、重命名和移除分组；移除分组会保留录音。
+
+![TalkTuck Mac 分组管理：工作、学习分组及重命名和移除操作（开发预览）](Docs/images/talktuck-macos/groups.png)
+
+### 导入音频后的转录与回听
+
+下面是 0.17.1 候选包导入合成语音后得到的转录，支持发言人分段和按段回放。
+
+![TalkTuck macOS 深色界面：实际导入合成音频后的波形、发言人分段与转录正文](Docs/validation/release-0.17.1-functional.2/import-e2e/03-transcribed.jpg)
+
+### 英文界面与中英混合转录
+
+界面语言和转录语言可以分别选择，已有录音内容保持原样。
+
+![TalkTuck Mac 英文界面与中英混合转录实际效果](Docs/images/recordai-library-0170.jpg)
+
+![TalkTuck macOS 设置：独立选择界面语言、音源和转录语言](Docs/images/recordai-settings-0170.jpg)
+
+[完整设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [截图来源](Docs/images/talktuck-macos/README.md)
+
+## 使用与验证
 
 选择麦克风、系统声音或两者作为音源，录音时可暂停、继续或切换到 mini 录音条；完成后可回放、按时间定位转录并导出。首次使用需要下载语音模型。
 
@@ -60,7 +114,7 @@ zsh Scripts/release.zsh
 
 ## 统一 Agent 接入
 
-首次获得已保存的非空转录时提示一次；在设置的“Agent 与数据”和交付页也可复制同一份接入提示词。粘贴给本地 Agent 后，由它获取当前版本 Skill 并按自己的环境安装。RecordAI 不要求选择 Agent，也不直接修改 Agent 配置。
+首次获得已保存的非空转录时提示一次；在设置的“Agent 与数据”和交付页也可复制同一份接入提示词。粘贴给本地 Agent 后，由它获取当前版本 Skill 并按自己的环境安装。TalkTuck 不要求选择 Agent，也不直接修改 Agent 配置。
 
 CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。该功能随 0.16.1 功能验证版提供；真实各品牌 Agent 的加载兼容性尚未全部联测。
 
