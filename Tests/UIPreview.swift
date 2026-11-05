@@ -13,7 +13,7 @@ import CryptoKit
     private let previewRoot: URL
     private let pages = PreviewPage.load()
     init() {
-        let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("recordai-ui-preview-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("talktuck-ui-preview-" + UUID().uuidString)
         previewRoot = root
         let library = try! MeetingLibrary(root: root)
         let demoID = UUID(); self.demoID = demoID
@@ -73,7 +73,7 @@ import CryptoKit
             let tracks = [MeetingAudioTrack(kind: .microphone, url: mic, offset: 0), MeetingAudioTrack(kind: .system, url: system, offset: 0)]
             try? JSONEncoder().encode(tracks).write(to: capture.appendingPathComponent("recording.json"))
         }
-        let namespace = "recordai-ui-preview-" + UUID().uuidString
+        let namespace = "talktuck-ui-preview-" + UUID().uuidString
         let defaults = UserDefaults(suiteName: namespace)!
         // Small, hash-correct fixture files exercise the same verified-model presentation.
         // They are never usable for inference; the preview bundle contains no speech engines.
@@ -136,7 +136,7 @@ import CryptoKit
         _state = StateObject(wrappedValue: previewState)
     }
     var body: some Scene {
-        WindowGroup("RecordAI · Agent 接入验收") {
+        WindowGroup("TalkTuck · Agent 接入验收") {
             MainView(state: page == 1 ? coldState : state, initialFilter: page == 3 ? "星标" : page == 5 ? "回收站" : "全部")
                 .id(page).background(RecordingWindowObserver(state: page == 1 ? coldState : state).frame(width: 0, height: 0)).frame(minWidth: 1040, minHeight: 760).font(AppTypography.body).controlSize(.extraLarge)
                 .preferredColorScheme(page == 40 ? .dark : .light)
@@ -182,7 +182,7 @@ import CryptoKit
                     status: "正在下载并校验本地模型文件…", error: modelPreview == "error" ? "网络连接已中断。" : nil,
                     totalBytes: (try? ASRModelManifest.load())?.totalBytes,
                     download: { modelPreview = "progress" }, cancel: { modelPreview = "initial" }, close: { presented = 0 })
-            }.padding(28).frame(width: 720).buttonStyle(RecordAISecondaryButtonStyle())
+            }.padding(28).frame(width: 720).buttonStyle(TalkTuckSecondaryButtonStyle())
         case 20...23: ConnectionsView(state: state)
         case 18...19, 24:
             RecordingAppConfigurationView(state: state,
@@ -190,7 +190,7 @@ import CryptoKit
         case 25: RecordingDeliveryView(state: state)
         case 26...28: SyncReviewView(state: state) { presented = 0 }
         case 29...30: CaptureRecoveryView(state: state)
-        case 31: RecordAIExecutionView(state: state)
+        case 31: TalkTuckExecutionView(state: state)
         case 32:
             if let paragraph = state.current?.transcriptParagraphs.first {
                 TranscriptParagraphEditor(paragraph: paragraph, speakerName: state.current?.paragraphSpeaker(paragraph) ?? "", cancel: { presented = 0 }) { text in
@@ -258,7 +258,7 @@ import CryptoKit
         case 25...34:
             if (26...28).contains(number) { Task { await state.dingTalkAccount.connect() } }
             if number == 27 { state.syncing = true; state.syncStatus = "正在保存文档 · 请勿重复提交。" }
-            if number == 28 { state.syncStatus = "演示：同步完成"; state.remoteURL = URL(string: "https://example.invalid/recordai-demo"); state.syncReceipt = "这是隔离预览回执，没有发送外部文档。" }
+            if number == 28 { state.syncStatus = "演示：同步完成"; state.remoteURL = URL(string: "https://example.invalid/talktuck-demo"); state.syncReceipt = "这是隔离预览回执，没有发送外部文档。" }
             if number == 29 { state.select(recoveryID) }
             if number == 31 {
                 state.busy = true; state.transcriptPhase = .recognizing

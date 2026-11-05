@@ -1,0 +1,55 @@
+{
+  "version": "0.17.3",
+  "build": "45",
+  "sourceDigest": "cae0d8f4158c311fa76420880a3a81192ca49c3ac34b40d55bf829fd499bd4a1",
+  "status": "local-candidate-only",
+  "regressionExitCodes": {
+    "account-regression": 0,
+    "hotword-sync-regression": 0,
+    "final-candidate": 0
+  },
+  "extraChecks": {
+    "serviceNamespaceMigration": "passed",
+    "offlinePackagedChineseASR": "passed-network-denied",
+    "windowsProbeContracts": {
+      "tests": 15,
+      "platform": "macOS",
+      "status": "passed",
+      "windowsHardwareValidated": false
+    },
+    "syntheticReportManifestAndCSP": "passed",
+    "privateKeyAndCredentialPatternScan": "no-matches"
+  },
+  "packages": {
+    "TalkTuck-0.17.3-arm64.dmg": {
+      "bytes": 175048336,
+      "sha256": "e3a2f631801c0f72182a0e50e0cc88f48a86a05d314b7ba0baed3ec93afb6803"
+    },
+    "TalkTuck-0.17.3-arm64.pkg": {
+      "bytes": 158282535,
+      "sha256": "b81a633972ef3fe1762759b171ae912f82c107c94b48d1701a8141caabc5b559"
+    }
+  },
+  "existingDownloadRelease": "v0.17.2",
+  "archive": {
+    "files": 1260,
+    "bytes": 34053741,
+    "allHashesMatch": true
+  },
+  "apiAlias": {
+    "serverLocalHTTPS": "401-application/json",
+    "existingRouteRetained": true,
+    "macPublicTLS": "failed-on-both-old-and-new-routes"
+  },
+  "nativeUI": "pending",
+  "publicationGates": "fail-closed-without-new-native-evidence",
+  "published": false,
+  "installed": false,
+  "personalRecordingsModified": false,
+  "limits": [
+    "Ad-hoc signing; no Developer ID or notarization",
+    "No fresh all-page native UI or physical-device sync acceptance",
+    "Public Mac-to-service TLS remains blocked"
+  ],
+  "runtimeAndToolingDigest": "2498454e10cfc7980cb7f216b2d88ed71bfa1eceaaa2748d800b6c61826997f7"
+}

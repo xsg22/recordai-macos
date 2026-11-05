@@ -48,7 +48,11 @@ def validate(report, regression, contracts, package, binding, source_hash, runti
 
 
 def main():
-    binding = json.loads((ROOT / "Docs/design-v2/validation/functional-release-binding.json").read_text())
+    binding_path = ROOT / "Docs/design-v2/validation/functional-release-binding.json"
+    if not binding_path.is_file():
+        print("Current-version native acceptance binding is required; archived evidence cannot authorize publication.", file=sys.stderr)
+        return 1
+    binding = json.loads(binding_path.read_text())
     # Preserve historical release evidence; each release may bind its own fresh validation directory.
     evidence = (ROOT / binding.get("evidenceRoot", "Docs/design-v2/validation")).resolve()
     if not evidence.is_relative_to((ROOT / "Docs").resolve()):

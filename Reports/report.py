@@ -47,7 +47,7 @@ def contract():
                        "columns": arr(SHORT, 2, 12), "rows": arr(ROW, 1, 100)},
                       ["id", "type", "title", "columns", "rows"]))
     return {"$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$id": "urn:recordai:analysis-report:1", "title": "RecordAI adaptive analysis report", **obj({
+            "$id": "urn:talktuck:analysis-report:1", "title": "TalkTuck adaptive analysis report", **obj({
         "schemaVersion": {"const": 1}, "reportId": IDENTIFIER, "title": SHORT, "subtitle": SHORT,
         "overview": CLAIM, "notice": TEXT,
         "recording": obj({"id": SHORT, "title": SHORT, "revision": {"type": "integer", "minimum": 0},
@@ -70,8 +70,8 @@ def draft_contract():
     protected = {"schemaVersion", "recording", "sources", "generation"}
     schema["properties"] = {key: value for key, value in schema["properties"].items() if key not in protected}
     schema["required"] = [key for key in schema["required"] if key not in protected]
-    schema["$id"] = "urn:recordai:analysis-draft:1"
-    schema["title"] = "RecordAI analyst draft; provenance is attached by the host"
+    schema["$id"] = "urn:talktuck:analysis-draft:1"
+    schema["title"] = "TalkTuck analyst draft; provenance is attached by the host"
     return schema
 
 
@@ -281,8 +281,8 @@ def render(report, audio_name=None):
     digest = lambda text: base64.b64encode(hashlib.sha256(text.encode()).digest()).decode()
     csp = f"default-src 'none'; style-src 'sha256-{digest(css)}'; script-src 'sha256-{digest(js)}'; media-src 'self' blob:; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'"
     return f'''<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="{h(csp)}"><meta name="color-scheme" content="light"><title>{h(report['title'])} · RecordAI</title><style>{css}</style></head>
-<body class="layout-{mode}{composition}"><a class="skip-link" href="#main">跳到报告正文</a><div class="shell"><header class="topbar"><a class="brand" href="#main"><span class="brand-icon" aria-hidden="true">▥</span>RecordAI<span class="brand-sub">内容洞察</span></a><div class="top-actions"><a href="report.json" download>↓ JSON</a><button id="print-report">导出 / 打印</button></div></header>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="{h(csp)}"><meta name="color-scheme" content="light"><title>{h(report['title'])} · TalkTuck</title><style>{css}</style></head>
+<body class="layout-{mode}{composition}"><a class="skip-link" href="#main">跳到报告正文</a><div class="shell"><header class="topbar"><a class="brand" href="#main"><span class="brand-icon" aria-hidden="true">▥</span>TalkTuck<span class="brand-sub">内容洞察</span></a><div class="top-actions"><a href="report.json" download>↓ JSON</a><button id="print-report">导出 / 打印</button></div></header>
 <main id="main"><div class="report-meta"><span class="report-type">{mode_title}</span><span>{h(report['subtitle'])}</span><span class="dot">·</span><time datetime="{h(record['createdAt'])}" class="recording-date">{h(record['createdAt'])}</time></div>
 <div class="hero"><div class="hero-copy"><h1>{h(report['title'])}</h1><p class="overview">{h(report['overview']['text'])}</p>{citations(report['overview']['sourceIds'])}<div class="trust-line"><span class="trust-dot"></span>{coverage_text}<span>·</span>原音 {clock(record['durationSeconds'])}{f'<span>·</span>{len(actions)} 项待跟进' if actions else ''}</div></div><aside class="spotlight">{spotlight}</aside></div>
 {f'<div class="sample-notice">{h(report["notice"])}</div>' if report.get('notice') else ''}

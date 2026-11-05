@@ -5,7 +5,7 @@ import CryptoKit
     @MainActor static func main() throws {
         try unselectedCardActions()
         let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent("recordai-organization-test-" + UUID().uuidString)
+        let root = fm.temporaryDirectory.appendingPathComponent("talktuck-organization-test-" + UUID().uuidString)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)
@@ -70,7 +70,7 @@ import CryptoKit
         precondition(restored.saveCollection(name: "项目", id: group.id))
         let renamed = try AgentReadStore(root: root.appendingPathComponent("AgentData")).read(record.id)
         precondition(renamed.organization?.group?.name == "项目" && renamed.contentDigest == initial.contentDigest)
-        if let fixture = ProcessInfo.processInfo.environment["RECORD_AI_TEST_AGENT_OUT"] {
+        if let fixture = ProcessInfo.processInfo.environment["TALKTUCK_TEST_AGENT_OUT"] {
             let target = URL(fileURLWithPath: fixture)
             try fm.copyItem(at: root.appendingPathComponent("AgentData"), to: target)
             let fixtureIDs = ["recordingID": record.id.uuidString, "otherID": other.id.uuidString, "groupID": group.id.uuidString]
@@ -130,7 +130,7 @@ import CryptoKit
 
     @MainActor static func unselectedCardActions() throws {
         let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent("recordai-card-actions-" + UUID().uuidString)
+        let root = fm.temporaryDirectory.appendingPathComponent("talktuck-card-actions-" + UUID().uuidString)
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)

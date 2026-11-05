@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:recordai:analysis-report:1",
-  "title": "RecordAI adaptive analysis report",
+  "$id": "urn:talktuck:analysis-report:1",
+  "title": "TalkTuck adaptive analysis report",
   "type": "object",
   "properties": {
     "schemaVersion": {

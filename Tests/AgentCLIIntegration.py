@@ -21,7 +21,7 @@ requests = [
  {'jsonrpc':'2.0','id':2,'method':'tools/list'},
  {'jsonrpc':'2.0','id':3,'method':'tools/call','params':{'name':'get_recording','arguments':{'id':id}}},
  {'jsonrpc':'2.0','id':4,'method':'tools/call','params':{'name':'get_transcript','arguments':{'id':id,'includePreview':True}}},
- {'jsonrpc':'2.0','id':5,'method':'resources/read','params':{'uri':f'recordai://recordings/{id}'}},
+ {'jsonrpc':'2.0','id':5,'method':'resources/read','params':{'uri':f'talktuck://recordings/{id}'}},
  {'jsonrpc':'2.0','id':6,'method':'tools/call','params':{'name':'get_recording','arguments':{'id':'../../private'}}},
  {'jsonrpc':'2.0','id':7,'method':'tools/call','params':{'name':'get_changes','arguments':{'since':999}}},
  {'jsonrpc':'2.0','id':8,'method':'delete_recording'},

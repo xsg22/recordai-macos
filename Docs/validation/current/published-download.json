@@ -1,0 +1,27 @@
+{
+  "version": "0.17.2",
+  "build": "44",
+  "downloadedFromGitHub": true,
+  "checksumsMatch": true,
+  "independentGitHubDigestsMatch": true,
+  "dmgAndPkgContentsMatch": true,
+  "signatureIntegrity": "passed",
+  "embeddedPython": "3.12",
+  "actualDownloadedEngineOfflineInference": "passed",
+  "downloadedCLIAndMCP": "passed",
+  "appLaunched": false,
+  "userLibraryModified": false,
+  "limits": [
+    "Ad-hoc signature; no Apple notarization or Developer ID signature"
+  ],
+  "assets": {
+    "TalkTuck-0.17.2-arm64.dmg": {
+      "bytes": 175034287,
+      "sha256": "03301aa213ffd310a3f5b5b8218d7dd35a89cea54fcffedfae4e2841b0fe3a74"
+    },
+    "TalkTuck-0.17.2-arm64.pkg": {
+      "bytes": 158221123,
+      "sha256": "f69301c2ddfc03f63c5f3e02dab0854ef08b1e558ef73196df99f70631cfd69c"
+    }
+  }
+}

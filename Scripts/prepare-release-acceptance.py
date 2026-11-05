@@ -25,15 +25,15 @@ app = args.app.resolve(strict=True)
 info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
 if info['CFBundleIdentifier'] != 'com.xsg.talktuck': parser.error('Use the actual production candidate bundle.')
 subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
-scratch = Path(tempfile.mkdtemp(prefix='recordai-release-'+info['CFBundleShortVersionString']+'-'))
+scratch = Path(tempfile.mkdtemp(prefix='talktuck-release-'+info['CFBundleShortVersionString']+'-'))
 home = scratch/'Home'; library = home/'Library/Application Support/CoHearTranscribe'
 library.mkdir(parents=True)
 # APFS clone shares existing model blocks but isolates any verification metadata writes.
 subprocess.run(['cp','-cR',str(args.models.resolve(strict=True)),str(library/'Models')],check=True)
 audio = scratch/'Product-weekly-demo.wav'; shutil.copyfile(args.audio.resolve(strict=True),audio)
-environment = dict(os.environ, CFFIXED_USER_HOME=str(home), RECORD_AI_UI_LANGUAGE='zh-Hans')
+environment = dict(os.environ, CFFIXED_USER_HOME=str(home), TALKTUCK_UI_LANGUAGE='zh-Hans')
 with (scratch/'app.log').open('wb') as log:
-    process = subprocess.Popen([str(app/'Contents/MacOS/RecordAIApp')],env=environment,stdin=subprocess.DEVNULL,
+    process = subprocess.Popen([str(app/'Contents/MacOS/TalkTuckApp')],env=environment,stdin=subprocess.DEVNULL,
                                stdout=log,stderr=log,start_new_session=True)
 value = dict(root=str(scratch),home=str(home),library=str(library),app=str(app),pid=process.pid,
              version=info['CFBundleShortVersionString'],audio=str(audio),

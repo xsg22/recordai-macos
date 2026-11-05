@@ -9,7 +9,7 @@ import Foundation
     @MainActor static func main() async throws {
         _ = NSApplication.shared
         let fm = FileManager.default
-        let root = fm.temporaryDirectory.appendingPathComponent("recordai-browsing-\(UUID().uuidString)")
+        let root = fm.temporaryDirectory.appendingPathComponent("talktuck-browsing-\(UUID().uuidString)")
         try fm.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? fm.removeItem(at: root) }
         let library = try MeetingLibrary(root: root.appendingPathComponent("Library"))

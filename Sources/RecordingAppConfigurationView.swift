@@ -20,15 +20,15 @@ struct RecordingAppConfigurationView: View {
                     Button { section = item.0 } label: {
                         Label(L10n.text(item.1), systemImage: item.2).font(AppTypography.secondary.weight(section == item.0 ? .semibold : .regular))
                             .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 12).padding(.vertical, 11)
-                            .foregroundStyle(section == item.0 ? RecordAITheme.accent : .primary)
-                            .background(section == item.0 ? RecordAITheme.accent.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 8))
+                            .foregroundStyle(section == item.0 ? TalkTuckTheme.accent : .primary)
+                            .background(section == item.0 ? TalkTuckTheme.accent.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 8))
                     }.buttonStyle(.plain).accessibilityAddTraits(section == item.0 ? .isSelected : [])
                         .accessibilityIdentifier("settings-section-" + item.0)
                 }
                 Spacer()
                 Label(L10n.text("本机存储"), systemImage: "lock.shield").font(AppTypography.secondary).foregroundStyle(.secondary).padding(12)
             }.padding(.horizontal, 12).padding(.vertical, 28).frame(width: 190)
-                .background(RecordAITheme.sidebar)
+                .background(TalkTuckTheme.sidebar)
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
@@ -41,21 +41,21 @@ struct RecordingAppConfigurationView: View {
                     default: recording
                     }
                 }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
-            }.background(RecordAITheme.surface)
+            }.background(TalkTuckTheme.surface)
         }.frame(width: 920, height: 632).font(AppTypography.body)
-            .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)
+            .buttonStyle(TalkTuckSecondaryButtonStyle()).tint(TalkTuckTheme.accent)
             .sheet(isPresented: $showingSpeechModels) {
                 VStack(alignment: .leading, spacing: 20) {
                     ASRModelSetupView(store: state.speechModels, close: { showingSpeechModels = false })
-                }.padding(28).frame(width: 720).buttonStyle(RecordAISecondaryButtonStyle())
+                }.padding(28).frame(width: 720).buttonStyle(TalkTuckSecondaryButtonStyle())
             }
     }
 
     private var recording: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("录音与转录"), subtitle: L10n.text("设置下一次录音使用的音源和处理方式。")) { EmptyView() }
-            RecordAICard(spacing: 0) {
-                RecordAISettingRow(title: L10n.text("界面语言")) {
+            TalkTuckPageHeader(title: L10n.text("录音与转录"), subtitle: L10n.text("设置下一次录音使用的音源和处理方式。")) { EmptyView() }
+            TalkTuckCard(spacing: 0) {
+                TalkTuckSettingRow(title: L10n.text("界面语言")) {
                     Picker(L10n.text("界面语言"), selection: $appLanguage.selection) {
                         ForEach(InterfaceLanguage.allCases) { Text($0.name).tag($0) }
                     }.id(appLanguage.effective).labelsHidden().accessibilityLabel(L10n.text("界面语言"))
@@ -63,35 +63,35 @@ struct RecordingAppConfigurationView: View {
                 Text(L10n.text("界面语言与转录语言分别设置，不会翻译已有录音内容。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Divider()
-                RecordAISettingRow(title: L10n.text("默认音源")) {
-                    RecordAIChoicePicker(title: "默认音源", items: MeetingRecordingMode.allCases.map { ($0.title, $0) }, selection: $state.recordingMode)
+                TalkTuckSettingRow(title: L10n.text("默认音源")) {
+                    TalkTuckChoicePicker(title: "默认音源", items: MeetingRecordingMode.allCases.map { ($0.title, $0) }, selection: $state.recordingMode)
                 }
                 Divider()
-                RecordAISettingRow(title: L10n.text("会话类型")) {
-                    RecordAIChoicePicker(title: "录音会话", items: RecordingSessionMode.allCases.map { ($0.title, $0) }, selection: $state.recordingSessionMode)
+                TalkTuckSettingRow(title: L10n.text("会话类型")) {
+                    TalkTuckChoicePicker(title: "录音会话", items: RecordingSessionMode.allCases.map { ($0.title, $0) }, selection: $state.recordingSessionMode)
                 }
                 Divider()
-                RecordAISettingRow(title: L10n.text("转写语言")) {
-                    RecordAIChoicePicker(title: L10n.text("转写语言"), items: TranscriptionLanguage.allCases.map { ($0.title, $0.rawValue) }, selection: $state.language)
+                TalkTuckSettingRow(title: L10n.text("转写语言")) {
+                    TalkTuckChoicePicker(title: L10n.text("转写语言"), items: TranscriptionLanguage.allCases.map { ($0.title, $0.rawValue) }, selection: $state.language)
                 }
                 Divider()
-                RecordAISettingRow(title: L10n.text("录音模式")) {
-                    RecordAIChoicePicker(title: "录音模式", items: RecordingProfile.allCases.map { ($0.title, $0) }, selection: $state.recordingProfile)
+                TalkTuckSettingRow(title: L10n.text("录音模式")) {
+                    TalkTuckChoicePicker(title: "录音模式", items: RecordingProfile.allCases.map { ($0.title, $0) }, selection: $state.recordingProfile)
                 }
             }.disabled(state.locked)
-            RecordAICard(quiet: true) {
+            TalkTuckCard(quiet: true) {
                 Text(L10n.text(state.recordingProfile.title)).font(AppTypography.heading)
                 Text(L10n.text(state.recordingProfile.detail)).font(AppTypography.secondary).foregroundStyle(.secondary).lineSpacing(7)
             }
-            RecordAIInfo(text: L10n.text("录音过程中设置会锁定，修改只影响下一次录音。隐藏窗口或切换 mini 不会停止采集。"))
-            RecordAIInfo(text: L10n.text("实时使用中英双语模型，最终转录遵循所选语言。"))
+            TalkTuckInfo(text: L10n.text("录音过程中设置会锁定，修改只影响下一次录音。隐藏窗口或切换 mini 不会停止采集。"))
+            TalkTuckInfo(text: L10n.text("实时使用中英双语模型，最终转录遵循所选语言。"))
         }
     }
 
     private var models: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("本地模型"), subtitle: L10n.text("管理实时转写和最终转录所需的语音模型。")) { EmptyView() }
-            RecordAICard(spacing: 20) {
+            TalkTuckPageHeader(title: L10n.text("本地模型"), subtitle: L10n.text("管理实时转写和最终转录所需的语音模型。")) { EmptyView() }
+            TalkTuckCard(spacing: 20) {
                 Text(L10n.text("语音识别")).font(AppTypography.heading)
                 HStack {
                     Text(L10n.text("实时转写与最终转录")).font(AppTypography.body)
@@ -106,8 +106,8 @@ struct RecordingAppConfigurationView: View {
 
     private var hotwordSettings: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("个人热词"), subtitle: L10n.text("确认的人名、项目名和术语会用于后续本地最终转录。")) { EmptyView() }
-            RecordAICard {
+            TalkTuckPageHeader(title: L10n.text("个人热词"), subtitle: L10n.text("确认的人名、项目名和术语会用于后续本地最终转录。")) { EmptyView() }
+            TalkTuckCard {
                 HStack {
                     Text(L10n.text("本地候选词模型")).font(AppTypography.heading)
                     Spacer()
@@ -121,7 +121,7 @@ struct RecordingAppConfigurationView: View {
                 if hotwordModel.busy { ProgressView(); Button(L10n.text("取消下载")) { hotwordModel.cancel() } }
                 if !hotwordModel.status.isEmpty { Text(L10n.text(hotwordModel.status)).font(AppTypography.secondary).foregroundStyle(.secondary) }
             }.task { hotwordModel.refresh() }
-            RecordAICard {
+            TalkTuckCard {
                 Text(L10n.format("已确认 · {0}", String(state.hotwords.words.count))).font(AppTypography.heading)
                 HStack {
                     TextField(L10n.text("输入专有名词"), text: $newHotword).textFieldStyle(.roundedBorder)
@@ -134,7 +134,7 @@ struct RecordingAppConfigurationView: View {
                 Text(L10n.text("优先选择标题或前文中出现的词，不足时补充最近确认的词，每段最多 12 个。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary)
             }
-            RecordAICard {
+            TalkTuckCard {
                 HStack {
                     Text(L10n.format("待确认 · {0}", String(state.hotwords.candidates.count))).font(AppTypography.heading)
                     Spacer()
@@ -150,7 +150,7 @@ struct RecordingAppConfigurationView: View {
                 }
                 if !state.hotwords.status.isEmpty { Text(L10n.text(state.hotwords.status)).font(AppTypography.secondary).foregroundStyle(.secondary) }
             }
-            RecordAICard {
+            TalkTuckCard {
                 HStack {
                     Text(L10n.text(state.hotwordSync.status)).font(AppTypography.secondary)
                     Spacer()
@@ -165,44 +165,44 @@ struct RecordingAppConfigurationView: View {
 
     private var talkTuckAccount: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("TalkTuck 账号"), subtitle: L10n.text("登录后，按需同步 iPhone 与 Mac 上的文字、分组和原音。")) { EmptyView() }
+            TalkTuckPageHeader(title: L10n.text("TalkTuck 账号"), subtitle: L10n.text("登录后，按需同步 iPhone 与 Mac 上的文字、分组和原音。")) { EmptyView() }
             TalkTuckAccountPanel(store: state.cloudAccount).disabled(state.locked)
             if state.cloudAccount.isSignedIn, state.cloudAccount.librarySyncAvailable, let engine = state.librarySync {
-                RecordAICard { LibrarySyncPanel(engine:engine,choices:state.history.filter { $0.userId == nil && $0.canSelectFinalForSync }.map { LibrarySyncChoice(id:$0.id,title:$0.title,isLocalFinal:$0.transcriptOrigin == .local) },groupNames:Dictionary(uniqueKeysWithValues:state.organization.groups.map { ($0.id,$0.name) })) }.disabled(state.locked)
+                TalkTuckCard { LibrarySyncPanel(engine:engine,choices:state.history.filter { $0.userId == nil && $0.canSelectFinalForSync }.map { LibrarySyncChoice(id:$0.id,title:$0.title,isLocalFinal:$0.transcriptOrigin == .local) },groupNames:Dictionary(uniqueKeysWithValues:state.organization.groups.map { ($0.id,$0.name) })) }.disabled(state.locked)
             }
             if state.cloudAccount.isSignedIn, let audio = state.libraryAudioSync {
-                RecordAICard { LibraryAudioSyncPanel(engine:audio,choices:state.history.filter { $0.userId == state.cloudAccount.userId }.map { LibrarySyncChoice(id:$0.id,title:$0.title) }) }.disabled(state.locked)
+                TalkTuckCard { LibraryAudioSyncPanel(engine:audio,choices:state.history.filter { $0.userId == state.cloudAccount.userId }.map { LibrarySyncChoice(id:$0.id,title:$0.title) }) }.disabled(state.locked)
             }
         }
     }
 
     private var accounts: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("第三方账号"), subtitle: L10n.text("连接钉钉、飞书或 Notion，按需发送选定的转录内容。")) { EmptyView() }
-            RecordAISegmentedPicker(items: PersonalDestination.allCases.map { (L10n.text($0.rawValue), $0) }, selection: $state.syncDestination)
+            TalkTuckPageHeader(title: L10n.text("第三方账号"), subtitle: L10n.text("连接钉钉、飞书或 Notion，按需发送选定的转录内容。")) { EmptyView() }
+            TalkTuckSegmentedPicker(items: PersonalDestination.allCases.map { (L10n.text($0.rawValue), $0) }, selection: $state.syncDestination)
             AccountConnectionPanel(state: state)
-            RecordAIInfo(text: L10n.text("只在你点击同步后发送选定文字。原始音频保留在本机。"))
+            TalkTuckInfo(text: L10n.text("只在你点击同步后发送选定文字。原始音频保留在本机。"))
         }
     }
 
     private var data: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("Agent 与本机资料"), subtitle: L10n.text("管理录音存储和其他本机工具的读取入口。")) { EmptyView() }
-            RecordAICard(quiet: true) { AgentConnectionView(state: state) }
-            RecordAICard {
+            TalkTuckPageHeader(title: L10n.text("Agent 与本机资料"), subtitle: L10n.text("管理录音存储和其他本机工具的读取入口。")) { EmptyView() }
+            TalkTuckCard(quiet: true) { AgentConnectionView(state: state) }
+            TalkTuckCard {
                 Label(L10n.text("本机 Agent"), systemImage: "externaldrive").font(AppTypography.heading)
                 Text(state.agentDataURL.path).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(TalkTuckTheme.border, lineWidth: 1))
                 ViewThatFits {
                     HStack { agentActions }
                     VStack(alignment: .leading, spacing: 10) { agentActions }
                 }
                 Text(L10n.text("默认读取定稿。外部工具可通过文件、CLI 或 MCP 消费；实时草稿须显式请求。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary)
-                if let issue = state.agentPublicationError { RecordAIInfo(text: L10n.text(issue), warning: true) }
+                if let issue = state.agentPublicationError { TalkTuckInfo(text: L10n.text(issue), warning: true) }
             }
-            RecordAICard {
+            TalkTuckCard {
                 Text(L10n.text("原始资料")).font(AppTypography.heading)
                 Text(state.dataRootURL.path).font(AppTypography.secondary).textSelection(.enabled)
                 HStack {

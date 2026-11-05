@@ -128,8 +128,8 @@ struct MiniRecordingView: View {
     @State private var hoveredControl: String?
     private var dark: Bool { colorScheme == .dark }
     private var ink: Color { dark ? Color(red: 0.92, green: 0.94, blue: 0.95) : Color(red: 0.16, green: 0.19, blue: 0.22) }
-    private var accent: Color { dark ? Color(red: 0.38, green: 0.65, blue: 1) : RecordAITheme.accent }
-    private var surface: Color { RecordAITheme.surface.opacity(0.96) }
+    private var accent: Color { dark ? Color(red: 0.38, green: 0.65, blue: 1) : TalkTuckTheme.accent }
+    private var surface: Color { TalkTuckTheme.surface.opacity(0.96) }
     private var mutedInk: Color { ink.opacity(contrast == .increased ? 0.82 : 0.70) }
     private var profile: RecordingProfile { state.locked ? state.activeRecordingProfile : state.recordingProfile }
     private var hasSession: Bool { state.miniSessionID != nil && state.miniSessionID == (state.recording ? state.recordingRecord?.id : state.current?.id) }
@@ -180,7 +180,7 @@ struct MiniRecordingView: View {
                     icon("stop.fill", label: "停止并保存") { state.toggleRecording() }
                         .disabled(state.preparing || state.quitting)
                 } else if !state.locked && !hasSession {
-                    Button(L10n.text("开始录音")) { state.toggleRecording() }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.syncing)
+                    Button(L10n.text("开始录音")) { state.toggleRecording() }.buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.syncing)
                         .miniWindowControl()
                 } else if state.busy || state.preparing { ProgressView().controlSize(.small) }
                 icon(inline ? "arrow.uturn.backward" : "arrow.up.right", label: inline ? "返回正在录音" : "展开录音窗口") {
@@ -191,8 +191,8 @@ struct MiniRecordingView: View {
                 HStack(alignment: .center, spacing: 10) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                     ScrollView { Text(L10n.text(issue)).font(.system(size: 13)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
-                    Button(L10n.text("查看问题")) { state.showRecordingWindow() }.buttonStyle(RecordAISecondaryButtonStyle())
-                    if state.canRetryMicrophone { Button(L10n.text("重试并继续")) { state.pauseRecording() }.buttonStyle(RecordAISecondaryButtonStyle()) }
+                    Button(L10n.text("查看问题")) { state.showRecordingWindow() }.buttonStyle(TalkTuckSecondaryButtonStyle())
+                    if state.canRetryMicrophone { Button(L10n.text("重试并继续")) { state.pauseRecording() }.buttonStyle(TalkTuckSecondaryButtonStyle()) }
                 }.padding(12).frame(height: 65).background(Color.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
                     .miniWindowControl()
             }

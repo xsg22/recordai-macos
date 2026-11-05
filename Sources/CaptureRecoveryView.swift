@@ -6,10 +6,10 @@ struct CaptureRecoveryView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            RecordAIPageHeader(title: L10n.text("恢复录音"), subtitle: L10n.text("检查中断前的原轨，恢复可读取的片段。")) {
+            TalkTuckPageHeader(title: L10n.text("恢复录音"), subtitle: L10n.text("检查中断前的原轨，恢复可读取的片段。")) {
                 Button(L10n.text("完成")) { dismiss() }.disabled(state.recoveryBusy).keyboardShortcut(.cancelAction)
             }
-            RecordAIInfo(text: L10n.text("原文、原轨和已保存片段都会保留；恢复不会覆盖已有录音。"))
+            TalkTuckInfo(text: L10n.text("原文、原轨和已保存片段都会保留；恢复不会覆盖已有录音。"))
             if state.recoveryBusy || (!state.recoveryStatus.hasPrefix("找到") && !state.recoveryStatus.hasPrefix("没有尚未")) {
             HStack {
                 if state.recoveryBusy { ProgressView().controlSize(.small) }
@@ -25,7 +25,7 @@ struct CaptureRecoveryView: View {
                         }.frame(maxWidth: .infinity).padding(.vertical, 50)
                     }
                     ForEach(Array(state.recoveryCandidates.enumerated()), id: \.element.id) { index, candidate in
-                        RecordAICard {
+                        TalkTuckCard {
                             Text(String(format: L10n.text("录音片段 · %02d"), index + 1)).font(AppTypography.heading)
                             Text(L10n.text("可恢复约 \(durationText(candidate.duration)) · \(candidate.existingMix != nil ? "已有完整混音" : "原始音轨合成")"))
                                 .font(AppTypography.secondary).foregroundStyle(.secondary)
@@ -41,7 +41,7 @@ struct CaptureRecoveryView: View {
                             }
                             ForEach(candidate.warnings, id: \.self) { Text(L10n.text($0)).font(AppTypography.secondary).foregroundStyle(.orange) }
                             Button(L10n.text(candidate.warnings.isEmpty ? "恢复并保存此片段" : "仅恢复可读取的音轨")) { state.recoverCapture(candidate) }
-                                .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked)
+                                .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked)
                         }
                     }
                     ForEach(state.recoveryWarnings, id: \.self) { Text(L10n.text($0)).font(AppTypography.secondary).foregroundStyle(.secondary) }
@@ -54,7 +54,7 @@ struct CaptureRecoveryView: View {
                 else { Button(L10n.text("打开原轨文件夹")) { state.revealStorage() } }
             }
         }.padding(28).frame(width: 720, height: !state.recoveryBusy && state.recoveryCandidates.isEmpty ? 418 : 524).font(AppTypography.body)
-            .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)
+            .buttonStyle(TalkTuckSecondaryButtonStyle()).tint(TalkTuckTheme.accent)
             .task { state.findRecoverableAudio() }
     }
 

@@ -1,6 +1,0 @@
-{
-  "sourceDigest": "7f2b6c08f79bbcd09ea38df204933e2592c7b09f92cf6f95a9975eac62945419",
-  "command": "python3 Scripts/test-recording-entry.py",
-  "exit_code": 0,
-  "scope": "14 groups of isolated data/audio state regression, no microphone capture or external document write"
-}

@@ -62,7 +62,7 @@ jobs:
         run: zsh Scripts/prepare-account-components.zsh
       - name: Run local regression
         env:
-          RECORD_AI_UI_LANGUAGE: zh-Hans
+          TALKTUCK_UI_LANGUAGE: zh-Hans
         run: |
           mkdir -p .build
           python3 Scripts/check-localization.py
@@ -71,14 +71,15 @@ jobs:
           python3 Scripts/test-recording-entry.py
           python3 Scripts/test-ui-contracts.py
           python3 Scripts/test-agent-setup.py
+          zsh Scripts/test-service-namespace.zsh
           zsh Scripts/test-library-management.zsh
       - name: Build and sign application packages
         run: |
-          COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/TalkTuck.app" \
+          COHEAR_STAGE_ONLY=1 TALKTUCK_BUILD_APP_PATH="$PWD/.build/local/TalkTuck.app" \
             zsh Scripts/build.zsh
       - name: Verify release assets
         run: |
-          RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/TalkTuck.app" zsh Scripts/verify-release.zsh
+          TALKTUCK_BUILD_APP_PATH="$PWD/.build/local/TalkTuck.app" zsh Scripts/verify-release.zsh
       - uses: actions/upload-artifact@v4
         with:
           name: TalkTuck-${{ steps.version.outputs.version }}-arm64
@@ -116,7 +117,7 @@ jobs:
             cp Docs/releases/functional-preview.md release-notes.md
           else
           cat > release-notes.md <<'EOF'
-          RecordAI ${{ needs.build.outputs.version }} for Apple Silicon and macOS 14 or later.
+          TalkTuck ${{ needs.build.outputs.version }} for Apple Silicon and macOS 14 or later.
 
           The app downloads and verifies its speech models on first use; model weights are not included in these packages.
 
@@ -132,6 +133,6 @@ jobs:
             dist/TalkTuck-${{ needs.build.outputs.version }}-arm64.pkg.sha256 \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "RecordAI $RELEASE_VERSION · $([[ "$GITHUB_EVENT_NAME" == push ]] && echo 功能验证版 || echo 预发布)" \
+            --title "TalkTuck $RELEASE_VERSION · $([[ "$GITHUB_EVENT_NAME" == push ]] && echo 功能验证版 || echo 预发布)" \
             --notes-file release-notes.md \
             --prerelease

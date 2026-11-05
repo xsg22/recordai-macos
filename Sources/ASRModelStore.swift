@@ -191,8 +191,8 @@ struct ASRModelDownloadPanel: View {
             VStack(spacing: 0) {
                 ForEach(Array(models.enumerated()), id: \.offset) { index, model in
                     HStack(spacing: 12) {
-                        Image(systemName: model.2).font(.system(size: 19)).foregroundStyle(RecordAITheme.accent)
-                            .frame(width: 38, height: 38).background(RecordAITheme.accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
+                        Image(systemName: model.2).font(.system(size: 19)).foregroundStyle(TalkTuckTheme.accent)
+                            .frame(width: 38, height: 38).background(TalkTuckTheme.accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
                         VStack(alignment: .leading, spacing: 4) {
                             Text(L10n.text(model.0)).font(AppTypography.body.weight(.medium))
                             Text(L10n.text(model.1)).font(AppTypography.secondary).foregroundStyle(.secondary)
@@ -200,16 +200,16 @@ struct ASRModelDownloadPanel: View {
                         Spacer()
                         if ready { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).accessibilityLabel(L10n.text("已下载")) }
                         else {
-                            Text(L10n.text(busy ? "等待校验" : "本地运行")).font(.system(size: 12)).foregroundStyle(RecordAITheme.muted)
+                            Text(L10n.text(busy ? "等待校验" : "本地运行")).font(.system(size: 12)).foregroundStyle(TalkTuckTheme.muted)
                                 .padding(.horizontal, 6).padding(.vertical, 4)
-                                .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 5))
+                                .background(TalkTuckTheme.quiet, in: RoundedRectangle(cornerRadius: 5))
                         }
                     }.padding(.vertical, 14.5)
                     if index < models.count - 1 { Divider() }
                 }
             }
             if busy {
-                RecordAICard(quiet: true) {
+                TalkTuckCard(quiet: true) {
                     VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Text(L10n.text("正在下载 · \(Int(progress * 100))%")).font(AppTypography.body.weight(.medium)).monospacedDigit()
@@ -219,15 +219,15 @@ struct ASRModelDownloadPanel: View {
                                 .font(AppTypography.secondary).monospacedDigit().foregroundStyle(.secondary)
                         }
                     }
-                    ProgressView(value: progress).tint(RecordAITheme.accent)
+                    ProgressView(value: progress).tint(TalkTuckTheme.accent)
                     Text(L10n.text(status)).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     Button(L10n.text("取消下载"), action: cancel)
                     }.frame(maxWidth: .infinity, minHeight: 161, alignment: .leading)
                 }
             } else if let error {
-                RecordAIInfo(text: L10n.text(error + " 已完成文件会保留，可重试继续下载。"), warning: true)
+                TalkTuckInfo(text: L10n.text(error + " 已完成文件会保留，可重试继续下载。"), warning: true)
             } else {
-                RecordAIInfo(text: L10n.text(ready ? status : "根据地区自动选择下载源，逐文件校验后才启用模型。录音和文字不会上传。"))
+                TalkTuckInfo(text: L10n.text(ready ? status : "根据地区自动选择下载源，逐文件校验后才启用模型。录音和文字不会上传。"))
             }
             if error == nil { Spacer(minLength: 0) }
             HStack(alignment: .center, spacing: 16) {
@@ -236,9 +236,9 @@ struct ASRModelDownloadPanel: View {
                     Text(L10n.text("保存在本机数据目录，升级后继续复用。"))
                 }.font(AppTypography.secondary).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
-                if !ready && !busy { Button(L10n.text(error == nil ? "下载语音模型" : "重试下载"), action: download).buttonStyle(RecordAIPrimaryButtonStyle()) }
-                if busy, let close { Button(L10n.text("后台继续下载"), action: close).buttonStyle(RecordAIPrimaryButtonStyle()) }
+                if !ready && !busy { Button(L10n.text(error == nil ? "下载语音模型" : "重试下载"), action: download).buttonStyle(TalkTuckPrimaryButtonStyle()) }
+                if busy, let close { Button(L10n.text("后台继续下载"), action: close).buttonStyle(TalkTuckPrimaryButtonStyle()) }
             }
-        }.frame(maxWidth: .infinity, minHeight: busy ? 655 : error == nil ? 509 : 485, alignment: .topLeading).buttonStyle(RecordAISecondaryButtonStyle())
+        }.frame(maxWidth: .infinity, minHeight: busy ? 655 : error == nil ? 509 : 485, alignment: .topLeading).buttonStyle(TalkTuckSecondaryButtonStyle())
     }
 }

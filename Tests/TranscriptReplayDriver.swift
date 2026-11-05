@@ -24,7 +24,7 @@ import Combine
                     guard let state else { return }
                     state.liveStatus = "合成文件推流验收 · 无麦克风采集"
                     let line = "\(event.type): \(event.text)\n"
-                    let log = FileManager.default.temporaryDirectory.appendingPathComponent("recordai-ui-replay-events.log")
+                    let log = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-ui-replay-events.log")
                     if !FileManager.default.fileExists(atPath: log.path) { FileManager.default.createFile(atPath: log.path, contents: nil) }
                     if let handle = try? FileHandle(forWritingTo: log) { _ = try? handle.seekToEnd(); try? handle.write(contentsOf: Data(line.utf8)); try? handle.close() }
                     if event.type == "error" { state.error = event.text }

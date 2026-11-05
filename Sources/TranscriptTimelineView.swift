@@ -9,7 +9,7 @@ struct TranscriptTimelineView: View {
     @State private var following = true
     @State private var editing: TranscriptParagraph?
     @State private var renaming: String?
-    private let accent = RecordAITheme.accent
+    private let accent = TalkTuckTheme.accent
     private var selectedRecording: Bool { state.isViewingRecording }
     private var selectedPreparing: Bool { state.preparing && state.isViewingActiveTask }
     private var selectedProcessing: Bool { state.busy && state.isViewingActiveTask }
@@ -139,7 +139,7 @@ struct TranscriptTimelineView: View {
                         HStack(alignment: .top, spacing: 12) {
                             if let time = group.combined.start {
                                 Button(clock(time)) { state.playReadingGroup(group.id) }.buttonStyle(.plain)
-                                    .font(AppTypography.secondary.monospacedDigit()).foregroundStyle(RecordAITheme.muted).frame(width: 46, height: 24)
+                                    .font(AppTypography.secondary.monospacedDigit()).foregroundStyle(TalkTuckTheme.muted).frame(width: 46, height: 24)
                                     .disabled(!state.canPlayTranscriptParagraph(group.combined)).help(L10n.text("播放合并片段，结束后自动暂停"))
                             } else { Color.clear.frame(width: 46, height: 24) }
                             Text(Set(group.paragraphs.map { Set($0.speakerIDs) }).count > 1 ? L10n.text("发言人需核对") : record.displayParagraphSpeaker(group.combined))
@@ -170,7 +170,7 @@ struct TranscriptTimelineView: View {
         HStack(alignment: .top, spacing: 12) {
             if let time = paragraph.start {
                 Button(clock(time)) { state.playTranscriptParagraph(paragraph) }
-                    .buttonStyle(.plain).font(AppTypography.secondary.monospacedDigit()).foregroundStyle(RecordAITheme.muted)
+                    .buttonStyle(.plain).font(AppTypography.secondary.monospacedDigit()).foregroundStyle(TalkTuckTheme.muted)
                     .frame(width: 46, height: 24).contentShape(Rectangle())
                     .disabled(!state.canPlayTranscriptParagraph(paragraph)).help(L10n.text("播放这一段，结束后自动暂停"))
             } else { Color.clear.frame(width: 46, height: 24) }
@@ -214,7 +214,7 @@ struct TranscriptTimelineView: View {
             .background(state.playingParagraphID == paragraph.id ? accent.opacity(0.09) : .clear, in: RoundedRectangle(cornerRadius: 6))
     }
     private func paragraphText(_ paragraph: TranscriptParagraph) -> some View {
-        Text(paragraph.text).font(.system(size: 16)).lineSpacing(4).lineLimit(nil).foregroundStyle(RecordAITheme.ink)
+        Text(paragraph.text).font(.system(size: 16)).lineSpacing(4).lineLimit(nil).foregroundStyle(TalkTuckTheme.ink)
             .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true).contentShape(Rectangle())
     }
     private func speakerMenu(_ id: String, record: MeetingRecord) -> some View {
@@ -227,7 +227,7 @@ struct TranscriptTimelineView: View {
                 Menu(L10n.text("合并到")) { ForEach(others, id: \.self) { target in Button(record.displaySpeakerName(target)) { state.mergeSpeaker(canonical, into: target) } } }
             }
         } label: { Text(record.displaySpeakerName(canonical)).font(.system(size: 13, weight: .medium)).lineLimit(1).truncationMode(.tail).frame(maxWidth: .infinity, minHeight: 24, alignment: .leading) }
-            .menuStyle(.borderlessButton).tint(RecordAITheme.ink).foregroundStyle(RecordAITheme.ink).help(L10n.text("修改名称或合并同一人的发言"))
+            .menuStyle(.borderlessButton).tint(TalkTuckTheme.ink).foregroundStyle(TalkTuckTheme.ink).help(L10n.text("修改名称或合并同一人的发言"))
     }
     @ViewBuilder private var currentLiveRows: some View {
         if !state.text.isEmpty { Divider(); Text(L10n.text("本次实时识别 · 未定稿")).font(AppTypography.secondary).foregroundStyle(.secondary) }
@@ -288,19 +288,19 @@ struct TranscriptParagraphEditor: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: L10n.text("编辑这段文字"), subtitle: L10n.text("保留录音时间和发言人标签。")) { Button(L10n.text("取消"), action: cancel).keyboardShortcut(.cancelAction) }
+            TalkTuckPageHeader(title: L10n.text("编辑这段文字"), subtitle: L10n.text("保留录音时间和发言人标签。")) { Button(L10n.text("取消"), action: cancel).keyboardShortcut(.cancelAction) }
             TextEditor(text: $draft).font(AppTypography.body).lineSpacing(6).padding(12)
-                .scrollContentBackground(.hidden).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(RecordAITheme.border, lineWidth: 1))
+                .scrollContentBackground(.hidden).background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(TalkTuckTheme.border, lineWidth: 1))
                 .accessibilityLabel(L10n.text("段落正文"))
-            if failed { RecordAIInfo(text: L10n.text("尚未保存，输入仍保留，请重试。"), warning: true) }
+            if failed { TalkTuckInfo(text: L10n.text("尚未保存，输入仍保留，请重试。"), warning: true) }
             HStack {
                 if let start = paragraph.start, let end = paragraph.end {
                     Text(String(format: "%02d:%02d—%02d:%02d", Int(start) / 60, Int(start) % 60, Int(end) / 60, Int(end) % 60) + (speakerName.isEmpty ? "" : " · " + speakerName)).font(AppTypography.secondary).foregroundStyle(.secondary)
                 }
-                Spacer(); Button(L10n.text("保存")) { failed = !save(draft) }.buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction)
+                Spacer(); Button(L10n.text("保存")) { failed = !save(draft) }.buttonStyle(TalkTuckPrimaryButtonStyle()).keyboardShortcut(.defaultAction)
             }
-        }.padding(28).frame(width: 720, height: 446).buttonStyle(RecordAISecondaryButtonStyle())
+        }.padding(28).frame(width: 720, height: 446).buttonStyle(TalkTuckSecondaryButtonStyle())
     }
 }
 

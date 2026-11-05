@@ -31,7 +31,7 @@ jobs:
       - name: Inspect runner audio devices without recording
         shell: pwsh
         run: |
-          python Platforms/Windows/recordai_probe.py devices --output .build/windows-ci/devices.json
+          python Platforms/Windows/talktuck_probe.py devices --output .build/windows-ci/devices.json
           # Hosted runners may have no audio endpoints. An unavailable device is evidence, not a capture pass.
           if ($LASTEXITCODE -notin @(0, 2)) { exit $LASTEXITCODE }
           exit 0
@@ -55,7 +55,7 @@ jobs:
         run: |
           Add-Type -AssemblyName System.Speech
           New-Item -ItemType Directory -Force .build/windows-engine | Out-Null
-          $text = 'Welcome to Record AI. This is an offline transcription test. Please keep the original recording.'
+          $text = 'Welcome to TalkTuck. This is an offline transcription test. Please keep the original recording.'
           [IO.File]::WriteAllText((Join-Path $PWD '.build/windows-engine/reference.txt'), $text)
           $synth = [System.Speech.Synthesis.SpeechSynthesizer]::new()
           $format = [System.Speech.AudioFormat.SpeechAudioFormatInfo]::new(16000, [System.Speech.AudioFormat.AudioBitsPerSample]::Sixteen, [System.Speech.AudioFormat.AudioChannel]::Mono)
@@ -68,7 +68,7 @@ jobs:
           } finally { $synth.Dispose() }
       - name: Real Windows CPU inference and accuracy report
         run: >-
-          python Platforms/Windows/recordai_probe.py transcribe
+          python Platforms/Windows/talktuck_probe.py transcribe
           --engine faster-whisper --model Systran/faster-whisper-tiny.en --allow-download
           --input .build/windows-engine/english.wav --reference .build/windows-engine/reference.txt
           --language en --device cpu --output .build/windows-engine/engine.json

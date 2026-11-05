@@ -15,15 +15,15 @@ import wave
 ROOT = Path(__file__).resolve().parents[1]
 (ROOT / '.build').mkdir(exist_ok=True)
 with tempfile.TemporaryDirectory(prefix="agent setup ' ", dir=ROOT / '.build') as scratch:
-    scratch = Path(scratch)
-    app = scratch / "RecordAI ' Local.app"
+    scratch = Path(scratch).resolve()
+    app = scratch / "TalkTuck ' Local.app"
     macos = app / 'Contents/MacOS'
     macos.mkdir(parents=True)
     shutil.copytree(ROOT / 'Resources/AgentSkill', app / 'Contents/Resources/AgentSkill')
     shutil.copyfile(ROOT / 'Resources/Info.plist', app / 'Contents/Info.plist')
-    cli = macos / 'recordai'
+    cli = macos / 'talktuck'
     subprocess.run(['xcrun', 'swiftc', '-warnings-as-errors', '-swift-version', '5', '-target', 'arm64-apple-macosx14.0',
-                    'Sources/AgentSchema.swift', 'Sources/RecordAIControl.swift', 'Sources/AgentSetup.swift',
+                    'Sources/AgentSchema.swift', 'Sources/TalkTuckControl.swift', 'Sources/AgentSetup.swift',
                     'Native/AgentCLI/main.swift', '-o', str(cli)], cwd=ROOT, check=True)
     library = scratch / "Library ' with spaces"
     data_root = library / 'AgentData'
@@ -48,27 +48,27 @@ with tempfile.TemporaryDirectory(prefix="agent setup ' ", dir=ROOT / '.build') a
     assert setup['connection']['cliPath'] == str(cli)
     assert setup['connection']['dataRoot'] == str(data_root)
     files = setup['skill']['files']
-    assert files['SKILL.md'] == (ROOT / 'Resources/AgentSkill/recordai/SKILL.md').read_text()
+    assert files['SKILL.md'] == (ROOT / 'Resources/AgentSkill/talktuck/SKILL.md').read_text()
     assert json.loads(files['references/connection.json'])['mcpServer']['args'] == ['--root', str(data_root), 'mcp']
     assert run('list') == [] and run('status')['available'] is False
     r = mcp([{'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {'protocolVersion': '2025-03-26'}},
              {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/call', 'params': {'name': 'get_agent_setup'}},
-             {'jsonrpc': '2.0', 'id': 3, 'method': 'resources/read', 'params': {'uri': 'recordai://setup'}},
+             {'jsonrpc': '2.0', 'id': 3, 'method': 'resources/read', 'params': {'uri': 'talktuck://setup'}},
              {'jsonrpc': '2.0', 'id': 4, 'method': 'resources/list'}])
     assert r[1]['result']['serverInfo']['version'] == version
     assert json.loads(r[2]['result']['content'][0]['text']) == setup
     assert json.loads(r[3]['result']['contents'][0]['text']) == setup
-    assert r[4]['result']['resources'][0]['uri'] == 'recordai://setup'
+    assert r[4]['result']['resources'][0]['uri'] == 'talktuck://setup'
     assert not library.exists(), 'Read-only bootstrap created files'
 
     # Simulate an agent writing the returned skill in an isolated home, never the user's real agent configuration.
     home = scratch / 'Agent Home'
     for relative, content in files.items():
-        path = home / '.agents/skills/recordai' / relative
+        path = home / '.agents/skills/talktuck' / relative
         assert not Path(relative).is_absolute() and '..' not in Path(relative).parts
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
-    connection = json.loads((home / '.agents/skills/recordai/references/connection.json').read_text())
+    connection = json.loads((home / '.agents/skills/talktuck/references/connection.json').read_text())
     assert subprocess.check_output([connection['cliPath'], '--root', connection['dataRoot'], 'list'], text=True).strip() == '[]'
 
     id = '11111111-2222-3333-4444-555555555555'

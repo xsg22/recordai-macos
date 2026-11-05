@@ -26,7 +26,7 @@ struct PlaybackWaveformView: View {
     @State private var issue: String?
     @State private var loading = true
     @FocusState private var seeking: Bool
-    private let accent = RecordAITheme.accent
+    private let accent = TalkTuckTheme.accent
     private var duration: Double { max(0.001, state.playbackDuration > 0 ? state.playbackDuration : waveform?.duration ?? 0.001) }
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -43,7 +43,7 @@ struct PlaybackWaveformView: View {
                             let rect = CGRect(x: CGFloat(index) * step, y: (size.height - height) / 2,
                                               width: max(1, step - 2), height: height)
                             context.fill(Path(roundedRect: rect, cornerRadius: 2),
-                                with: .color(Double(index) / Double(count) < state.playbackTime / duration ? RecordAITheme.primaryFill : RecordAITheme.waveformRest))
+                                with: .color(Double(index) / Double(count) < state.playbackTime / duration ? TalkTuckTheme.primaryFill : TalkTuckTheme.waveformRest))
                         }
                     }.accessibilityHidden(true)
                     Rectangle().fill(accent).frame(width: 2)
@@ -51,7 +51,7 @@ struct PlaybackWaveformView: View {
                         .accessibilityHidden(true)
                     Text(clock(state.playbackTime)).font(.system(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
                         .padding(.horizontal, 6).padding(.vertical, 3)
-                        .background(RecordAITheme.primaryFill, in: RoundedRectangle(cornerRadius: 4))
+                        .background(TalkTuckTheme.primaryFill, in: RoundedRectangle(cornerRadius: 4))
                         .position(x: max(23, min(geometry.size.width - 23, geometry.size.width * state.playbackTime / duration)), y: -16)
                         .accessibilityHidden(true)
                     Slider(value: Binding(get: { min(duration, max(0, state.playbackTime)) }, set: { state.seek($0) }), in: 0...duration)

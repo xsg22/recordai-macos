@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download public RecordAI release assets with resumable ranges and independent GitHub SHA256 checks."""
+"""Download public TalkTuck release assets with resumable ranges and independent GitHub SHA256 checks."""
 import argparse
 import concurrent.futures
 import datetime
@@ -30,7 +30,7 @@ def request(url, headers=None, alternate=False):
     for index, opener in enumerate(routes):
         try:
             return opener.open(urllib.request.Request(url,headers={
-                'User-Agent':'RecordAI-release-verification',**(headers or {})}),timeout=25)
+                'User-Agent':'TalkTuck-release-verification',**(headers or {})}),timeout=25)
         except (OSError,TimeoutError):
             if index == len(routes)-1: raise
 
@@ -41,7 +41,7 @@ else:
 assert release['tag_name'] == args.tag and not release['draft']
 assert release['html_url'] == 'https://github.com/xsg22/talktuck/releases/tag/'+args.tag
 assets = {asset['name']:asset for asset in release['assets']}
-prefix = 'TalkTuck' if f'TalkTuck-{version}-arm64.dmg' in assets else 'RecordAI'
+prefix = 'TalkTuck'
 names = [f'{prefix}-{version}-arm64.{ext}' for ext in ['dmg','dmg.sha256','pkg','pkg.sha256']]
 assert all(name in assets for name in names),'Missing release assets'
 assert all(assets[name]['browser_download_url'] == f'https://github.com/xsg22/talktuck/releases/download/{args.tag}/{name}' for name in names)

@@ -14,19 +14,19 @@ import Foundation
         precondition(L10n.processingStatus("正在区分发言人 · 第 1/2 段录音 · 正文已保存") == "Identifying speakers · Audio part 1/2 · Transcript saved")
         precondition(L10n.text("录音原轨已保存至 完成{1}，合成失败：保存{0}") == "Original tracks saved to 完成{1}. Mixing failed: 保存{0}")
         precondition(L10n.format("{0} 个录音", "完成{1}").contains("完成{1}"))
-        let suite = "RecordAI-language-test-" + UUID().uuidString
+        let suite = "TalkTuck-language-test-" + UUID().uuidString
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         let preferences = AppLanguage(defaults: defaults, initial: .system)
         preferences.selection = .english
         precondition(defaults.string(forKey: AppLanguage.preferenceKey) == "en")
         precondition(preferences.effective == .english && preferences.locale.identifier == "en")
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("RecordAI-language-" + UUID().uuidString)
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("TalkTuck-language-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)
-        var record = MeetingRecord(title: "完成{1}", text: "保存。\nHello, RecordAI.", status: .completed)
+        var record = MeetingRecord(title: "完成{1}", text: "保存。\nHello, TalkTuck.", status: .completed)
         record.transcriptParagraphs = [TranscriptParagraph(text: "保存。", start: 1, end: 2, speakerIDs: ["0"]),
-                                       TranscriptParagraph(text: "Hello, RecordAI.", separator: "\n", start: 3, end: 5, speakerIDs: ["1"])]
+                                       TranscriptParagraph(text: "Hello, TalkTuck.", separator: "\n", start: 3, end: 5, speakerIDs: ["1"])]
         record.speakerNames = ["0": "发言人 1", "1": "完成"]
         record.customSpeakerNameIDs = ["1"]
         _ = try library.save(record)

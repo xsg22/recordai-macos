@@ -10,7 +10,7 @@
       "s0004"
     ]
   },
-  "notice": "合成语音实测样本。本报告展示真实录音转录后的分析效果，不代表真实项目进度。",
+  "notice": "合成演示资料，仅展示报告格式，不代表实际项目进度或新版本的转录验收。",
   "coverage": {
     "status": "complete",
     "includedSourceIds": [
@@ -184,8 +184,8 @@
     }
   ],
   "generation": {
-    "provider": "Codex（本次对话分析）",
-    "method": "analyst-json-validated-and-rendered",
+    "provider": "Synthetic contract fixture",
+    "method": "hand-authored-synthetic-contract-fixture",
     "generatedAt": "2026-11-02T04:17:01.820503+00:00"
   }
 }

@@ -65,7 +65,7 @@
       audioStatus.textContent = '这份报告未找到随附音频文件，仍可查看完整原文与引用。';
     });
   }
-  const storageKey = 'recordai-report-user-state:' + report.recording.id + ':' + report.recording.contentDigest;
+  const storageKey = 'talktuck-report-user-state:' + report.recording.id + ':' + report.recording.contentDigest;
   let stored = {};
   let storageAvailable = true;
   const note = document.querySelector('#local-state-note');

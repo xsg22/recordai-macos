@@ -21,7 +21,7 @@
 
 `RecordingBrowsingSmoke` 使用真实静音会话和音量为零的播放器，验证切换/返回、实时草稿隔离、单句与完整回放、停止后的音频归属和历史文件逐字节不变。最终日志为 `.build/browse-recording-regression-final.log`，界面契约日志为 `.build/browse-recording-contracts.log`。原生隔离预览实际点击确认：录音页无重复 mini、历史页显示 mini、mini 返回按钮恢复录音页。
 
-本地工作分支为 `codex/readme-contact`，未提交或推送。本次候选输出到 `.build/recording-browser-candidate/RecordAI.app`，重新编译并通过签名检查；源码/二进制摘要保存在同目录 `build-manifest.json`。未覆盖或重启正在录音的旧候选，当前录音不受影响；停止录音并退出后再切换到新候选。
+本地工作分支为 `codex/readme-contact`，未提交或推送。本次候选输出到 `.build/recording-browser-candidate/TalkTuck.app`，重新编译并通过签名检查；源码/二进制摘要保存在同目录 `build-manifest.json`。未覆盖或重启正在录音的旧候选，当前录音不受影响；停止录音并退出后再切换到新候选。
 
 ## 验证
 
@@ -38,4 +38,4 @@
 
 ## 本地结果
 
-验证日志位于 `.build/live-source-regression-final.log`、`.build/live-source-localization.log`；原生预览位于 `.build/live-source-ui/RecordAI.app`。可运行候选位于 `.build/live-source-candidate/RecordAI.app`，复用已验证安装包的引擎资源并重新编译、签名主程序，未生成新的 DMG/PKG，也未安装到 `/Applications` 或发布。
+验证日志位于 `.build/live-source-regression-final.log`、`.build/live-source-localization.log`；原生预览位于 `.build/live-source-ui/TalkTuck.app`。可运行候选位于 `.build/live-source-candidate/TalkTuck.app`，复用已验证安装包的引擎资源并重新编译、签名主程序，未生成新的 DMG/PKG，也未安装到 `/Applications` 或发布。

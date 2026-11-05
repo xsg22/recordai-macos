@@ -1,4 +1,4 @@
-"""Run the actual Swift client against an isolated in-memory RecordAI server."""
+"""Run the actual Swift client against an isolated in-memory TalkTuck server."""
 import os
 import pathlib
 import selectors
@@ -7,11 +7,14 @@ import subprocess
 import tempfile
 
 root = pathlib.Path(__file__).resolve().parent.parent
-server = pathlib.Path(os.environ.get("RECORD_AI_SERVER_ROOT", str(root.parent / "recordai" / "server"))).resolve()
-node = os.environ.get("RECORD_AI_TEST_NODE") or shutil.which("node")
+server_root = os.environ.get("TALKTUCK_SERVER_ROOT")
+if not server_root:
+    raise SystemExit("Set TALKTUCK_SERVER_ROOT to the compatible isolated test server checkout.")
+server = pathlib.Path(server_root).resolve()
+node = os.environ.get("TALKTUCK_TEST_NODE") or shutil.which("node")
 if not node:
-    raise SystemExit("Node.js 22+ is required; set RECORD_AI_TEST_NODE to its executable.")
-with tempfile.TemporaryDirectory(prefix="recordai-hotword-e2e-") as temp:
+    raise SystemExit("Node.js 22+ is required; set TALKTUCK_TEST_NODE to its executable.")
+with tempfile.TemporaryDirectory(prefix="talktuck-hotword-e2e-") as temp:
     binary = str(pathlib.Path(temp) / "account-e2e")
     subprocess.run(["xcrun", "swiftc", "-warnings-as-errors", "-swift-version", "5", "-parse-as-library",
                     "Sources/PersonalHotwords.swift", "Sources/HotwordSync.swift", "Sources/TalkTuckAccountStore.swift",

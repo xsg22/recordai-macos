@@ -1,8 +1,8 @@
-.build/
+/.build
 /.tools
 /.vendor
 /.models
-dist/
+/dist
 .DS_Store
 .build-check
 Docs/rea/foresight-macho.json

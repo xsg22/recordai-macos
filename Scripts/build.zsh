@@ -9,7 +9,7 @@ mkdir -p .vendor .models .build dist
 [[ "$(shasum -a 256 .vendor/lark-cli/lark-cli | cut -d ' ' -f 1)" == '558a4b3db4beb63ab71f2d2dbc42506846535bc1276f707764ff94809e8441a0' ]] || { print -u2 '飞书组件校验失败'; exit 1; }
 
 /bin/zsh Scripts/prepare-asr.zsh
-app="${RECORD_AI_BUILD_APP_PATH:-$root/.build/release/TalkTuck.app}"
+app="${TALKTUCK_BUILD_APP_PATH:-$root/.build/release/TalkTuck.app}"
 [[ ! -d "$app" ]] || /bin/rm -rf "$app"
 mkdir -p "$app/Contents/"{MacOS,Resources/Engine,Resources/Licenses}
 mkdir -p "$app/Contents/Resources/"{Accounts,Integrations}
@@ -18,9 +18,9 @@ cp .vendor/lark-cli/lark-cli "$app/Contents/Resources/Integrations/lark-cli"
 cp Resources/DWS-LICENSE.txt "$app/Contents/Resources/Licenses/dws.txt"
 cp .vendor/lark-cli/LICENSE "$app/Contents/Resources/Licenses/lark-cli.txt"
 xcrun swiftc -O -swift-version 5 -parse-as-library -target arm64-apple-macosx14.0 \
-    -o "$app/Contents/MacOS/RecordAIApp" Sources/*.swift
+    -o "$app/Contents/MacOS/TalkTuckApp" Sources/*.swift
 xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx14.0 \
-    Sources/AgentSchema.swift Sources/RecordAIControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$app/Contents/MacOS/recordai"
+    Sources/AgentSchema.swift Sources/TalkTuckControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$app/Contents/MacOS/talktuck"
 ditto Resources/AgentSkill "$app/Contents/Resources/AgentSkill"
 ditto Resources/Localization "$app/Contents/Resources/Localization"
 cp Resources/Info.plist "$app/Contents/Info.plist"
@@ -39,7 +39,7 @@ codesign --force --sign "$identity" "$app/Contents/Resources/Engine/ASR/libonnxr
 codesign --force --sign "$identity" "$app/Contents/Resources/Engine/ASR/paraformer-live"
 codesign --force --sign "$identity" "$app/Contents/Resources/Accounts/dws"
 codesign --force --sign "$identity" "$app/Contents/Resources/Integrations/lark-cli"
-codesign --force --sign "$identity" "$app/Contents/MacOS/recordai"
+codesign --force --sign "$identity" "$app/Contents/MacOS/talktuck"
 codesign --force --sign "$identity" "$app"
 codesign --verify --deep --strict "$app"
 otool -L "$app/Contents/Resources/Engine/ASR/paraformer-live" | tail -n +2 > .build/engine-linkage.txt
@@ -53,7 +53,7 @@ fi
 # 全部构建和签名成功后才替换交付目录，失败不覆盖可用旧版。
 if [[ "${COHEAR_STAGE_ONLY:-0}" != "1" ]]; then
     ditto "$app" "$root/dist/TalkTuck.app.new"
-    [[ ! -d "$root/dist/TalkTuck.app" ]] || mv "$root/dist/TalkTuck.app" "$root/.build/previous-recordai-$(date +%s).app"
+    [[ ! -d "$root/dist/TalkTuck.app" ]] || mv "$root/dist/TalkTuck.app" "$root/.build/previous-talktuck-$(date +%s).app"
     mv "$root/dist/TalkTuck.app.new" "$root/dist/TalkTuck.app"
     app="$root/dist/TalkTuck.app"
 fi

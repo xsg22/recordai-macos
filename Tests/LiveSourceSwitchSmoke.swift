@@ -4,7 +4,7 @@ import Foundation
 
 @main struct LiveSourceSwitchSmoke {
     @MainActor static func main() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("recordai-source-switch-\(UUID().uuidString)")
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-source-switch-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let both = RecordingSources(mode: .meeting)

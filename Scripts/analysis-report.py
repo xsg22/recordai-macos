@@ -70,20 +70,20 @@ def package(report, output, audio_path=None, replace=False):
     validate(report)
     output = Path(output).absolute()
     output.parent.mkdir(parents=True, exist_ok=True)
-    manifest_name = ".recordai-report-bundle.json"
+    manifest_name = ".talktuck-report-bundle.json"
     if output.exists():
         marker = output / manifest_name
         if not replace or output.is_symlink() or not marker.is_file():
             raise InvalidReport("Output already exists. Only an owned report bundle can be replaced with --replace")
         manifest = read(marker)
         names = set(manifest.get("files", [])) | {manifest_name}
-        if manifest.get("generator") != "recordai-adaptive-report-v1" or {p.name for p in output.iterdir()} != names:
+        if manifest.get("generator") != "talktuck-adaptive-report-v1" or {p.name for p in output.iterdir()} != names:
             raise InvalidReport("Output contains unrecognized files; refusing to replace it")
         for name, digest in manifest.get("sha256", {}).items():
             path = output / name
             if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
                 raise InvalidReport("An output file was modified; preserve it before rendering to a new directory")
-    with tempfile.TemporaryDirectory(prefix=".recordai-report-", dir=output.parent) as temporary:
+    with tempfile.TemporaryDirectory(prefix=".talktuck-report-", dir=output.parent) as temporary:
         stage = Path(temporary) / "bundle"
         stage.mkdir()
         audio_name = None
@@ -97,7 +97,7 @@ def package(report, output, audio_path=None, replace=False):
         write(stage / "schema.json", contract())
         (stage / "report.html").write_text(render(report, audio_name), encoding="utf-8")
         files = sorted(p.name for p in stage.iterdir())
-        write(stage / manifest_name, {"generator": "recordai-adaptive-report-v1", "reportId": report["reportId"],
+        write(stage / manifest_name, {"generator": "talktuck-adaptive-report-v1", "reportId": report["reportId"],
                                       "files": files, "sha256": {n: hashlib.sha256((stage / n).read_bytes()).hexdigest() for n in files}})
         backup = Path(temporary) / "previous"
         if output.exists():
@@ -118,7 +118,7 @@ def main():
     source = p.add_mutually_exclusive_group(required=True)
     source.add_argument("--recording-id")
     source.add_argument("--snapshot", type=Path)
-    p.add_argument("--connection", type=Path, default=Path.home() / ".agents/skills/recordai/references/connection.json")
+    p.add_argument("--connection", type=Path, default=Path.home() / ".agents/skills/talktuck/references/connection.json")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--chunk-characters", type=int, default=5000)
     p = subs.add_parser("render")
@@ -126,7 +126,7 @@ def main():
     p.add_argument("--analysis", type=Path, required=True)
     p.add_argument("--provider", required=True)
     p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--connection", type=Path, default=Path.home() / ".agents/skills/recordai/references/connection.json")
+    p.add_argument("--connection", type=Path, default=Path.home() / ".agents/skills/talktuck/references/connection.json")
     p.add_argument("--verify-current", action="store_true")
     p.add_argument("--include-audio", action="store_true", help="Explicitly copy the recording's first audio part into this local report bundle")
     p.add_argument("--replace", action="store_true")

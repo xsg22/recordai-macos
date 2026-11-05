@@ -6,7 +6,7 @@ import AVFoundation
     @MainActor static func main() async throws {
         let mode = CommandLine.arguments[1],root = URL(fileURLWithPath:CommandLine.arguments[2])
         let f = try JSONDecoder().decode(Fixture.self,from:Data(contentsOf:root.appendingPathComponent("private/credentials.json")))
-        guard f.purpose == "user-authorized-physical-device-sync-acceptance",f.expiresAt > Date().timeIntervalSince1970,f.username.hasPrefix("qa_sync_"),f.server.absoluteString == "https://xueshengguo.com/recordai" else { throw LibrarySyncError.invalidData }
+        guard f.purpose == "user-authorized-physical-device-sync-acceptance",f.expiresAt > Date().timeIntervalSince1970,f.username.hasPrefix("qa_sync_"),f.server.absoluteString == "https://xueshengguo.com/talktuck" else { throw LibrarySyncError.invalidData }
         var request = URLRequest(url:f.server.appendingPathComponent("v1/auth/account"));request.httpMethod = "POST";request.setValue("application/json",forHTTPHeaderField:"Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject:["username":f.username,"password":f.password])
         let (data,response) = try await URLSession.shared.data(for:request);guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw LibrarySyncError.unavailable }

@@ -21,7 +21,7 @@ engine, models = args.engine_dir.resolve(), args.model_root.resolve()
 for path in [engine/'qwen-asr', engine/'paraformer-live', models/'Qwen3ASR', models/'Paraformer']:
     if not path.exists(): parser.error('Missing prerequisite: ' + str(path))
 scratch = Path(tempfile.mkdtemp(prefix='bilingual-engine-', dir=ROOT/'.build'))
-sentences = [('english-a', 'Samantha', 'Welcome to the Record AI test. Please keep the original recording and organize it into a group. The next release is version zero point one seven.'),
+sentences = [('english-a', 'Samantha', 'Welcome to the TalkTuck test. Please keep the original recording and organize it into a group. The next release is version zero point one seven.'),
              ('english-b', 'Daniel', 'I will check offline transcription on Friday. The budget is twenty five dollars. Let the external agent read the final transcript.'),
              ('chinese', 'Tingting', '大家好，今天测试离线转录。请保留原始录音，按照分组管理资料。让外部智能助手读取转录结果。')]
 for name, voice, text in sentences:

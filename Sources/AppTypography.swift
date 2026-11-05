@@ -18,13 +18,13 @@ func recordingDurationText(_ seconds: Double) -> String {
     return L10n.text(minutes >= 60 ? "\(minutes / 60)小时\(minutes % 60)分钟" : "\(minutes) 分钟")
 }
 
-struct RecordAIPrimaryButtonStyle: ButtonStyle {
+struct TalkTuckPrimaryButtonStyle: ButtonStyle {
     var showsProgress = false
     @Environment(\.isEnabled) private var enabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.system(size: 15, weight: .semibold))
             .padding(.horizontal, 16).padding(.vertical, 13)
             .foregroundStyle(.white)
-            .background(enabled || showsProgress ? RecordAITheme.primaryFill.opacity(configuration.isPressed ? 0.8 : 1) : Color.gray.opacity(0.45), in: RoundedRectangle(cornerRadius: 10))
+            .background(enabled || showsProgress ? TalkTuckTheme.primaryFill.opacity(configuration.isPressed ? 0.8 : 1) : Color.gray.opacity(0.45), in: RoundedRectangle(cornerRadius: 10))
     }
 }

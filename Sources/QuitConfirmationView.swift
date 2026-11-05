@@ -13,10 +13,10 @@ struct QuitConfirmationView: View {
             HStack {
                 Button(L10n.text(activity == .recording ? "返回录音" : "返回应用"), action: cancel).keyboardShortcut(.cancelAction)
                 Spacer()
-                if let action = activity.action { Button(L10n.text(action), action: confirm).buttonStyle(RecordAIPrimaryButtonStyle()).keyboardShortcut(.defaultAction) }
+                if let action = activity.action { Button(L10n.text(action), action: confirm).buttonStyle(TalkTuckPrimaryButtonStyle()).keyboardShortcut(.defaultAction) }
             }.padding(.top, 8)
-        }.padding(28).frame(width: 470).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle())
-            .background(RecordAITheme.surface).clipShape(RoundedRectangle(cornerRadius: 16))
+        }.padding(28).frame(width: 470).font(AppTypography.body).buttonStyle(TalkTuckSecondaryButtonStyle())
+            .background(TalkTuckTheme.surface).clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 

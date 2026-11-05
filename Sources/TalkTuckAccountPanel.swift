@@ -7,7 +7,7 @@ struct TalkTuckAccountPanel: View {
     @State private var agreed = false
     @State private var resendAt = Date.distantPast
     var body: some View {
-        RecordAICard {
+        TalkTuckCard {
             Label("TalkTuck", systemImage: "person.crop.circle").font(AppTypography.heading)
             if store.isSignedIn {
                 Text(L10n.text("已登录") + (store.displayName.isEmpty ? "" : " · " + store.displayName))

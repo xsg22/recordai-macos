@@ -1,4 +1,0 @@
-The following is a diff from the previous accessibility tree for Window: "RecordAI" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
-~			31 slider (settable, float) Description: 音频波形播放进度, Value: 9.105499999999999, Details: 9 秒，共 31 秒
-~			34 button Description: 暂停回放, ID: pause.fill
-The focused UI element is 11 text field (settable) 搜索录音名称或内容…

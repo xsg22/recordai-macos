@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// Shared values from Docs/design-v2/manifest.json.
-enum RecordAITheme {
+enum TalkTuckTheme {
     static let primaryFill = Color(red: 9 / 255, green: 99 / 255, blue: 1)
     static let accent = adaptive(light: 0x0963ff, dark: 0x94bcff)
     static let radius: CGFloat = 12
@@ -27,7 +27,7 @@ enum RecordAITheme {
     }
 }
 
-struct RecordAILogo: View {
+struct TalkTuckLogo: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     var size: CGFloat = 44
     var body: some View {
@@ -44,19 +44,19 @@ struct RecordAILogo: View {
     }
 }
 
-struct RecordAISecondaryButtonStyle: ButtonStyle {
+struct TalkTuckSecondaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.system(size: 13, weight: .medium))
             .padding(.horizontal, 13).padding(.vertical, 11)
-            .foregroundStyle(enabled ? RecordAITheme.ink.opacity(0.8) : RecordAITheme.muted.opacity(0.55))
-            .background(configuration.isPressed ? RecordAITheme.quiet : RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9))
-            .overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border, lineWidth: 1))
+            .foregroundStyle(enabled ? TalkTuckTheme.ink.opacity(0.8) : TalkTuckTheme.muted.opacity(0.55))
+            .background(configuration.isPressed ? TalkTuckTheme.quiet : TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).stroke(TalkTuckTheme.border, lineWidth: 1))
             .contentShape(RoundedRectangle(cornerRadius: 9))
     }
 }
 
-struct RecordAICard<Content: View>: View {
+struct TalkTuckCard<Content: View>: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     var quiet = false
     var spacing: CGFloat = 16
@@ -64,12 +64,12 @@ struct RecordAICard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: spacing) { content }
             .padding(20).frame(maxWidth: .infinity, alignment: .leading)
-            .background(quiet ? RecordAITheme.quiet : RecordAITheme.surface, in: RoundedRectangle(cornerRadius: RecordAITheme.radius))
-            .overlay(RoundedRectangle(cornerRadius: RecordAITheme.radius).stroke(quiet ? .clear : RecordAITheme.border, lineWidth: 1))
+            .background(quiet ? TalkTuckTheme.quiet : TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: TalkTuckTheme.radius))
+            .overlay(RoundedRectangle(cornerRadius: TalkTuckTheme.radius).stroke(quiet ? .clear : TalkTuckTheme.border, lineWidth: 1))
     }
 }
 
-struct RecordAIPageHeader<Trailing: View>: View {
+struct TalkTuckPageHeader<Trailing: View>: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     let title: String
     var subtitle = ""
@@ -86,7 +86,7 @@ struct RecordAIPageHeader<Trailing: View>: View {
     }
 }
 
-struct RecordAISettingRow<Content: View>: View {
+struct TalkTuckSettingRow<Content: View>: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     let title: String
     var minimumHeight: CGFloat = 62
@@ -100,12 +100,12 @@ struct RecordAISettingRow<Content: View>: View {
     }
 }
 
-struct RecordAIInfo: View {
+struct TalkTuckInfo: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     let text: String
     var warning = false
     var success = false
-    private var color: Color { warning ? .orange : success ? .green : RecordAITheme.accent }
+    private var color: Color { warning ? .orange : success ? .green : TalkTuckTheme.accent }
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: warning ? "exclamationmark.triangle" : success ? "checkmark.circle" : "info.circle")
@@ -117,7 +117,7 @@ struct RecordAIInfo: View {
     }
 }
 
-struct RecordAISegmentedPicker<Value: Hashable>: View {
+struct TalkTuckSegmentedPicker<Value: Hashable>: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     let items: [(String, Value)]
     @Binding var selection: Value
@@ -128,16 +128,16 @@ struct RecordAISegmentedPicker<Value: Hashable>: View {
                 Button { selection = item.1 } label: {
                     Text(item.0).font(AppTypography.secondary.weight(selection == item.1 ? .semibold : .regular))
                         .frame(maxWidth: .infinity).padding(.vertical, 10)
-                        .foregroundStyle(selection == item.1 ? RecordAITheme.accent : .secondary)
-                        .background(selection == item.1 ? RecordAITheme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
+                        .foregroundStyle(selection == item.1 ? TalkTuckTheme.accent : .secondary)
+                        .background(selection == item.1 ? TalkTuckTheme.surface : .clear, in: RoundedRectangle(cornerRadius: 7))
                 }.buttonStyle(.plain).accessibilityValue(L10n.text(selection == item.1 ? "已选择" : "未选择"))
             }
-        }.padding(4).background(RecordAITheme.tabs, in: RoundedRectangle(cornerRadius: 10))
+        }.padding(4).background(TalkTuckTheme.tabs, in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
 /// A menu keeps native keyboard navigation while matching the design's field surface.
-struct RecordAIChoicePicker<Value: Hashable>: View {
+struct TalkTuckChoicePicker<Value: Hashable>: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     let title: String
     let items: [(String, Value)]
@@ -153,10 +153,10 @@ struct RecordAIChoicePicker<Value: Hashable>: View {
         } label: {
             Text(items.first { $0.1 == selection }?.0 ?? title).font(AppTypography.secondary)
         }.menuStyle(.borderlessButton).menuIndicator(.visible)
-            .tint(RecordAITheme.ink).foregroundStyle(RecordAITheme.ink)
+            .tint(TalkTuckTheme.ink).foregroundStyle(TalkTuckTheme.ink)
             .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
-            .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9))
-            .overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border))
+            .background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).stroke(TalkTuckTheme.border))
             .accessibilityLabel(L10n.text(title))
     }
 }

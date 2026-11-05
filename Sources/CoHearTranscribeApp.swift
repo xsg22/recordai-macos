@@ -32,7 +32,6 @@ struct CoHearTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var state: AppState
     init() {
-        LegacyPreferencesMigration.runForInstalledApp()
         _appLanguage = ObservedObject(wrappedValue: AppLanguage.shared)
         _state = StateObject(wrappedValue: AppState())
     }
@@ -92,7 +91,7 @@ struct MainView: View {
     init(state: AppState, initialFilter: String = "全部") {
         self.state = state; _filter = State(initialValue: initialFilter)
     }
-    private let accent = RecordAITheme.accent
+    private let accent = TalkTuckTheme.accent
     private var missingMicrophone: Bool { state.error?.contains("没有可用的麦克风输入设备") == true }
     private var visibleHistory: [MeetingRecord] {
         state.filteredHistory.filter { filter == "全部" || filter == "回收站" || (filter == "星标" ? $0.isStarred : filter == "已完成" ? $0.status == .completed : $0.status != .completed) }
@@ -102,7 +101,7 @@ struct MainView: View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    RecordAILogo()
+                    TalkTuckLogo()
                     VStack(alignment: .leading, spacing: 3) {
                         Text("TalkTuck").font(.system(size: 20, weight: .semibold))
                         Text(L10n.text("本地录音 · AI 转写")).font(AppTypography.secondary).foregroundStyle(.secondary)
@@ -110,7 +109,7 @@ struct MainView: View {
                 }.padding(.bottom, 8)
                 Button { state.toggleRecording() } label: {
                     Label(L10n.text("开始新录音"), systemImage: "mic").frame(maxWidth: .infinity)
-                }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing || missingMicrophone)
+                }.buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing || missingMicrophone)
                 VStack(spacing: 3) {
                     filterRow("全部", symbol: "waveform", count: state.history.count)
                     filterRow("星标", symbol: "star", count: state.history.filter(\.isStarred).count)
@@ -127,10 +126,10 @@ struct MainView: View {
                     }.buttonStyle(.plain).padding(.horizontal, 10).accessibilityLabel(L10n.text("返回正在录音"))
                 }
                 HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass").font(.system(size: 10)).foregroundStyle(RecordAITheme.muted).accessibilityHidden(true)
+                    Image(systemName: "magnifyingglass").font(.system(size: 10)).foregroundStyle(TalkTuckTheme.muted).accessibilityHidden(true)
                     TextField(L10n.text("搜索录音名称或内容…"), text: $state.search).textFieldStyle(.plain).font(.system(size: 13))
-                }.padding(12).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 9))
-                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(RecordAITheme.border))
+                }.padding(12).background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 9))
+                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(TalkTuckTheme.border))
                 HStack {
                     Text(L10n.text("录音资料库")).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                     Spacer()
@@ -174,7 +173,7 @@ struct MainView: View {
                 }.font(AppTypography.secondary).fixedSize(horizontal: false, vertical: true)
 
             }.padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .background(RecordAITheme.sidebar)
+                .background(TalkTuckTheme.sidebar)
                 .navigationSplitViewColumnWidth(windowWidth <= 1100 ? 260 : 280)
         } detail: {
             VStack(alignment: .leading, spacing: 12) {
@@ -184,13 +183,13 @@ struct MainView: View {
                     VStack(spacing: 24) {
                         Image(systemName: state.search.isEmpty && filter == "星标" ? "star" : "magnifyingglass").font(.system(size: 30)).foregroundStyle(accent)
                             .frame(width: 100, height: 110)
-                            .background(LinearGradient(colors: [RecordAITheme.surface, accent.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(RecordAITheme.border, lineWidth: 1))
+                            .background(LinearGradient(colors: [TalkTuckTheme.surface, accent.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 16))
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(TalkTuckTheme.border, lineWidth: 1))
                             .rotationEffect(.degrees(-7)).shadow(color: accent.opacity(0.06), radius: 14, y: 10).padding(.bottom, 8)
                         Text(L10n.text(filter == "星标" && state.groupFilter.isEmpty && state.search.isEmpty ? "暂无星标录音" : "没有找到相关录音")).font(.system(size: 23, weight: .semibold))
                         Text(L10n.text("调整搜索或分组筛选，也可以导入新的音频。"))
                             .font(AppTypography.body).foregroundStyle(.secondary)
-                        Button(L10n.text(state.search.isEmpty ? "查看全部录音" : "清除搜索")) { state.search = ""; state.groupFilter = ""; filter = "全部" }.buttonStyle(RecordAIPrimaryButtonStyle())
+                        Button(L10n.text(state.search.isEmpty ? "查看全部录音" : "清除搜索")) { state.search = ""; state.groupFilter = ""; filter = "全部" }.buttonStyle(TalkTuckPrimaryButtonStyle())
                     }.padding(.top, 100).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 } else {
                 if missingMicrophone {
@@ -199,7 +198,7 @@ struct MainView: View {
                 } else if state.current != nil {
                     meetingToolbar
                     if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution && !showingOrganization {
-                        RecordAICard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
+                        TalkTuckCard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
                     }
                     if let issue = state.recordingIssue, state.isViewingRecording {
                         HStack(spacing: 16) {
@@ -258,7 +257,7 @@ struct MainView: View {
                 }.font(AppTypography.secondary).foregroundStyle(.secondary)
                 }
                 }
-            }.padding(28).frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity).background(RecordAITheme.surface)
+            }.padding(28).frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity).background(TalkTuckTheme.surface)
         }
         .overlay(alignment: .bottom) {
             if state.recording && !state.miniMode && (state.showsInlineRecorder || emptyFilter || filter == "回收站") && !missingMicrophone, let controller = state.miniController {
@@ -267,9 +266,9 @@ struct MainView: View {
                     .onDisappear { state.setInlineRecorderVisible(false) }
             }
         }
-        .buttonStyle(RecordAISecondaryButtonStyle())
-        .tint(RecordAITheme.accent)
-        .foregroundStyle(RecordAITheme.ink)
+        .buttonStyle(TalkTuckSecondaryButtonStyle())
+        .tint(TalkTuckTheme.accent)
+        .foregroundStyle(TalkTuckTheme.ink)
         .background(GeometryReader { geometry in
             Color.clear.onAppear { windowWidth = geometry.size.width }
                 .onChange(of: geometry.size.width) { _, width in windowWidth = width }
@@ -284,7 +283,7 @@ struct MainView: View {
                 ASRModelSetupView(store: state.speechModels, close: { state.showModelDownload = false })
             }.padding(28).frame(width: 720).controlSize(.large)
         }
-        .sheet(isPresented: Binding(get: { showingExecution || state.showExecutionTrace }, set: { value in showingExecution = value; state.showExecutionTrace = value })) { RecordAIExecutionView(state: state) }
+        .sheet(isPresented: Binding(get: { showingExecution || state.showExecutionTrace }, set: { value in showingExecution = value; state.showExecutionTrace = value })) { TalkTuckExecutionView(state: state) }
         .sheet(isPresented: $delivering) { RecordingDeliveryView(state: state) }
         .sheet(item: $state.deletionRequest) { record in ConfirmTrashView(state: state, record: record) }
         .sheet(isPresented: $showingOrganization) {
@@ -295,7 +294,7 @@ struct MainView: View {
         }
         .sheet(isPresented: $state.showSettings) { ConnectionsView(state: state) }
         .sheet(isPresented: Binding(get: { state.error != nil && !missingMicrophone }, set: { if !$0 && !missingMicrophone { state.error = nil } })) {
-            RecordAIErrorView(message: state.error ?? "", close: { state.error = nil }, retry: state.errorRetry == nil ? nil : { state.retryLastError() })
+            TalkTuckErrorView(message: state.error ?? "", close: { state.error = nil }, retry: state.errorRetry == nil ? nil : { state.retryLastError() })
         }
     }
 
@@ -362,11 +361,11 @@ struct MainView: View {
                 Image(systemName: symbol).frame(width: 18)
                 Text(L10n.text(title == "全部" ? "全部录音" : title))
                 Spacer()
-                Text("\(count)").foregroundStyle(RecordAITheme.muted)
+                Text("\(count)").foregroundStyle(TalkTuckTheme.muted)
             }.font(.system(size: 14, weight: filter == title ? .semibold : .regular))
                 .padding(.horizontal, 12).padding(.vertical, 12)
                 .contentShape(Rectangle())
-                .background(filter == title ? RecordAITheme.selection : .clear, in: RoundedRectangle(cornerRadius: 9))
+                .background(filter == title ? TalkTuckTheme.selection : .clear, in: RoundedRectangle(cornerRadius: 9))
         }.buttonStyle(.plain).foregroundStyle(filter == title ? accent : .primary).disabled(!state.canBrowseRecordings)
     }
 
@@ -385,7 +384,7 @@ struct MainView: View {
             } label: {
                 recoveryChoice("打开声音设置", detail: "检查麦克风并选择可用的输入设备", symbol: "gearshape")
             }.buttonStyle(.plain)
-            RecordAIInfo(text: L10n.text("已有录音和文字会保留。设备恢复后可继续录音。"))
+            TalkTuckInfo(text: L10n.text("已有录音和文字会保留。设备恢复后可继续录音。"))
             Button(L10n.text("返回")) { state.error = nil }
         }.frame(maxWidth: 430).frame(maxWidth: .infinity).padding(32)
     }
@@ -401,7 +400,7 @@ struct MainView: View {
             Spacer()
             Image(systemName: "chevron.right").foregroundStyle(.secondary)
         }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background(RecordAITheme.sidebar, in: RoundedRectangle(cornerRadius: 12))
+            .background(TalkTuckTheme.sidebar, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var meetingInspector: some View { MeetingInspector(state: state) }
@@ -440,7 +439,7 @@ struct MainView: View {
                             (Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale)) + Text("—") + Text(record.created.addingTimeInterval(record.duration), format: .dateTime.hour().minute().locale(L10n.locale)))
                             Text("· " + recordingDurationText(record.duration))
                         }
-                    }.font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
+                    }.font(AppTypography.secondary).foregroundStyle(TalkTuckTheme.muted)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -467,10 +466,10 @@ struct MainView: View {
                 if state.audio != nil && (state.text.isEmpty || state.current?.pendingAudioFiles.isEmpty == false) {
                     Button { state.transcribe() } label: {
                         Label(L10n.text(state.current?.pendingAudioFiles.isEmpty == false ? "继续转录" : "开始转录"), systemImage: "waveform")
-                    }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+                    }.buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
                 } else {
                     Button { state.continueRecording() } label: { Label(L10n.text("继续录音"), systemImage: "mic") }
-                        .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+                        .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
                 }
             }
             Button { showingOrganization = true } label: { Label(L10n.text("整理"), systemImage: "folder") }
@@ -529,14 +528,14 @@ struct MainView: View {
             Text(L10n.text(state.speechModels.busy ? "语音模型下载中 · \(Int(state.speechModels.progress * 100))%" : "首次使用需要下载语音模型"))
             Button(L10n.text(state.speechModels.busy ? "查看下载" : "下载模型 ↗")) { state.showModelDownload = true }.buttonStyle(.plain).foregroundStyle(accent)
             Spacer(minLength: 0)
-        }.font(.system(size: 12)).foregroundStyle(RecordAITheme.muted).padding(16)
+        }.font(.system(size: 12)).foregroundStyle(TalkTuckTheme.muted).padding(16)
             .background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
     }
 
     private var captureCard: some View {
         VStack(alignment: .center, spacing: 18) {
             Image(systemName: "waveform").font(.system(size: 48)).foregroundStyle(accent)
-                .frame(width: 100, height: 112).background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 14))
+                .frame(width: 100, height: 112).background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(accent.opacity(0.08))).rotationEffect(.degrees(-7))
                 .shadow(color: accent.opacity(0.08), radius: 18, y: 12).padding(.bottom, 12)
             Text(L10n.text(state.history.isEmpty ? "开始你的第一段录音" : "开始一段新录音")).font(.system(size: 27, weight: .semibold))
@@ -544,7 +543,7 @@ struct MainView: View {
                 .font(.system(size: 14)).lineSpacing(9).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 8).padding(.bottom, 14)
             ZStack {
                 Button { state.toggleRecording() } label: { Label(L10n.text("开始录音"), systemImage: "mic").padding(.trailing, 24).frame(maxWidth: .infinity) }
-                    .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+                    .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
                 Menu { recordingSettingsMenu } label: { Color.clear.frame(width: 30, height: 46).contentShape(Rectangle()) }
                     .menuStyle(.borderlessButton).menuIndicator(.hidden).frame(width: 30, height: 46)
                     .overlay { Image(systemName: "chevron.down").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).allowsHitTesting(false) }
@@ -570,7 +569,7 @@ struct MainView: View {
             Text(L10n.text(title)).font(AppTypography.body.weight(.medium))
             Text(L10n.text(detail)).font(.system(size: 12)).lineSpacing(5).foregroundStyle(.secondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, minHeight: 110).padding(.vertical, 22).padding(.horizontal, 10)
-            .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 12))
+            .background(TalkTuckTheme.quiet, in: RoundedRectangle(cornerRadius: 12))
     }
     @ViewBuilder private var recordingSettingsMenu: some View {
         Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
@@ -595,12 +594,12 @@ struct ConnectionsView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: L10n.text("第三方账号"), subtitle: L10n.text("连接钉钉、飞书或 Notion，按需发送选定的转录内容。")) { Button(L10n.text("完成")) { dismiss() }.keyboardShortcut(.cancelAction) }
-            RecordAISegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination)
+            TalkTuckPageHeader(title: L10n.text("第三方账号"), subtitle: L10n.text("连接钉钉、飞书或 Notion，按需发送选定的转录内容。")) { Button(L10n.text("完成")) { dismiss() }.keyboardShortcut(.cancelAction) }
+            TalkTuckSegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination)
             AccountConnectionPanel(state: state)
-            RecordAIInfo(text: L10n.text(state.syncDestination == .feishu && state.feishuAccount.hasPendingAuthorization ? "已有待处理授权时优先继续，不重复申请。重新申请前需确认旧申请已失效。" : "只在你点击同步后发送选定文字。原始音频保留在本机。"))
+            TalkTuckInfo(text: L10n.text(state.syncDestination == .feishu && state.feishuAccount.hasPendingAuthorization ? "已有待处理授权时优先继续，不重复申请。重新申请前需确认旧申请已失效。" : "只在你点击同步后发送选定文字。原始音频保留在本机。"))
             Spacer()
-        }.padding(28).frame(width: 720, height: state.syncDestination == .dingtalk ? 530 : 494).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle()).controlSize(.extraLarge)
+        }.padding(28).frame(width: 720, height: state.syncDestination == .dingtalk ? 530 : 494).font(AppTypography.body).buttonStyle(TalkTuckSecondaryButtonStyle()).controlSize(.extraLarge)
     }
 }
 
@@ -612,8 +611,8 @@ struct SyncReviewView: View {
     @State private var showingReceipt = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: L10n.text("同步这条录音"), subtitle: state.current?.title ?? "") { Button(L10n.text("关闭")) { close() }.disabled(state.syncing).keyboardShortcut(.cancelAction) }
-            RecordAISegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination).disabled(state.syncing)
+            TalkTuckPageHeader(title: L10n.text("同步这条录音"), subtitle: state.current?.title ?? "") { Button(L10n.text("关闭")) { close() }.disabled(state.syncing).keyboardShortcut(.cancelAction) }
+            TalkTuckSegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination).disabled(state.syncing)
             AccountConnectionPanel(state: state, compact: true)
             SyncContentPreview(state: state)
             if !state.syncStatus.isEmpty {
@@ -627,13 +626,13 @@ struct SyncReviewView: View {
                                 ScrollView { Text(state.syncReceipt).font(AppTypography.secondary).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(20) }.frame(width: 500, height: 280)
                             }
                     }
-                }.font(AppTypography.secondary).foregroundStyle(syncNeedsAttention ? Color.orange : state.remoteURL != nil ? Color.green : RecordAITheme.accent)
+                }.font(AppTypography.secondary).foregroundStyle(syncNeedsAttention ? Color.orange : state.remoteURL != nil ? Color.green : TalkTuckTheme.accent)
                     .padding(17).frame(maxWidth: .infinity, alignment: .leading)
-                    .background((syncNeedsAttention ? Color.orange : state.remoteURL != nil ? Color.green : RecordAITheme.accent).opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
+                    .background((syncNeedsAttention ? Color.orange : state.remoteURL != nil ? Color.green : TalkTuckTheme.accent).opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
             }
             if let feedback = state.syncFeedback {
                 HStack(alignment: .top, spacing: 12) {
-                    RecordAIInfo(text: feedback, warning: state.remoteURL == nil)
+                    TalkTuckInfo(text: feedback, warning: state.remoteURL == nil)
                     Button(L10n.text("知道了")) { state.syncFeedback = nil }
                 }
             }
@@ -642,9 +641,9 @@ struct SyncReviewView: View {
                 Spacer()
                 if state.syncing { ProgressView().controlSize(.small) }
                 Button(L10n.text(state.syncing ? "同步中…" : "同步到\(state.syncDestination.rawValue)")) { state.syncMeeting() }
-                    .buttonStyle(RecordAIPrimaryButtonStyle(showsProgress: state.syncing)).disabled(state.syncing || !state.canSyncFinalTranscript || !accountReady)
+                    .buttonStyle(TalkTuckPrimaryButtonStyle(showsProgress: state.syncing)).disabled(state.syncing || !state.canSyncFinalTranscript || !accountReady)
             }
-        }.padding(28).frame(width: 720, height: state.syncStatus.isEmpty ? 664 : 736).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle()).controlSize(.extraLarge)
+        }.padding(28).frame(width: 720, height: state.syncStatus.isEmpty ? 664 : 736).font(AppTypography.body).buttonStyle(TalkTuckSecondaryButtonStyle()).controlSize(.extraLarge)
         .sheet(isPresented: $connecting) { ConnectionsView(state: state) }
 
     }

@@ -27,7 +27,7 @@ for extension in ['dmg','pkg']:
             target.rename(backup/path.name)
         if not target.exists():shutil.copyfile(path,target)
 PY
-verificationTemp="$(mktemp -d "${TMPDIR:-/tmp}/recordai-published-verify.XXXXXX")"
+verificationTemp="$(mktemp -d "${TMPDIR:-/tmp}/talktuck-published-verify.XXXXXX")"
 attached=0
 cleanup() {
     if (( attached )); then
@@ -45,7 +45,7 @@ attached=1
 ditto "$verificationTemp/image/TalkTuck.app" "$app"
 hdiutil detach "$verificationTemp/image" >/dev/null
 attached=0
-RECORD_AI_BUILD_APP_PATH="$app" zsh Scripts/verify-release.zsh > "$evidenceDirectory/package-verification.log" 2>&1
+TALKTUCK_BUILD_APP_PATH="$app" zsh Scripts/verify-release.zsh > "$evidenceDirectory/package-verification.log" 2>&1
 zsh Scripts/test-localization.zsh > "$evidenceDirectory/localization.log" 2>&1
 modelRoot="$(python3 - "$acceptanceContext" <<'PY'
 import json,sys
@@ -61,7 +61,7 @@ python3 - "$app" "$acceptanceContext" "$evidenceDirectory" "$version" <<'PY'
 from pathlib import Path
 import hashlib,json,subprocess,sys
 app,context,out,version=Path(sys.argv[1]),json.load(open(sys.argv[2])),Path(sys.argv[3]),sys.argv[4]
-base=[str(app/'Contents/MacOS/recordai'),'--root',str(Path(context['library'])/'AgentData')]
+base=[str(app/'Contents/MacOS/talktuck'),'--root',str(Path(context['library'])/'AgentData')]
 setup=json.loads(subprocess.check_output(base+['setup','--json'],text=True));assert setup['appVersion']==version
 record=json.loads(Path(context['meetingPath']).read_text())
 queried=json.loads(subprocess.check_output(base+['read',record['id']],text=True));assert queried['finalText']==record['text']

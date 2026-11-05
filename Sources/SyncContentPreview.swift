@@ -25,8 +25,8 @@ struct SyncContentPreview: View {
                     }
                 } else { Text(state.text).font(AppTypography.body).lineSpacing(6) }
             }.frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding(16)
-        }.background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(RecordAITheme.border, lineWidth: 1))
+        }.background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(TalkTuckTheme.border, lineWidth: 1))
             .accessibilityLabel("同步正文预览")
     }
 }

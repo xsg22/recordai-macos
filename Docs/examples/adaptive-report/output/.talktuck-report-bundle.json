@@ -1,0 +1,14 @@
+{
+  "generator": "talktuck-adaptive-report-v1",
+  "reportId": "product-weekly-0AF69966-r19",
+  "files": [
+    "report.html",
+    "report.json",
+    "schema.json"
+  ],
+  "sha256": {
+    "report.html": "61e9c0e569273ef61f79990958aab0b0860861d7925c6f13936e085086573fe2",
+    "report.json": "3853beae7ec80abd5898ee63826fbeda9f8a19726fc316c1cacc5e2ec6997947",
+    "schema.json": "9d248b602c945d5b392d073dd0b028e86afc3fb80690e65b37e90dd331c8e69f"
+  }
+}

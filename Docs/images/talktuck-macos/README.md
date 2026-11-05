@@ -1,19 +1,3 @@
-# TalkTuck macOS README 截图来源
+# TalkTuck macOS
 
-这组图片为原生 macOS 客户端截图，未修改界面文字或替换品牌；RecordAI 为产品更名前的名称。
-
-| 文件 | 来源与说明 |
-| --- | --- |
-| library-agent.png | 2026-11-03 原生开发预览，隔离的产品周会演示资料；展示录音库、转录与 Agent 引导。 |
-| recording-sources.png | 同轮原生开发预览；演示麦克风、系统声音和实时字幕的录音界面，不作为真实音源采集通过的证据。 |
-| mini.png | 同轮原生 mini 悬浮窗，含两行演示字幕和录音控制。 |
-| groups.png | 同轮原生分组管理界面，工作/学习为演示分组。 |
-
-以上四张与本机已准备的公开分享配图逐字节一致，使用合成或隔离演示内容，不含用户私人录音。README 另引用仓库已有的 0.17.1 合成音频导入截图及 0.17.0 中英文界面实测截图；它们保留原路径和当时版本，未冒充本轮新包截图。
-
-本次只更新仓库品牌、说明和配图，没有构建或发布新安装包。下载入口指向 GitHub 已有的 v0.17.1-functional.6，资产名称仍为 RecordAI。
-# 0.17.2（44）最新截图
-
-`library-0172.png`、`groups-0172.png`、`settings-0172.png` 与 `agent-0172.png` 来自本版正式客户端的原生窗口，使用独立资料目录和系统合成语音。资料库图中的产品专名及待办字样通过原生段落编辑器人工校正；Agent 引导图保留原始识别结果。图片不包含私人录音、个人路径、真实账号或手机号。详见[发布验证记录](../../validation/release-0.17.2/README.md)。
-
-下面保留此前图片的历史来源说明；项目 README 当前展示均已切换到 0.17.2（44）。
+Three native screenshots from version 0.17.2 (44), using isolated synthetic audio. The library text includes manual correction. Historical screenshots were hash-verified and archived outside the current source tree.

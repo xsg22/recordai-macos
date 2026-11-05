@@ -133,17 +133,17 @@ struct AppStateSmoke {
         let guide = try String(contentsOf: root.appendingPathComponent("AgentData/SETUP.md"), encoding: .utf8)
         precondition(guide.contains("setup --json") && guide.contains("get_agent_setup"))
         let publicRoot = root.appendingPathComponent("AgentData")
-        let start = try RecordAIControlQueue.enqueue(action: "start_recording", root: publicRoot)
-        state.processRecordAICommands()
-        let startResult = try JSONSerialization.jsonObject(with: RecordAIControlQueue.result(start.id, root: publicRoot)) as! [String: String]
+        let start = try TalkTuckControlQueue.enqueue(action: "start_recording", root: publicRoot)
+        state.processTalkTuckCommands()
+        let startResult = try JSONSerialization.jsonObject(with: TalkTuckControlQueue.result(start.id, root: publicRoot)) as! [String: String]
         precondition(startResult["status"] == "rejected" && !state.recording && !state.preparing, "缺模型不得把启动回执记为成功")
-        let stale = RecordAIControlCommand(id: UUID(), action: "pause_recording", createdAt: Date().addingTimeInterval(-60))
+        let stale = TalkTuckControlCommand(id: UUID(), action: "pause_recording", createdAt: Date().addingTimeInterval(-60))
         let staleURL = publicRoot.appendingPathComponent("Control/commands/\(stale.id.uuidString).json")
         try AgentCodec.encoder().encode(stale).write(to: staleURL)
-        state.processRecordAICommands()
-        let staleResult = try JSONSerialization.jsonObject(with: RecordAIControlQueue.result(stale.id, root: publicRoot)) as! [String: String]
+        state.processTalkTuckCommands()
+        let staleResult = try JSONSerialization.jsonObject(with: TalkTuckControlQueue.result(stale.id, root: publicRoot)) as! [String: String]
         precondition(staleResult["status"] == "rejected" && staleResult["result"]?.contains("过期") == true)
-        precondition(RecordAIControlQueue.pending(root: publicRoot).isEmpty)
+        precondition(TalkTuckControlQueue.pending(root: publicRoot).isEmpty)
         print("PASS: 首次非空定稿引导、失败与草稿排除、忙碌不打扰、展示持久化、稍后/重启不重弹、本地安装说明。")
     }
 
@@ -155,14 +155,14 @@ struct AppStateSmoke {
             state.busy = false; state.recording = false; state.paused = false
         }
         func stage(_ title: String) -> (String, String, String) {
-            RecordAIExecutionView(state: state).stages.first { $0.0 == title }!
+            TalkTuckExecutionView(state: state).stages.first { $0.0 == title }!
         }
         state.history[0].status = .failed
         state.transcriptPhase = .failed
         precondition(!state.current!.text.isEmpty)
         precondition(stage("最终转录").1 == "失败", "旧正文不能掩盖本次转录失败")
         precondition(stage("最终转录").2.contains("已有正文已保留"))
-        precondition(RecordAIExecutionView(state: state).sessionStatus == "待重试")
+        precondition(TalkTuckExecutionView(state: state).sessionStatus == "待重试")
         state.transcriptPhase = .idle
         precondition(stage("最终转录").1 == "失败", "重新选中失败记录后仍须显示失败")
         state.history[0].status = .completed

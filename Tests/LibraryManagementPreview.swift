@@ -11,7 +11,7 @@ import SwiftUI
         else if let url = Bundle.main.url(forResource: "LibraryPreviewRoot", withExtension: "txt"), let value = try? String(contentsOf: url, encoding: .utf8) { path = value.trimmingCharacters(in: .whitespacesAndNewlines) }
         else { fatalError("需要隔离验收目录") }
         let root = URL(fileURLWithPath: path).standardizedFileURL
-        guard root.lastPathComponent == "LibraryData", FileManager.default.fileExists(atPath: root.appendingPathComponent(".recordai-isolated-test").path) else { fatalError("不能使用非验收目录") }
+        guard root.lastPathComponent == "LibraryData", FileManager.default.fileExists(atPath: root.appendingPathComponent(".talktuck-isolated-test").path) else { fatalError("不能使用非验收目录") }
         let next = AppState(storageURL: root, connectionNamespace: "library-preview-" + root.deletingLastPathComponent().lastPathComponent)
         if let first = next.history.first { next.select(first.id) }
         _state = StateObject(wrappedValue: next)

@@ -16,12 +16,12 @@ struct RecordingCanvasView: View {
                         Button(L10n.text("展开实时正文")) { state.expandedRealtime = true }
                     }
                 }.padding(.horizontal, 20).padding(.top, 44).padding(.bottom, 20).frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
-                    .background(RecordAITheme.quiet, in: RoundedRectangle(cornerRadius: 12))
+                    .background(TalkTuckTheme.quiet, in: RoundedRectangle(cornerRadius: 12))
                     .padding(.top, 22).help(L10n.text("录音状态也可从菜单栏查看，随时暂停或停止。"))
                 Spacer(minLength: 0)
             } else {
                 TranscriptTimelineView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                    .background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 12))
                 if state.isViewingRecording && state.activeRecordingProfile == .backgroundRealtime {
                     Button(L10n.text("收起实时正文")) { state.expandedRealtime = false }
                 }
@@ -40,18 +40,18 @@ struct RecordingDeliveryView: View {
     @State private var showingAgentScope = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: L10n.text("导出与交付"), subtitle: state.title + (state.text.isEmpty ? "" : " · " + L10n.text("转录已保存"))) {
+            TalkTuckPageHeader(title: L10n.text("导出与交付"), subtitle: state.title + (state.text.isEmpty ? "" : " · " + L10n.text("转录已保存"))) {
                 Button(L10n.text("完成")) { dismiss() }
                     .keyboardShortcut(showingAgentScope ? nil : .cancelAction)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    RecordAICard {
+                    TalkTuckCard {
                         VStack(alignment: .leading, spacing: 16) {
                         Text(L10n.text("文字与音频")).font(AppTypography.heading)
                         VStack(alignment: .leading, spacing: 14) {
                             HStack {
-                                Button(L10n.text(copied ? "已复制正文" : "复制正文")) { copy(state.text); copied = true }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.text.isEmpty)
+                                Button(L10n.text(copied ? "已复制正文" : "复制正文")) { copy(state.text); copied = true }.buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.text.isEmpty)
                                 Button(L10n.text("复制 Markdown")) { copy(state.markdown) }.disabled(state.text.isEmpty)
                             }
                             HStack {
@@ -66,25 +66,25 @@ struct RecordingDeliveryView: View {
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         }.frame(maxWidth: .infinity, minHeight: 186, alignment: .topLeading)
                     }
-                    RecordAICard {
+                    TalkTuckCard {
                         VStack(alignment: .leading, spacing: 16) {
                         Text(L10n.text("同步到个人工作区")).font(AppTypography.heading)
                         VStack(alignment: .leading, spacing: 12) {
                             Text(L10n.text("钉钉 · 飞书 · Notion。预览内容后保存到已连接账号，音频保留在本机。"))
-                            Button(L10n.text("预览并同步…")) { reviewingSync = true }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(!state.canSyncFinalTranscript)
+                            Button(L10n.text("预览并同步…")) { reviewingSync = true }.buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(!state.canSyncFinalTranscript)
                             if !state.canSyncFinalTranscript { Text(L10n.text("等待转录任务完成后可同步。")).font(AppTypography.secondary).foregroundStyle(.secondary) }
                             if !state.syncStatus.isEmpty { Text(L10n.text(state.syncStatus)).font(AppTypography.secondary) }
                             if let url = state.remoteURL { Link("打开同步结果", destination: url) }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         }.frame(maxWidth: .infinity, minHeight: 122, alignment: .topLeading)
                     }
-                    RecordAICard(quiet: true) {
+                    TalkTuckCard(quiet: true) {
                         VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text(L10n.text("交给本机 Agent")).font(AppTypography.heading)
                             Spacer()
                             Button { showingAgentScope = true } label: { Image(systemName: "info.circle") }
-                                .buttonStyle(.plain).foregroundStyle(RecordAITheme.muted)
+                                .buttonStyle(.plain).foregroundStyle(TalkTuckTheme.muted)
                                 .accessibilityLabel(L10n.text("数据目录与读取范围"))
                                 .popover(isPresented: $showingAgentScope) {
                                     VStack(alignment: .leading, spacing: 16) {
@@ -115,7 +115,7 @@ struct RecordingDeliveryView: View {
                 }
             }
         }.padding(28).frame(width: 720, height: 740).font(AppTypography.body)
-            .buttonStyle(RecordAISecondaryButtonStyle()).tint(RecordAITheme.accent)
+            .buttonStyle(TalkTuckSecondaryButtonStyle()).tint(TalkTuckTheme.accent)
             .sheet(isPresented: $reviewingSync) { SyncReviewView(state: state, close: { reviewingSync = false }) }
     }
     private func copy(_ value: String) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(value, forType: .string) }

@@ -6,7 +6,7 @@ param(
     [ValidateSet('cpu', 'cuda')][string]$Device = 'cpu',
     [string]$Model, [string]$Audio, [string]$Reference,
     [ValidateRange(1, 120)][int]$Seconds = 10,
-    [string]$Output = (Join-Path $PWD ('RecordAI-validation-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))),
+    [string]$Output = (Join-Path $PWD ('TalkTuck-validation-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))),
     [switch]$AllowModelDownload
 )
 $ErrorActionPreference = 'Stop'
@@ -29,16 +29,16 @@ if ($Mode -eq 'Contracts') {
 if ($Mode -in @('Devices', 'Capture')) {
     & $python -m pip install -r (Join-Path $PSScriptRoot 'requirements-capture.txt')
     if ($LASTEXITCODE -ne 0) { throw 'Capture dependencies could not be installed.' }
-    $probeArgs = @((Join-Path $PSScriptRoot 'recordai_probe.py'), 'devices', '--output', (Join-Path $Output 'devices.json'))
+    $probeArgs = @((Join-Path $PSScriptRoot 'talktuck_probe.py'), 'devices', '--output', (Join-Path $Output 'devices.json'))
     if ($Mode -eq 'Capture') {
-        $probeArgs = @((Join-Path $PSScriptRoot 'recordai_probe.py'), 'capture', '--source', $Source, '--seconds', $Seconds, '--output', (Join-Path $Output 'capture.json'))
+        $probeArgs = @((Join-Path $PSScriptRoot 'talktuck_probe.py'), 'capture', '--source', $Source, '--seconds', $Seconds, '--output', (Join-Path $Output 'capture.json'))
     }
 } else {
     if (-not $Model -or -not $Audio) { throw 'Engine validation requires -Model and -Audio.' }
     $requirements = if ($Engine -eq 'qwen') { 'requirements-qwen.txt' } else { 'requirements-whisper.txt' }
     & $python -m pip install -r (Join-Path $PSScriptRoot $requirements)
     if ($LASTEXITCODE -ne 0) { throw 'Engine dependencies could not be installed.' }
-    $probeArgs = @((Join-Path $PSScriptRoot 'recordai_probe.py'), 'transcribe', '--engine', $Engine, '--model', $Model, '--input', $Audio, '--language', $Language, '--device', $Device, '--output', (Join-Path $Output 'engine.json'))
+    $probeArgs = @((Join-Path $PSScriptRoot 'talktuck_probe.py'), 'transcribe', '--engine', $Engine, '--model', $Model, '--input', $Audio, '--language', $Language, '--device', $Device, '--output', (Join-Path $Output 'engine.json'))
     if ($Reference) { $probeArgs += @('--reference', $Reference) }
     if ($AllowModelDownload) { $probeArgs += '--allow-download' }
 }

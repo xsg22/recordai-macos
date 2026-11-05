@@ -10,11 +10,11 @@ private struct AccountCardHeader: View {
             Group {
                 if notion { Text("N").font(.system(size: 25, weight: .medium)) }
                 else { Image(systemName: "doc.text").font(.system(size: 23)) }
-            }.foregroundStyle(RecordAITheme.accent).frame(width: 48, height: 48)
-                .background(RecordAITheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+            }.foregroundStyle(TalkTuckTheme.accent).frame(width: 48, height: 48)
+                .background(TalkTuckTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.text(title)).font(AppTypography.heading)
-                Text(status).font(AppTypography.secondary).foregroundStyle(connected ? Color.green : RecordAITheme.muted)
+                Text(status).font(AppTypography.secondary).foregroundStyle(connected ? Color.green : TalkTuckTheme.muted)
             }
         }
     }
@@ -35,15 +35,15 @@ struct AccountConnectionPanel: View {
         }
     }
     private var compactCard: some View {
-        RecordAICard(quiet: true) {
+        TalkTuckCard(quiet: true) {
             HStack {
                 Text(L10n.text(state.syncDestination.rawValue) + " · " + identity).font(.system(size: 14, weight: .semibold))
                 Spacer()
                 Label(L10n.text(connected ? "已连接" : "尚未连接"), systemImage: connected ? "checkmark" : "link")
-                    .font(AppTypography.secondary).foregroundStyle(connected ? Color.green : RecordAITheme.muted)
+                    .font(AppTypography.secondary).foregroundStyle(connected ? Color.green : TalkTuckTheme.muted)
             }.padding(.vertical, 18)
             Text(L10n.text("发送：录音名称、时间、时长和转录正文。原始音频不会发送。"))
-                .font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted).fixedSize(horizontal: false, vertical: true)
+                .font(AppTypography.secondary).foregroundStyle(TalkTuckTheme.muted).fixedSize(horizontal: false, vertical: true)
                 .padding(.bottom, 10)
         }
     }
@@ -76,13 +76,13 @@ struct DingTalkConnectionCard: View {
                 HStack {
                     if account.busy { ProgressView().controlSize(.small) }
                     Button(L10n.text(account.connected ? "检查连接" : "连接钉钉账号")) { Task { await account.connect() } }
-                        .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(account.busy)
+                        .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(account.busy)
                     if account.connected { Button(L10n.text("解除关联")) { account.disconnect() }.disabled(account.busy) }
                 }
             }
-        }.padding(.vertical, 12).padding(20).frame(maxWidth: .infinity, alignment: .leading).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle())
-            .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(RecordAITheme.border, lineWidth: 1))
+        }.padding(.vertical, 12).padding(20).frame(maxWidth: .infinity, alignment: .leading).font(AppTypography.body).buttonStyle(TalkTuckSecondaryButtonStyle())
+            .background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(TalkTuckTheme.border, lineWidth: 1))
             .task { await account.restore() }
             .alert(L10n.text("钉钉连接"), isPresented: Binding(get: { account.error != nil }, set: { if !$0 { account.error = nil } })) {
                 Button(L10n.text("好的")) { account.error = nil }
@@ -105,7 +105,7 @@ struct FeishuConnectionCard: View {
                 HStack {
                     if account.busy { ProgressView().controlSize(.small) }
                     Button(L10n.text("检查授权状态")) { Task { await account.checkAuthorization() } }
-                        .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(account.busy)
+                        .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(account.busy)
                     if !account.connected {
                         Button(L10n.text(account.hasPendingAuthorization ? "继续上次授权" : "连接飞书账号")) { Task { await account.connect() } }
                             .disabled(account.busy || account.pendingAuthorizationExpired)
@@ -115,9 +115,9 @@ struct FeishuConnectionCard: View {
                     }
                 }
             }
-        }.padding(20).frame(maxWidth: .infinity, alignment: .leading).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle())
-            .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(RecordAITheme.border, lineWidth: 1))
+        }.padding(20).frame(maxWidth: .infinity, alignment: .leading).font(AppTypography.body).buttonStyle(TalkTuckSecondaryButtonStyle())
+            .background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(TalkTuckTheme.border, lineWidth: 1))
             .task { await account.restore() }
             .confirmationDialog(L10n.text("重新发起飞书授权？"), isPresented: $confirmNewAuthorization) {
                 Button(L10n.text("重新申请授权")) { Task { await account.requestNewAuthorization() } }
@@ -151,7 +151,7 @@ struct NotionConnectionCard: View {
                 HStack {
                     if account.busy { ProgressView().controlSize(.small) }
                     Button(L10n.text(account.connected ? "检查 Notion 连接" : "连接 Notion 账号")) { account.startConnection() }
-                        .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(account.busy)
+                        .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(account.busy)
                     if account.canReopenAuthorization { Button(L10n.text("再次打开授权页面")) { account.reopenAuthorizationPage() } }
                     if account.busy { Button(L10n.text("取消等待")) { account.cancelConnection() } }
                     if account.connected {
@@ -159,9 +159,9 @@ struct NotionConnectionCard: View {
                     }
                 }
             }
-        }.padding(.vertical, 12).padding(20).frame(maxWidth: .infinity, alignment: .leading).font(AppTypography.body).buttonStyle(RecordAISecondaryButtonStyle())
-            .background(RecordAITheme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(RecordAITheme.border, lineWidth: 1))
+        }.padding(.vertical, 12).padding(20).frame(maxWidth: .infinity, alignment: .leading).font(AppTypography.body).buttonStyle(TalkTuckSecondaryButtonStyle())
+            .background(TalkTuckTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(TalkTuckTheme.border, lineWidth: 1))
             .task { await account.restore() }
             .alert(L10n.text("Notion 连接"), isPresented: Binding(get: { account.error != nil }, set: { if !$0 { account.error = nil } })) {
                 Button(L10n.text("好的")) { account.error = nil }

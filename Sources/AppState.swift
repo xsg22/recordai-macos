@@ -139,7 +139,7 @@ final class AppState: ObservableObject {
     private var library: MeetingLibrary?
     private var autosave: Task<Void, Never>?
     private var accountSubscriptions = Set<AnyCancellable>()
-    private var recordAIControlTimer: Timer?
+    private var talkTuckControlTimer: Timer?
     private var liveSession: LiveTranscriptionSession?
     private var liveGeneration: UUID?
     private var liveCommitted: [String] = []
@@ -233,8 +233,8 @@ final class AppState: ObservableObject {
             self?.paused = true; self?.recordingIssue = error.localizedDescription
             self?.status = "录音已暂停。请处理提示后重试，或停止并保存。"
         }
-        recordAIControlTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.processRecordAICommands(); self?.publishRecordingStatus() }
+        talkTuckControlTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.processTalkTuckCommands(); self?.publishRecordingStatus() }
         }
         configureLibrarySync()
         publishRecordingStatus()
@@ -258,10 +258,14 @@ final class AppState: ObservableObject {
             _ = self.saveEdits(); audio.disconnect(); sync.disconnect()
             if let access = self.cloudAccount.syncAccess {
                 do {
+                    if let previous = self.cloudAccount.previousServer {
+                        try ServiceNamespaceMigration.run(root:self.storage.appendingPathComponent("Sync"),userId:access.userId,from:previous,to:access.server)
+                    }
                     try sync.connect(userId:access.userId,server:access.server,transport:LibrarySyncHTTP(server:access.server,token:access.token))
                     try audio.connect(userId:access.userId,server:access.server,transport:LibraryAudioHTTP(server:access.server,token:access.token))
+                    try self.cloudAccount.completeServerMigration()
                 }
-                catch { self.error = "本机同步状态无法读取，已暂停同步。" }
+                catch { audio.disconnect(); sync.disconnect(); self.error = "本机同步状态无法读取，已暂停同步。" }
             }
             self.reloadSyncProjection()
         }
@@ -278,25 +282,25 @@ final class AppState: ObservableObject {
     }
 
     private func publishRecordingStatus() {
-        let snapshot = RecordAIRuntimeStatus(recording: recording, paused: paused, preparing: preparing, busy: busy,
+        let snapshot = TalkTuckRuntimeStatus(recording: recording, paused: paused, preparing: preparing, busy: busy,
             recordingID: recordingID ?? selection, status: status, issue: recordingIssue)
         guard let data = try? AgentCodec.encoder().encode(snapshot) else { return }
         let url = agentDataURL.appendingPathComponent("runtime.json")
-        guard (try? RecordAIControlQueue.requireContained(url, root: agentDataURL)) != nil else { return }
+        guard (try? TalkTuckControlQueue.requireContained(url, root: agentDataURL)) != nil else { return }
         try? data.write(to: url, options: .atomic)
     }
 
-    func processRecordAICommands() {
-        for (url, command) in RecordAIControlQueue.pending(root: storage.appendingPathComponent("AgentData")) {
+    func processTalkTuckCommands() {
+        for (url, command) in TalkTuckControlQueue.pending(root: storage.appendingPathComponent("AgentData")) {
             var result = ""
             var accepted = true
             if Date().timeIntervalSince(command.createdAt) > 30 || command.createdAt.timeIntervalSinceNow > 5 {
-                RecordAIControlQueue.finish(url, root: agentDataURL, result: "命令已过期，请查询状态后重新发起。", accepted: false)
+                TalkTuckControlQueue.finish(url, root: agentDataURL, result: "命令已过期，请查询状态后重新发起。", accepted: false)
                 continue
             }
             if preparing || busy || recoveryBusy || quitting || syncing ||
                 (continuousProcessing && !recording && ["start_recording", "retry_transcription"].contains(command.action)) {
-                RecordAIControlQueue.finish(url, root: agentDataURL, result: "当前任务忙碌，请稍后重试。", accepted: false)
+                TalkTuckControlQueue.finish(url, root: agentDataURL, result: "当前任务忙碌，请稍后重试。", accepted: false)
                 continue
             }
             switch command.action {
@@ -315,7 +319,7 @@ final class AppState: ObservableObject {
                 if let current, !recording, current.audioFiles.isEmpty == false { transcribe(); result = "转录重试请求已接受" } else { result = "当前没有可重试音频" }
             default: result = "未识别控制动作"; accepted = false
             }
-            RecordAIControlQueue.finish(url, root: storage.appendingPathComponent("AgentData"), result: result, accepted: accepted)
+            TalkTuckControlQueue.finish(url, root: storage.appendingPathComponent("AgentData"), result: result, accepted: accepted)
         }
     }
 
@@ -1218,7 +1222,7 @@ final class AppState: ObservableObject {
         return true
     }
     var agentInstructions: String {
-        let config: [String: Any] = ["mcpServers": ["recordai": agentSetup.mcpConfiguration]]
+        let config: [String: Any] = ["mcpServers": ["talktuck": agentSetup.mcpConfiguration]]
         let json = (try? JSONSerialization.data(withJSONObject: config, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])).map { String(decoding: $0, as: UTF8.self) } ?? ""
         return AgentDataPublisher.instructions + "\n\nMCP配置示例：\n" + json + "\n\n数据目录：" + agentDataURL.path
     }

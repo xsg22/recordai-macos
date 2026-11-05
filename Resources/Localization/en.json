@@ -397,7 +397,7 @@
   "让你的 AI 助手使用这段录音": "Let your AI assistant use this recording",
   "连接你的 AI 助手": "Connect your AI assistant",
   "稍后": "Later",
-  "复制提示词，发给 Codex、Claude Code、WorkBuddy、豆包等助手。由助手安装 TalkTuck Skill（recordai），并验证转录查询。": "Copy the prompt to Codex, Claude Code, WorkBuddy, Doubao or another local agent. The agent installs the TalkTuck Skill and verifies transcript access.",
+  "复制提示词，发给 Codex、Claude Code、WorkBuddy、豆包等助手。由助手安装 TalkTuck Skill（talktuck），并验证转录查询。": "Copy the prompt to Codex, Claude Code, WorkBuddy, Doubao or another local agent. The agent installs the TalkTuck Skill and verifies transcript access.",
   "再次复制接入提示词": "Copy setup prompt again",
   "已复制，粘贴到你使用的 AI 助手中": "Copied. Paste it into your AI assistant.",
   "需要助手支持本机文件或命令访问。接入时不会自动录音；使用外部助手查询时，相关文字会交给该助手处理。": "Your assistant needs local file or command access. Setup never starts recording. Text you query will be processed by that assistant.",

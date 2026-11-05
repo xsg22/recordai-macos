@@ -24,7 +24,7 @@ let defaultAgentRoot = FileManager.default.urls(for: .applicationSupportDirector
 let ownApplicationURL = AgentSetup.applicationURL(executable: URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath())
 func setup(_ root: URL) -> AgentSetup { AgentSetup(appURL: ownApplicationURL, dataRoot: root) }
 func runtime(_ root: URL) throws -> Any {
-    do { return try jsonValue(RecordAIRuntimeStatus.read(root: root)) }
+    do { return try jsonValue(TalkTuckRuntimeStatus.read(root: root)) }
     catch { return ["available": false, "reason": "App 未运行、状态尚未就绪或状态文件不可读取。"] as [String: Any] }
 }
 func launchIfRequested(_ launch: Bool, action: String, root: URL) throws {
@@ -38,7 +38,7 @@ func launchIfRequested(_ launch: Bool, action: String, root: URL) throws {
     // Keep stdio MCP's stdout exclusively for JSON-RPC.
     task.standardOutput = FileHandle.nullDevice; task.standardError = FileHandle.nullDevice
     try task.run(); task.waitUntilExit()
-    guard task.terminationStatus == 0 else { throw CLIError.message("未能打开 RecordAI，请手动打开后重试。") }
+    guard task.terminationStatus == 0 else { throw CLIError.message("未能打开 TalkTuck，请手动打开后重试。") }
 }
 let toolNames = ["get_agent_setup", "list_recordings", "get_recording", "get_transcript", "get_audio_files", "get_changes", "get_recording_status", "get_command_result", "control_recording"]
 func mcp(_ store: AgentReadStore) {
@@ -55,14 +55,14 @@ func mcp(_ store: AgentReadStore) {
             case "initialize":
                 let supported = ["2024-11-05", "2025-03-26", "2025-06-18"]
                 let requested = params["protocolVersion"] as? String ?? ""
-                result = ["protocolVersion": supported.contains(requested) ? requested : "2025-03-26", "capabilities": ["tools": [:], "resources": [:]], "serverInfo": ["name": "recordai", "version": setup(store.root).version]]
+                result = ["protocolVersion": supported.contains(requested) ? requested : "2025-03-26", "capabilities": ["tools": [:], "resources": [:]], "serverInfo": ["name": "talktuck", "version": setup(store.root).version]]
             case "ping": result = [:] as [String: String]
             case "tools/list":
                 result = ["tools": toolNames.map { name -> [String: Any] in
                     let noArguments = ["get_agent_setup", "get_recording_status"].contains(name)
-                    let properties: [String: Any] = name == "list_recordings" ? ["query": ["type": "string"], "groupId": ["type": "string", "format": "uuid"], "ungrouped": ["type": "boolean"]] : name == "get_changes" ? ["since": ["type": "integer", "minimum": 0]] : noArguments ? [:] : name == "get_command_result" ? ["commandId": ["type": "string", "format": "uuid"]] : name == "control_recording" ? ["action": ["type": "string", "enum": RecordAIControlQueue.actions], "launch": ["type": "boolean", "default": false]] : ["id": ["type": "string", "format": "uuid"], "includePreview": ["type": "boolean", "default": false]]
+                    let properties: [String: Any] = name == "list_recordings" ? ["query": ["type": "string"], "groupId": ["type": "string", "format": "uuid"], "ungrouped": ["type": "boolean"]] : name == "get_changes" ? ["since": ["type": "integer", "minimum": 0]] : noArguments ? [:] : name == "get_command_result" ? ["commandId": ["type": "string", "format": "uuid"]] : name == "control_recording" ? ["action": ["type": "string", "enum": TalkTuckControlQueue.actions], "launch": ["type": "boolean", "default": false]] : ["id": ["type": "string", "format": "uuid"], "includePreview": ["type": "boolean", "default": false]]
                     let required: [String] = name == "list_recordings" ? [] : name == "get_changes" ? ["since"] : noArguments ? [] : name == "get_command_result" ? ["commandId"] : name == "control_recording" ? ["action"] : ["id"]
-                    let description = name == "get_agent_setup" ? "只读获取 RecordAI Skill 完整文件、当前连接路径和安装验证说明。不安装、不录音。" : name == "get_recording_status" ? "读取实际采集状态；available=false时不能宣称录音状态已确认。" : name == "get_command_result" ? "读取控制命令回执；accepted仅代表请求已接受，录音状态须另查。" : name == "control_recording" ? "明确要求时控制录音；可用launch=true冷启动。排队成功不是录音成功。" : name == "get_changes" ? "只读变更游标；resyncRequired时重新list" : "只读本机录音与转录。默认不返回未定稿预览。"
+                    let description = name == "get_agent_setup" ? "只读获取 TalkTuck Skill 完整文件、当前连接路径和安装验证说明。不安装、不录音。" : name == "get_recording_status" ? "读取实际采集状态；available=false时不能宣称录音状态已确认。" : name == "get_command_result" ? "读取控制命令回执；accepted仅代表请求已接受，录音状态须另查。" : name == "control_recording" ? "明确要求时控制录音；可用launch=true冷启动。排队成功不是录音成功。" : name == "get_changes" ? "只读变更游标；resyncRequired时重新list" : "只读本机录音与转录。默认不返回未定稿预览。"
                     return ["name": name, "description": description, "inputSchema": ["type": "object", "properties": properties, "required": required, "additionalProperties": false], "annotations": ["readOnlyHint": name != "control_recording", "destructiveHint": false, "idempotentHint": name != "control_recording", "openWorldHint": false]]
                 }]
             case "tools/call":
@@ -74,7 +74,7 @@ func mcp(_ store: AgentReadStore) {
                     switch name {
                     case "get_agent_setup": value = try setup(store.root).descriptor()
                     case "get_recording_status": value = try runtime(store.root)
-                    case "get_command_result": value = try JSONSerialization.jsonObject(with: RecordAIControlQueue.result(uuid(args["commandId"] as? String), root: store.root))
+                    case "get_command_result": value = try JSONSerialization.jsonObject(with: TalkTuckControlQueue.result(uuid(args["commandId"] as? String), root: store.root))
                     case "list_recordings":
                         guard Set(args.keys).isSubset(of: ["query", "groupId", "ungrouped"]),
                               args["query"] == nil || args["query"] is String,
@@ -84,10 +84,10 @@ func mcp(_ store: AgentReadStore) {
                         value = try summaries(store, query: args["query"] as? String ?? "", groupID: group, ungrouped: args["ungrouped"] as? Bool ?? false)
                     case "control_recording":
                         guard let action = args["action"] as? String else { throw CLIError.message("control_recording需要action") }
-                        guard RecordAIControlQueue.actions.contains(action) else { throw CLIError.message("不支持的录音控制动作。") }
+                        guard TalkTuckControlQueue.actions.contains(action) else { throw CLIError.message("不支持的录音控制动作。") }
                         if let launch = args["launch"], !(launch is Bool) { throw CLIError.message("launch必须是布尔值。") }
                         try launchIfRequested(args["launch"] as? Bool ?? false, action: action, root: store.root)
-                        let command = try RecordAIControlQueue.enqueue(action: action, root: store.root)
+                        let command = try TalkTuckControlQueue.enqueue(action: action, root: store.root)
                         value = ["accepted": true, "commandId": command.id.uuidString, "action": action]
                     case "get_changes":
                         guard let since = args["since"] as? Int, since >= 0 else { throw CLIError.message("since必须是非负整数。") }
@@ -105,15 +105,15 @@ func mcp(_ store: AgentReadStore) {
                     result = ["content": [["type": "text", "text": String(decoding: data, as: UTF8.self)]], "isError": false]
                 } catch { result = ["content": [["type": "text", "text": error.localizedDescription]], "isError": true] }
             case "resources/list":
-                result = ["resources": [["uri": "recordai://setup", "name": "RecordAI 安装说明与 Skill", "mimeType": "application/json"]] + (try store.list().map { ["uri": "recordai://recordings/\($0.id.uuidString)", "name": $0.title, "mimeType": "application/json"] })]
+                result = ["resources": [["uri": "talktuck://setup", "name": "TalkTuck 安装说明与 Skill", "mimeType": "application/json"]] + (try store.list().map { ["uri": "talktuck://recordings/\($0.id.uuidString)", "name": $0.title, "mimeType": "application/json"] })]
             case "resources/read":
                 let uri = params["uri"] as? String ?? ""
-                if uri == "recordai://setup" {
+                if uri == "talktuck://setup" {
                     let data = try JSONSerialization.data(withJSONObject: setup(store.root).descriptor(), options: [.sortedKeys, .withoutEscapingSlashes])
                     result = ["contents": [["uri": uri, "mimeType": "application/json", "text": String(decoding: data, as: UTF8.self)]]]
                     break
                 }
-                let prefix = "recordai://recordings/"
+                let prefix = "talktuck://recordings/"
                 guard uri.hasPrefix(prefix) else { throw CLIError.message("未知录音资源。") }
                 let record = try store.read(uuid(String(uri.dropFirst(prefix.count))))
                 result = ["contents": [["uri": uri, "mimeType": "application/json", "text": String(decoding: try AgentCodec.encoder().encode(record), as: UTF8.self)]]]
@@ -139,7 +139,7 @@ do {
         if arguments.contains("--json") { try output(setup(root).descriptor()) }
         else { print(setup(root).guide) }
     case "status": try output(runtime(root))
-    case "result": try output(JSONSerialization.jsonObject(with: RecordAIControlQueue.result(uuid(arguments.count > 1 ? arguments[1] : nil), root: root)))
+    case "result": try output(JSONSerialization.jsonObject(with: TalkTuckControlQueue.result(uuid(arguments.count > 1 ? arguments[1] : nil), root: root)))
     case "list":
         var query = "", group: UUID?, ungrouped = false
         var index = 1
@@ -154,9 +154,9 @@ do {
         try output(summaries(store, query: query, groupID: group, ungrouped: ungrouped))
     case "control":
         guard arguments.count > 1 else { throw CLIError.message("control需要动作名") }
-        guard RecordAIControlQueue.actions.contains(arguments[1]) else { throw CLIError.message("不支持的录音控制动作。") }
+        guard TalkTuckControlQueue.actions.contains(arguments[1]) else { throw CLIError.message("不支持的录音控制动作。") }
         try launchIfRequested(arguments.contains("--launch"), action: arguments[1], root: root)
-        let command = try RecordAIControlQueue.enqueue(action: arguments[1], root: root)
+        let command = try TalkTuckControlQueue.enqueue(action: arguments[1], root: root)
         try output(["accepted": true, "commandId": command.id.uuidString, "action": command.action])
     case "read", "audio":
         let record = try store.read(uuid(arguments.count > 1 ? arguments[1] : nil), includePreview: arguments.contains("--include-preview"))
@@ -174,7 +174,7 @@ do {
         guard let index = arguments.firstIndex(of: "--since"), arguments.indices.contains(index + 1), let cursor = Int(arguments[index + 1]), cursor >= 0 else { throw CLIError.message("changes需要--since非负整数。") }
         try output(jsonValue(store.changes(since: cursor)))
     case "mcp": mcp(store)
-    case "help", "--help": print("recordai setup [--json] | list | read UUID [--format json|md|txt|srt] [--include-preview] | audio UUID | changes --since N | status | result COMMAND_UUID | control ACTION [--launch] | mcp\n可选 --root 指定AgentData目录。--launch仅用于start_recording和本App默认资料目录。")
+    case "help", "--help": print("talktuck setup [--json] | list | read UUID [--format json|md|txt|srt] [--include-preview] | audio UUID | changes --since N | status | result COMMAND_UUID | control ACTION [--launch] | mcp\n可选 --root 指定AgentData目录。--launch仅用于start_recording和本App默认资料目录。")
     default: throw CLIError.message("未知命令，请使用--help。")
     }
 } catch { fputs("读取失败：\(error.localizedDescription)\n", stderr); exit(1) }

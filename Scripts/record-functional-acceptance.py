@@ -60,7 +60,7 @@ assert 'button 开始转录' in (evidence/'direct-start.ax.txt').read_text()
 assert '正在本地识别' in (evidence/'processing.ax.txt').read_text()
 assert '让你的 AI 助手使用这段录音' in (evidence/'02-transcribed.ax.txt').read_text()
 assert '产品讨论' in (evidence/'organized.ax.txt').read_text()
-base = [str(app/'Contents/MacOS/recordai'),'--root',str(library/'AgentData')]
+base = [str(app/'Contents/MacOS/talktuck'),'--root',str(library/'AgentData')]
 run = lambda *arguments: json.loads(subprocess.check_output(base+list(arguments),text=True))
 setup, current, status = run('setup','--json'), run('read',after['id']), run('status')
 assert setup['appVersion'] == version and current['finalText'] == after['text']
@@ -115,7 +115,7 @@ write(evidence/'ui-contracts.json',dict(recorded_at=now,sourceDigest=digest,exit
            'FeishuAuthorizationRecoverySmoke','OptionalModelSmoke','OptionalModelFallbackSmoke','IntelligenceSmoke'],
     scope='Isolated contract tests; no actual OAuth or remote publication.'))
 write(evidence/'candidate-package.json',dict(recorded_at=now,version=version,sourceDigest=digest,script_exit_code=0,
-    main_binary_sha256=sha(app/'Contents/MacOS/RecordAIApp'),cli_sha256=sha(app/'Contents/MacOS/recordai'),
+    main_binary_sha256=sha(app/'Contents/MacOS/TalkTuckApp'),cli_sha256=sha(app/'Contents/MacOS/talktuck'),
     embedded_asr_sha256=sha(app/'Contents/Resources/Engine/ASR/qwen-asr'),
     artifacts={path.name:sha(path) for path in (ROOT/'dist').glob(f'TalkTuck-{version}-arm64.*') if path.suffix in ['.dmg','.pkg']}))
 binding_path = ROOT/'Docs/design-v2/validation/functional-release-binding.json'

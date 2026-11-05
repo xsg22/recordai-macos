@@ -30,7 +30,7 @@ AI识别可能出现遗漏或错误，请结合原始录音核对，不保证消
 转写统一时间线，活动句与已确认句分开；整段录音停止后定稿，持续录音逐片段定稿和分人。支持发言人改名、合并/恢复独立标签、段落纠错与点击时间回放。
 发言人分段不保证真实身份或全部正确，多人抢话/噪声时请结合原录音核对。
 
-0.9.0：录音库、转录画布与交付入口。支持TXT/Markdown/JSON/原始SRT及全部音频导出，个人平台同步前预览；本机Agent可读AgentData目录，或使用App内Contents/MacOS/recordai的只读CLI/MCP。详细接入说明可从设置复制。
+0.9.0：录音库、转录画布与交付入口。支持TXT/Markdown/JSON/原始SRT及全部音频导出，个人平台同步前预览；本机Agent可读AgentData目录，或使用App内Contents/MacOS/talktuck的只读CLI/MCP。详细接入说明可从设置复制。
 
 0.9.1：退出时可选择保存录音并退出，或取消转录并退出。音频保存失败不会自动退出。
 
@@ -41,7 +41,7 @@ AI识别可能出现遗漏或错误，请结合原始录音核对，不保证消
 0.15.1：默认实时转录，保留后台实时和仅录音后转录选项。窗口隐藏/最小化只减少界面更新，不停止实时识别；录音可从菜单栏暂停或停止。关闭录音窗口继续运行，退出应用仍需正常保存/取消任务。
 
 
-RecordAI 0.15.1：本机 Agent 可通过 Contents/MacOS/recordai control ACTION --root PATH 控制录音，也可使用 MCP 的 control_recording。控制命令异步执行，结果写入 AgentData/Control/results。
+TalkTuck 0.15.1：本机 Agent 可通过 Contents/MacOS/talktuck control ACTION --root PATH 控制录音，也可使用 MCP 的 control_recording。控制命令异步执行，结果写入 AgentData/Control/results。
 
 0.15.1：安装包移除全部语音模型权重。首次使用一键下载，显示进度，可取消/重试；逐文件大小和 SHA256 校验，完成后才启用。已验证文件缓存保留，未完成的当前文件重试时重新下载。
 

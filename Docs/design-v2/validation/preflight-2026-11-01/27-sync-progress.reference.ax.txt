@@ -1,7 +1,0 @@
-Browser tab: 2, Title: "RecordAI · 完整界面设计册", URL: "http://127.0.0.1:8765/?canvas=1&v=2.0.3#27-sync-progress".
-The following is a diff from the previous accessibility tree with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
-~1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#27-sync-progress
-~		63 text ⓘ　正在保存文档 · 请勿重复提交。
-~		64 button 连接账号
-+		65 button 同步中…
-The focused UI element is 1 AXWebArea RecordAI · 完整界面设计册, URL: 127.0.0.1:8765/?canvas=1&v=2.0.3#27-sync-progress

@@ -1,5 +1,0 @@
-{
-  "meetingAndAgentBytesUnchanged": true,
-  "filesChecked": 5,
-  "excluded": "runtime.json changes as the running app updates its heartbeat"
-}

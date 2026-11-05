@@ -3,10 +3,10 @@ set -euo pipefail
 cd "${0:A:h:h}"
 
 releaseVersion="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-appBundle="${RECORD_AI_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/TalkTuck.app}"
+appBundle="${TALKTUCK_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/TalkTuck.app}"
 imagePath="$PWD/dist/TalkTuck-${releaseVersion}-arm64.dmg"
 packagePath="$PWD/dist/TalkTuck-${releaseVersion}-arm64.pkg"
-verificationRoot="$(mktemp -d "${TMPDIR:-/tmp}/recordai-package-verify.XXXXXX")"
+verificationRoot="$(mktemp -d "${TMPDIR:-/tmp}/talktuck-package-verify.XXXXXX")"
 mountPath="$verificationRoot/image"
 mountAttached=0
 cleanup() {
@@ -24,13 +24,13 @@ verify_app() {
     local bundle="$1"
     codesign --verify --deep --strict "$bundle"
     [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$bundle/Contents/Info.plist")" == "$releaseVersion" ]]
-    [[ "$(lipo -archs "$bundle/Contents/MacOS/RecordAIApp")" == arm64 ]]
-    [[ -x "$bundle/Contents/MacOS/recordai" ]]
+    [[ "$(lipo -archs "$bundle/Contents/MacOS/TalkTuckApp")" == arm64 ]]
+    [[ -x "$bundle/Contents/MacOS/talktuck" ]]
     [[ -f "$bundle/Contents/Resources/AppIcon.icns" ]]
     cmp Resources/AppIcon.png "$bundle/Contents/Resources/AppIcon.png"
-    [[ -f "$bundle/Contents/Resources/AgentSkill/recordai/SKILL.md" ]]
-    cmp Resources/AgentSkill/recordai/SKILL.md "$bundle/Contents/Resources/AgentSkill/recordai/SKILL.md"
-    "$bundle/Contents/MacOS/recordai" setup --json > "$verificationRoot/agent-setup.json"
+    [[ -f "$bundle/Contents/Resources/AgentSkill/talktuck/SKILL.md" ]]
+    cmp Resources/AgentSkill/talktuck/SKILL.md "$bundle/Contents/Resources/AgentSkill/talktuck/SKILL.md"
+    "$bundle/Contents/MacOS/talktuck" setup --json > "$verificationRoot/agent-setup.json"
     python3 - "$verificationRoot/agent-setup.json" "$releaseVersion" <<'PY'
 import json, sys
 value = json.load(open(sys.argv[1]))
@@ -52,12 +52,12 @@ mkdir "$mountPath"
 hdiutil attach -readonly -nobrowse -mountpoint "$mountPath" "$imagePath" >/dev/null
 mountAttached=1
 verify_app "$mountPath/TalkTuck.app"
-cmp "$appBundle/Contents/MacOS/RecordAIApp" "$mountPath/TalkTuck.app/Contents/MacOS/RecordAIApp"
-cmp "$appBundle/Contents/MacOS/recordai" "$mountPath/TalkTuck.app/Contents/MacOS/recordai"
+cmp "$appBundle/Contents/MacOS/TalkTuckApp" "$mountPath/TalkTuck.app/Contents/MacOS/TalkTuckApp"
+cmp "$appBundle/Contents/MacOS/talktuck" "$mountPath/TalkTuck.app/Contents/MacOS/talktuck"
 pkgutil --expand-full "$packagePath" "$verificationRoot/package"
 packagedApp="$verificationRoot/package/Payload/TalkTuck.app"
 verify_app "$packagedApp"
-cmp "$appBundle/Contents/MacOS/RecordAIApp" "$packagedApp/Contents/MacOS/RecordAIApp"
-cmp "$appBundle/Contents/MacOS/recordai" "$packagedApp/Contents/MacOS/recordai"
+cmp "$appBundle/Contents/MacOS/TalkTuckApp" "$packagedApp/Contents/MacOS/TalkTuckApp"
+cmp "$appBundle/Contents/MacOS/talktuck" "$packagedApp/Contents/MacOS/talktuck"
 cmp "$appBundle/Contents/Resources/Engine/ASR/qwen-asr" "$packagedApp/Contents/Resources/Engine/ASR/qwen-asr"
 print "PASS: $releaseVersion 的签名、架构、内置 Python 3.12 与语音引擎、DMG/PKG 内容和校验值。"

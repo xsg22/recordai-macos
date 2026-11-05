@@ -12,14 +12,15 @@ mkdir -p .build
 python3 Scripts/check-localization.py
 zsh Scripts/test-localization.zsh
 python3 Tests/LanguagePolicySmoke.py
-export RECORD_AI_UI_LANGUAGE=zh-Hans
+export TALKTUCK_UI_LANGUAGE=zh-Hans
 python3 Scripts/test-recording-entry.py
 python3 Scripts/test-ui-contracts.py
 python3 Scripts/test-agent-setup.py
+zsh Scripts/test-service-namespace.zsh
 zsh Scripts/test-library-management.zsh
 if [[ ! -x .vendor/dws/dws || ! -x .vendor/lark-cli/lark-cli ]]; then zsh Scripts/prepare-account-components.zsh; fi
 releaseVersion="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-export RECORD_AI_BUILD_APP_PATH="${RECORD_AI_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/TalkTuck.app}"
+export TALKTUCK_BUILD_APP_PATH="${TALKTUCK_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/TalkTuck.app}"
 COHEAR_STAGE_ONLY=1 zsh Scripts/build.zsh
 zsh Scripts/verify-release.zsh
 if (( candidate )); then print '仅完成本地候选包校验，不触发发布。功能验证版须另走主功能门禁和 functional 标签流程。'

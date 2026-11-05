@@ -8,6 +8,6 @@ struct MeetingInspector: View {
             RecordingOrganizationPanel(state: state)
                 .font(AppTypography.secondary).padding(.leading, 24).padding(.vertical, 4)
         }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .overlay(alignment: .leading) { Rectangle().fill(RecordAITheme.border).frame(width: 1) }
+            .overlay(alignment: .leading) { Rectangle().fill(TalkTuckTheme.border).frame(width: 1) }
     }
 }

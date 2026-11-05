@@ -5,7 +5,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>TalkTuck</string>
 	<key>CFBundleExecutable</key>
-	<string>RecordAIApp</string>
+	<string>TalkTuckApp</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.17.2</string>
+	<string>0.17.3</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -23,12 +23,12 @@
 			<string>com.xsg.talktuck.oauth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>recordai</string>
+				<string>talktuck</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>44</string>
+	<string>45</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>NSAudioCaptureUsageDescription</key>

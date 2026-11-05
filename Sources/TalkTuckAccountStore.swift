@@ -10,6 +10,7 @@ struct TalkTuckSession: Codable {
     var expiresAt: Date
     var displayName: String
     var librarySyncAvailable: Bool? = nil
+    var previousServer: String? = nil
 }
 
 @MainActor protocol TalkTuckSessionStorage {
@@ -77,12 +78,14 @@ enum TalkTuckAccountError: Error, Equatable {
     private var generation = UUID()
     private var didRestore = false
     private var active: TalkTuckSession?
+    private(set) var previousServer: URL?
+    private var serverMigrationVerified = false
     private let deviceId: String
     private struct Login: Decodable { let token: String; let expiresIn: Int; let userId: UUID; let loginSubject: String; let username: String? }
     private struct EmptyResponse: Decodable {}
     private struct Identity: Decodable { let userId: UUID; let schemaVersion: Int; let librarySync: Bool; let audioSync: Bool }
 
-    init(baseURL: URL = URL(string: "https://xueshengguo.com/recordai")!, session: URLSession? = nil,
+    init(baseURL: URL = URL(string: "https://xueshengguo.com/talktuck")!, session: URLSession? = nil,
          credentials: TalkTuckSessionStorage? = nil, deviceId: UUID? = nil) {
         self.baseURL = baseURL
         if let deviceId { self.deviceId = deviceId.uuidString.lowercased() }
@@ -102,7 +105,16 @@ enum TalkTuckAccountError: Error, Equatable {
         let epoch = generation
         busy = true; defer { if generation == epoch { busy = false } }
         do {
-            guard let saved = try credentials.read(), saved.server == baseURL.absoluteString else { return }
+            guard var saved = try credentials.read(), sameServiceOrigin(saved.server) else { return }
+            serverMigrationVerified = false
+            if saved.server != baseURL.absoluteString {
+                saved.previousServer = saved.server
+                saved.server = baseURL.absoluteString
+            }
+            if let previous = saved.previousServer {
+                guard sameServiceOrigin(previous) else { return }
+                previousServer = URL(string: previous)
+            } else { previousServer = nil }
             guard saved.expiresAt > Date() else { throw TalkTuckAccountError.unauthorized }
             if saved.librarySyncAvailable == true {
                 active = saved; userId = saved.userId; displayName = saved.displayName; librarySyncAvailable = true; onSessionChange?()
@@ -110,6 +122,9 @@ enum TalkTuckAccountError: Error, Equatable {
             let identity: Identity = try await request("v2/me", token: saved.token)
             guard generation == epoch else { return }
             guard identity.schemaVersion == 1, identity.userId == saved.userId else { throw TalkTuckAccountError.invalidReply }
+            saved.librarySyncAvailable = identity.librarySync
+            try credentials.write(saved)
+            serverMigrationVerified = true
             active = saved; userId = saved.userId; displayName = saved.displayName; message = nil; librarySyncAvailable = identity.librarySync; onSessionChange?()
         } catch {
             guard generation == epoch else { return }
@@ -120,6 +135,20 @@ enum TalkTuckAccountError: Error, Equatable {
                 message = Self.safeMessage(error)
             }
         }
+    }
+
+    private func sameServiceOrigin(_ value: String) -> Bool {
+        guard let url = URL(string: value), url.user == nil, url.password == nil,
+              url.query == nil, url.fragment == nil else { return false }
+        let port: (URL) -> Int? = { $0.port ?? ($0.scheme == "https" ? 443 : $0.scheme == "http" ? 80 : nil) }
+        return url.scheme == baseURL.scheme && url.host?.lowercased() == baseURL.host?.lowercased() && port(url) == port(baseURL)
+    }
+
+    func completeServerMigration() throws {
+        guard serverMigrationVerified, var saved = active, previousServer != nil else { return }
+        saved.previousServer = nil
+        try credentials.write(saved)
+        active = saved; previousServer = nil
     }
 
     func sendSMS(phone: String) async -> Bool {
@@ -156,6 +185,7 @@ enum TalkTuckAccountError: Error, Equatable {
             let saved = TalkTuckSession(server: baseURL.absoluteString, token: result.token, userId: identity.userId, loginSubject: result.loginSubject,
                 expiresAt: Date().addingTimeInterval(Double(result.expiresIn)), displayName: result.username ?? "", librarySyncAvailable: identity.librarySync)
             try credentials.write(saved)
+            previousServer = nil; serverMigrationVerified = true
             active = saved; userId = saved.userId; displayName = saved.displayName; librarySyncAvailable = identity.librarySync; onSessionChange?()
             return true
         } catch { if generation == epoch { message = Self.safeMessage(error) }; return false }
@@ -165,6 +195,7 @@ enum TalkTuckAccountError: Error, Equatable {
         generation = UUID(); busy = false
         do {
             try credentials.write(nil)
+            previousServer = nil; serverMigrationVerified = false
             active = nil; userId = nil; displayName = ""; message = nil; librarySyncAvailable = false; onSessionChange?()
         } catch { message = Self.safeMessage(error) }
     }

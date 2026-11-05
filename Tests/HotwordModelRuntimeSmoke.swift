@@ -12,17 +12,17 @@ enum ASRResources {
     @MainActor static func main() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at:root) }
-        let source = "今天薛圣国讨论了 RecordAI 项目，TalkTuck 是 Mac 客户端。接下来会检查 Qwen3-ASR 的热词。"
+        let source = "今天讨论了 Aurora 项目，TalkTuck 是 Mac 客户端。接下来会检查 Qwen3-ASR 的热词。"
         let store = PersonalHotwords(root:root)
         guard HotwordLocalRuntime.configurationAvailable() else { fatalError("model or engine missing") }
         store.extract(from:source)
         for _ in 0..<600 where store.extracting { try await Task.sleep(nanoseconds:100_000_000) }
         guard !store.extracting else { fatalError("model timed out") }
         let words = Set(store.candidates.map(\.word))
-        precondition(words.contains("RecordAI") && words.contains("TalkTuck"), "extraction missed known terms: \(store.status)")
+        precondition(words.contains("Aurora") && words.contains("TalkTuck"), "extraction missed known terms: \(store.status)")
         precondition(words.allSatisfy { source.contains($0) } && store.words.isEmpty)
-        store.accept(store.candidates.first { $0.word == "RecordAI" }!)
-        precondition(store.words == ["RecordAI"])
+        store.accept(store.candidates.first { $0.word == "Aurora" }!)
+        precondition(store.words == ["Aurora"])
         print("PASS: real local model extracted candidates offline; confirmed word persisted")
     }
 }

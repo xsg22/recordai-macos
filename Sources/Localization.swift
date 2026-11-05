@@ -13,11 +13,11 @@ enum InterfaceLanguage: String, CaseIterable, Identifiable {
 final class AppLanguage: ObservableObject {
     static let shared = AppLanguage()
     @Published var selection: InterfaceLanguage { didSet { defaults.set(selection.rawValue, forKey: Self.preferenceKey) } }
-    static let preferenceKey = "RecordAI.interfaceLanguage"
+    static let preferenceKey = "TalkTuck.interfaceLanguage"
     private let defaults: UserDefaults
     init(defaults: UserDefaults = .standard, initial: InterfaceLanguage? = nil) {
         self.defaults = defaults
-        selection = initial ?? ProcessInfo.processInfo.environment["RECORD_AI_UI_LANGUAGE"].flatMap(InterfaceLanguage.init(rawValue:))
+        selection = initial ?? ProcessInfo.processInfo.environment["TALKTUCK_UI_LANGUAGE"].flatMap(InterfaceLanguage.init(rawValue:))
             ?? defaults.string(forKey: Self.preferenceKey).flatMap(InterfaceLanguage.init(rawValue:)) ?? .system
     }
     var effective: InterfaceLanguage {

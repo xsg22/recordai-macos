@@ -8,7 +8,7 @@ python3 - <<'PY'
 from pathlib import Path
 import plistlib
 Path('.build/LocalizationAppTypes.swift').write_text(Path('Sources/CoHearTranscribeApp.swift').read_text().replace('@main\n', ''))
-Path('.build/LocalizationTests.app/Contents/Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier='com.recordai.tests.localization', CFBundleExecutable='test')))
+Path('.build/LocalizationTests.app/Contents/Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier='com.talktuck.tests.localization', CFBundleExecutable='test')))
 PY
 sources=(Sources/*.swift)
 sources=(${sources:#Sources/CoHearTranscribeApp.swift})

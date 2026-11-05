@@ -15,13 +15,13 @@ from unittest.mock import patch
 import wave
 
 ROOT = Path(__file__).resolve().parents[2]
-spec = importlib.util.spec_from_file_location('recordai_probe', ROOT / 'Platforms/Windows/recordai_probe.py')
+spec = importlib.util.spec_from_file_location('talktuck_probe', ROOT / 'Platforms/Windows/talktuck_probe.py')
 probe = importlib.util.module_from_spec(spec); spec.loader.exec_module(probe)
 
 
 class ProbeTests(unittest.TestCase):
     def setUp(self):
-        self.scratch = tempfile.TemporaryDirectory(prefix='RecordAI validation 中文 ')
+        self.scratch = tempfile.TemporaryDirectory(prefix='TalkTuck validation 中文 ')
         self.addCleanup(self.scratch.cleanup)
         self.root = Path(self.scratch.name)
 
@@ -51,7 +51,7 @@ class ProbeTests(unittest.TestCase):
         self.assertEqual(report['status'], 'unavailable'); self.assertFalse(report['hardwareCaptureValidated'])
 
     def test_quality_is_measured_not_assumed(self):
-        self.assertEqual(probe.quality("Don't change RecordAI!", "don't change recordai.")['wordErrorRate'], 0)
+        self.assertEqual(probe.quality("Don't change TalkTuck!", "don't change talktuck.")['wordErrorRate'], 0)
         self.assertEqual(probe.quality('离线转录', '离线记录')['characterErrorRate'], .25)
         self.assertIsNone(probe.quality('', '')['wordErrorRate'])
 
@@ -94,7 +94,7 @@ class ProbeTests(unittest.TestCase):
             def __init__(self, path, **options): calls.append(options)
             def transcribe(self, source, **options):
                 calls.append(options)
-                row = types.SimpleNamespace(start=0., end=.1, text='Hello, RecordAI.', words=[])
+                row = types.SimpleNamespace(start=0., end=.1, text='Hello, TalkTuck.', words=[])
                 return iter([row]), types.SimpleNamespace(language='en')
         args = argparse.Namespace(engine='faster-whisper', device='cpu', model=str(model), input=audio,
                                   language='en', allow_download=False, reference=None)

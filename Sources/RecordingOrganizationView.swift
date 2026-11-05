@@ -33,7 +33,7 @@ struct CollectionManager: View {
     private var rows: [RecordingCollection] { state.organization.groups }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            RecordAIPageHeader(title: L10n.text("管理分组"), subtitle: L10n.text("创建后，右键录音选择“移动到分组”。移除分组不会删除录音。")) { Button(L10n.text("完成")) { dismiss() } }
+            TalkTuckPageHeader(title: L10n.text("管理分组"), subtitle: L10n.text("创建后，右键录音选择“移动到分组”。移除分组不会删除录音。")) { Button(L10n.text("完成")) { dismiss() } }
             HStack {
                 TextField(L10n.text(editingID == nil ? "新建名称（最多 40 字）" : "修改名称"), text: $name).textFieldStyle(.roundedBorder).onSubmit(save)
                 Button(L10n.text(editingID == nil ? "创建" : "保存名称"), action: save).disabled(state.locked || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -49,11 +49,11 @@ struct CollectionManager: View {
                             Text(L10n.text("\(state.history.filter { $0.groupID == row.id }.count) 条录音")).foregroundStyle(.secondary)
                             Button(L10n.text("重命名")) { editingID = row.id; name = row.name }
                             Button(L10n.text("移除")) { removing = row }
-                        }.padding(12).background(RecordAITheme.tabs, in: RoundedRectangle(cornerRadius: 8))
+                        }.padding(12).background(TalkTuckTheme.tabs, in: RoundedRectangle(cornerRadius: 8))
                     }
                 }
             }
-        }.padding(28).frame(width: 620, height: 480).buttonStyle(RecordAISecondaryButtonStyle())
+        }.padding(28).frame(width: 620, height: 480).buttonStyle(TalkTuckSecondaryButtonStyle())
             .alert(L10n.text("移除这个分组？"), isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {
                 Button(L10n.text("取消"), role: .cancel) { removing = nil }
                 Button(L10n.text("移除分类")) {

@@ -17,10 +17,10 @@ sources=(Sources/*.swift)
 sources=(${sources:#Sources/CoHearTranscribeApp.swift})
 xcrun swiftc -swift-version 5 -parse-as-library -target arm64-apple-macosx14.0 \
     $sources "$runDir/AppTypes.swift" "$runDir/Regressions.swift" -o "$runDir/organization-smoke"
-RECORD_AI_TEST_AGENT_OUT="$runDir/agent-fixture" "$runDir/organization-smoke" "$@" | tee "$runDir/domain.log"
+TALKTUCK_TEST_AGENT_OUT="$runDir/agent-fixture" "$runDir/organization-smoke" "$@" | tee "$runDir/domain.log"
 xcrun swiftc -swift-version 5 -target arm64-apple-macosx14.0 \
-    Sources/AgentSchema.swift Sources/RecordAIControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$runDir/recordai"
-python3 Tests/OrganizationCLIIntegration.py "$runDir/recordai" "$runDir/agent-fixture" | tee "$runDir/agent.log"
+    Sources/AgentSchema.swift Sources/TalkTuckControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o "$runDir/talktuck"
+python3 Tests/OrganizationCLIIntegration.py "$runDir/talktuck" "$runDir/agent-fixture" | tee "$runDir/agent.log"
 python3 Tests/SpeakerAttributionSmoke.py | tee "$runDir/fragment.log"
 python3 -m unittest discover -s Tests/reporting -v > "$runDir/report.log" 2>&1
 print "PASS: 资料管理与 Agent 验证记录 $runDir"

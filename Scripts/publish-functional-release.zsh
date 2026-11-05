@@ -15,7 +15,7 @@ releaseHead="$(git rev-parse HEAD)"
 if git rev-parse --verify "$releaseTag^{commit}" >/dev/null 2>&1; then
     [[ "$(git rev-parse "$releaseTag^{commit}")" == "$releaseHead" ]] || { print -u2 '已有标签指向其他版本，不覆盖。'; exit 1; }
 else
-    git tag -a "$releaseTag" -m "RecordAI $releaseVersion functional prerelease"
+    git tag -a "$releaseTag" -m "TalkTuck $releaseVersion functional prerelease"
 fi
-git push "${RECORD_AI_GIT_REMOTE:-origin}" "refs/tags/$releaseTag"
+git push "${TALKTUCK_GIT_REMOTE:-origin}" "refs/tags/$releaseTag"
 print '标签已推送；请检查 Build macOS release assets，只有构建、回归及包校验通过后才会出现 GitHub 安装包。'
