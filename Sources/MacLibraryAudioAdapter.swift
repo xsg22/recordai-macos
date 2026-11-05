@@ -19,6 +19,8 @@ import AVFoundation
     }
     func sources(_ id: UUID, userId: UUID) async throws -> [LibraryAudioSource] {
         let r = try record(id,userId),urls = try library.audioURLs(for:r)
+        // The v1 cloud manifest cannot safely represent canonical multi-stream archives.
+        guard !urls.contains(where: { $0.pathExtension == "json" }) else { throw LibraryAudioError.canonicalProtocolRequired }
         var sources: [LibraryAudioSource] = [];var offset = 0
         for url in urls {
             let duration = try await AVURLAsset(url:url).load(.duration);_ = try record(id,userId)

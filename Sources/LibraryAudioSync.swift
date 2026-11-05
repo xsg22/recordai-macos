@@ -12,7 +12,7 @@ struct LibraryAudioManifest: Codable, Equatable { var recordingId: UUID; var ver
 struct LibraryAudioArchive: Codable, Equatable { var manifest: LibraryAudioManifest; var filenames: [String] }
 struct LibraryAudioSource { var url: URL; var durationMs: Int; var timelineStartMs: Int }
 struct LibraryAudioUpload: Codable { var uploadId: UUID; var chunkSize: Int; var received: [Int]; var complete: Bool }
-enum LibraryAudioError: Error { case invalid, changed, conflict, cancelled, integrity, response(Int) }
+enum LibraryAudioError: Error { case invalid, changed, conflict, cancelled, integrity, canonicalProtocolRequired, response(Int) }
 
 struct LibraryAudioCandidate {
     var recordingId: UUID; var revision: String?
@@ -257,6 +257,7 @@ enum LibraryAudioFiles {
             if conflict != nil { message = "云端已有不同原音，请选择保留哪一版。双方原件都会保留。" }
             else if let lastFailure {
                 if case LibraryAudioError.integrity = lastFailure { message = "音频校验失败，现有原件未被替换。可以重试。" }
+                else if case LibraryAudioError.canonicalProtocolRequired = lastFailure { message = "分段录音暂不支持原音云同步，原音仍保存在本机。" }
                 else if case LibraryAudioError.changed = lastFailure { message = "本机音频已变化，请移除此任务后重新选择。" }
                 else { message = "原音传输未完成，进度已保留，可稍后重试。" }
             }

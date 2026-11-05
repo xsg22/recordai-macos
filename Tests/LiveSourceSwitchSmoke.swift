@@ -77,10 +77,14 @@ import Foundation
         let maximumActive = (pauseAfter - startBefore) + (stopBefore - resumeBefore) + 0.1
         precondition(recording.seconds >= max(0.45, minimumActive - 0.05) && recording.seconds <= maximumActive,
                      "静音计时继续，暂停时间排除：实际 \(recording.seconds)，预期 \(minimumActive)...\(maximumActive)")
-        let silent = try AVAudioFile(forReading: recording.audioURL)
-        let silentBuffer = AVAudioPCMBuffer(pcmFormat: silent.processingFormat, frameCapacity: AVAudioFrameCount(silent.length))!
-        try silent.read(into: silentBuffer)
-        precondition(UnsafeBufferPointer(start: silentBuffer.floatChannelData![0], count: Int(silentBuffer.frameLength)).allSatisfy { abs($0) < 0.001 })
+        let silent = try CanonicalAudioReader(manifestURL: recording.audioURL)
+        precondition(abs(Double(silent.durationFrames) / 16_000 - recording.seconds) < 0.1)
+        var frame: Int64 = 0
+        while frame < silent.durationFrames {
+            let buffer = try silent.read(startFrame: frame, count: Int(min(4096, silent.durationFrames - frame)))
+            precondition(UnsafeBufferPointer(start: buffer.floatChannelData![0], count: Int(buffer.frameLength)).allSatisfy { abs($0) < 0.001 })
+            frame += Int64(buffer.frameLength)
+        }
         precondition(recorder.state == .idle)
         // Projection and foreground mini flushing use the same saved live text.
         let preview = MiniTranscriptPreview(text: "之前一句\n最近确认句\n当前草稿", partial: "当前草稿")

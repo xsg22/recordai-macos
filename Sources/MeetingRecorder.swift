@@ -27,6 +27,14 @@ struct MeetingRecording {
     var warning: String? = nil
 }
 
+struct MeetingCaptureRequest {
+    let mode: MeetingRecordingMode
+    let directory: URL
+    let sessionMode: RecordingSessionMode
+    let meetingOffset: Double
+    let segmenter: ContinuousRecordingSegmenter?
+}
+
 enum MeetingRecorderError: LocalizedError {
     case message(String)
     case microphoneStalled
@@ -80,13 +88,13 @@ final class MeetingRecorder {
 
     /// directory 应传入 App 自有 Recordings 目录；每次录音创建唯一子目录。
     func start(mode: MeetingRecordingMode, directory root: URL,
-               sessionMode: RecordingSessionMode = .conference,
+               sessionMode: RecordingSessionMode = .conference, meetingOffset: TimeInterval = 0,
                segmenter: ContinuousRecordingSegmenter? = nil) async throws {
-        try await start(sources: RecordingSources(mode: mode), directory: root, sessionMode: sessionMode, segmenter: segmenter)
+        try await start(sources: RecordingSources(mode: mode), directory: root, sessionMode: sessionMode, meetingOffset: meetingOffset, segmenter: segmenter)
     }
 
     func start(sources: RecordingSources, directory root: URL,
-               sessionMode: RecordingSessionMode = .conference,
+               sessionMode: RecordingSessionMode = .conference, meetingOffset: TimeInterval = 0,
                segmenter: ContinuousRecordingSegmenter? = nil) async throws {
         guard state == .idle else { throw MeetingRecorderError.message("已有录音正在进行。") }
         state = .preparing
@@ -108,9 +116,13 @@ final class MeetingRecorder {
                 }
                 filter = SCContentFilter(display: display, excludingWindows: [])
             }
-            let directory = root.appendingPathComponent(UUID().uuidString, isDirectory: true)
+            let captureID = UUID()
+            let directory = root.appendingPathComponent(captureID.uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            guard meetingOffset.isFinite, meetingOffset >= 0 else { throw BalancedAudioError.invalidManifest }
+            try BalancedAudioIO.save(CanonicalCaptureContext(mode: sessionMode, meetingOffset: meetingOffset), to: directory.appendingPathComponent("capture-context.json"))
             self.directory = directory
+            segmenter?.bindCanonicalArchive(directory)
             failure = nil
             canRetryMicrophone = false
             pausedAt = nil
@@ -118,7 +130,7 @@ final class MeetingRecorder {
             started = MeetingCaptureTimeline.now
             recordingActivity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .idleSystemSleepDisabled], reason: "正在本地录音")
             let mode: MeetingRecordingMode = sources.microphone ? (sources.systemAudio ? .meeting : .microphone) : .systemAudio
-            let sink = MeetingAudioSink(directory: directory, started: started, mode: mode, sessionMode: sessionMode, segmenter: segmenter, onAudio: onAudio) { [weak self] error in
+            let sink = MeetingAudioSink(directory: directory, started: started, mode: mode, sessionMode: sessionMode, segmenter: segmenter, onAudio: onAudio, canonicalRecordingID: captureID) { [weak self] error in
                 Task { @MainActor in
                     guard let self, self.state == .preparing || self.state == .recording || self.state == .paused else { return }
                     self.reportFailure(error)
@@ -303,6 +315,15 @@ final class MeetingRecorder {
         return true
     }
 
+    func resumeAfterDraining() async -> Bool {
+        guard state == .paused, let sink else { return false }
+        let session = sessionID
+        do { try await sink.prepareToResume() }
+        catch { failure = error; onError?(error); return false }
+        guard state == .paused, sessionID == session else { return false }
+        return resume()
+    }
+
     private func startMicrophoneCapture(sink: MeetingAudioSink) throws {
         try Self.requireMicrophone()
         let engine = AVAudioEngine()
@@ -359,7 +380,6 @@ final class MeetingRecorder {
         }
         stream = nil
         systemDelegate = nil
-        let tracks = sink.finish(duration: duration)
         self.sink = nil
         defer {
             if let recordingActivity { ProcessInfo.processInfo.endActivity(recordingActivity) }
@@ -367,19 +387,13 @@ final class MeetingRecorder {
             state = .idle
             activeSources = .muted
         }
+        let destination = try await Task.detached(priority: .utility) { try sink.finishCanonical(duration: duration) }.value
+        let manifest = try JSONDecoder().decode(BalancedRecordingManifest.self, from: Data(contentsOf: destination))
         let captureWarning = (failure ?? stopFailure ?? sink.recordingError)?.localizedDescription
-        guard !tracks.isEmpty else {
-            throw MeetingRecorderError.message("未采集到音频，请检查系统权限和输入设备。")
-        }
-        let destination = directory.appendingPathComponent("meeting.m4a")
-        do { try await MeetingAudioMixer.mix(tracks: tracks, destination: destination, duration: duration) }
-        catch {
-            throw MeetingRecorderError.message("录音原轨已保存至 \(directory.path)，合成失败：\(error.localizedDescription)")
-        }
         return MeetingRecording(audioURL: destination,
-                                microphoneURL: tracks.first { $0.kind == .microphone }?.url,
-                                systemAudioURL: tracks.first { $0.kind == .system }?.url,
-                                seconds: duration, warning: captureWarning)
+                                microphoneURL: manifest.streams.contains { $0.streamID == "microphone" } ? directory.appendingPathComponent("microphone/final.manifest.json") : nil,
+                                systemAudioURL: manifest.streams.contains { $0.streamID == "system" } ? directory.appendingPathComponent("system/final.manifest.json") : nil,
+                                seconds: Double(manifest.durationFrames) / 16_000, warning: captureWarning)
     }
 }
 
@@ -412,6 +426,11 @@ struct MeetingCaptureTimeline {
     private var pauseStart: TimeInterval?
 
     init(started: TimeInterval) { self.started = started }
+    func position(at timestamp: TimeInterval) -> TimeInterval {
+        let removed = pauses.reduce(0.0) { $0 + max(0, min(timestamp, $1.upperBound) - $1.lowerBound) }
+            + (pauseStart.map { max(0, timestamp - $0) } ?? 0)
+        return max(0, timestamp - started - removed)
+    }
 
     mutating func setPaused(_ value: Bool, at timestamp: TimeInterval) {
         if value, pauseStart == nil { pauseStart = timestamp }
@@ -452,6 +471,10 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
     private let onError: (Error) -> Void
     private let segmenter: ContinuousRecordingSegmenter?
     private var files: [MeetingAudioTrack.Kind: AVAudioFile] = [:]
+    private let canonicalRecordingID: UUID?
+    private var canonicalWriters: [MeetingAudioTrack.Kind: MacSegmentedSourceWriter] = [:]
+    private var enabledSources: RecordingSources
+    private var declaredSources: [CanonicalSourceDeclaration] = []
     private var tracks: [MeetingAudioTrack] = []
     private var finished = false
     private var failed = false
@@ -481,11 +504,13 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
     init(directory: URL, started: TimeInterval, mode: MeetingRecordingMode = .microphone,
          sessionMode: RecordingSessionMode = .conference,
          segmenter: ContinuousRecordingSegmenter? = nil,
-         onAudio: (([Float]) -> Void)? = nil, onError: @escaping (Error) -> Void) {
+         onAudio: (([Float]) -> Void)? = nil, canonicalRecordingID: UUID? = nil, onError: @escaping (Error) -> Void) {
         self.directory = directory
         self.timeline = MeetingCaptureTimeline(started: started)
         self.sourceTimeline = RecordingSourceTimeline(started: started, sources: RecordingSources(mode: mode))
         self.onError = onError
+        self.canonicalRecordingID = canonicalRecordingID
+        self.enabledSources = RecordingSources(mode: mode)
         let activeSegmenter = sessionMode == .continuous ? segmenter : nil
         self.segmenter = activeSegmenter
         if onAudio != nil || activeSegmenter != nil {
@@ -494,11 +519,20 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
                 activeSegmenter?.append(samples, at: offset)
             }
         }
+        super.init()
+        if canonicalRecordingID != nil {
+            do { try declareSources(enabledSources, frame: 0) } catch { report(error) }
+        }
     }
 
     func setSources(_ sources: RecordingSources, at timestamp: TimeInterval = MeetingCaptureTimeline.now) {
         queue.sync {
             sourceTimeline.setSources(sources, at: timestamp)
+            enabledSources = sources
+            if canonicalRecordingID != nil {
+                do { try declareSources(sources, frame: Int64((timeline.position(at: timestamp) * 16_000).rounded())) }
+                catch { report(error) }
+            }
             live?.setTrackCount((sources.microphone ? 1 : 0) + (sources.systemAudio ? 1 : 0))
             hasIntentionalSilence = hasIntentionalSilence || sources.isMuted
             healthLock.lock(); meter = 0; healthLock.unlock()
@@ -513,21 +547,46 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
         queue.async {
             guard !self.finished, !self.failed, !self.livePaused else { return }
             let slices = self.timeline.slices(at: timestamp, frames: 1, sampleRate: 16_000)
-            if let offset = slices.first?.offset { self.live?.advance(to: offset) }
+            if let offset = slices.first?.offset {
+                self.live?.advance(to: offset)
+                if self.canonicalRecordingID != nil {
+                    do {
+                        if self.enabledSources.isMuted, self.canonicalWriters.isEmpty {
+                            _ = try self.canonicalWriter(.microphone, startFrame: 0)
+                        }
+                        let frame = Int64((offset * 16_000).rounded())
+                        for (kind, writer) in self.canonicalWriters where !self.enabledSources.contains(kind) {
+                            try writer.appendSilence(untilFrame: frame)
+                        }
+                    } catch { self.report(error) }
+                }
+            }
         }
     }
 
-    func setPaused(_ value: Bool) {
-        let timestamp = MeetingCaptureTimeline.now
+    func setPaused(_ value: Bool, at timestamp: TimeInterval = MeetingCaptureTimeline.now) {
         queue.sync {
             timeline.setPaused(value, at: timestamp)
             livePaused = value
+            do { for writer in canonicalWriters.values { if value { try writer.pause() } else { try writer.resume() } } }
+            catch { report(error) }
             healthLock.lock(); meter = 0; healthLock.unlock()
         }
         if value {
             queue.asyncAfter(deadline: .now() + 0.2) { [weak self] in
                 guard let self, self.livePaused, !self.finished else { return }
                 self.live?.flush()
+            }
+        }
+    }
+
+    func prepareToResume() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            queue.async {
+                do {
+                    for writer in self.canonicalWriters.values { try writer.resume() }
+                    continuation.resume()
+                } catch { continuation.resume(throwing: error) }
             }
         }
     }
@@ -609,6 +668,21 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
 
     private func writeActive(_ buffer: AVAudioPCMBuffer, kind: MeetingAudioTrack.Kind, offset: TimeInterval) {
         guard !failed else { return }
+        if canonicalRecordingID != nil {
+            do {
+                let writer = try canonicalWriter(kind, startFrame: Int64((offset * 16_000).rounded()))
+                try writer.append(buffer, offset: offset)
+                if let channels = buffer.floatChannelData {
+                    var peak: Float = 0
+                    for channel in 0..<(buffer.format.isInterleaved ? 1 : Int(buffer.format.channelCount)) {
+                        let count = Int(buffer.frameLength) * (buffer.format.isInterleaved ? Int(buffer.format.channelCount) : 1)
+                        for index in 0..<count { let sample = abs(channels[channel][index]); if sample.isFinite { peak = max(peak, sample) } }
+                    }
+                    healthLock.lock(); meter = min(1, max(peak, meter)); healthLock.unlock()
+                }
+            } catch { report(error) }
+            return
+        }
         do {
             let file: AVAudioFile
             if let existing = files[kind] { file = existing }
@@ -675,8 +749,66 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
         onError(error)
     }
 
+    private func canonicalWriter(_ kind: MeetingAudioTrack.Kind, startFrame: Int64) throws -> MacSegmentedSourceWriter {
+        if let existing = canonicalWriters[kind] { return existing }
+        guard let canonicalRecordingID else { throw BalancedAudioError.invalidManifest }
+        let streamID = kind == .microphone ? "microphone" : "system"
+        let writer = try MacSegmentedSourceWriter(directory: directory.appendingPathComponent(streamID), recordingID: canonicalRecordingID,
+                                                streamID: streamID, startFrame: startFrame) { [weak self] item in
+            self?.queue.async { [weak self] in self?.publishSealed(item) }
+        }
+        canonicalWriters[kind] = writer
+        return writer
+    }
+    private func declareSources(_ sources: RecordingSources, frame: Int64) throws {
+        for kind in [MeetingAudioTrack.Kind.microphone, .system] where sources.contains(kind) {
+            let id = kind == .microphone ? "microphone" : "system"
+            if !declaredSources.contains(where: { $0.streamID == id }) { declaredSources.append(CanonicalSourceDeclaration(streamID: id, startFrame: frame)) }
+        }
+        try BalancedAudioIO.save(declaredSources, to: directory.appendingPathComponent("canonical-sources.json"))
+    }
+
+    private func publishSealed(_ item: ResilientRecordingSegmentDescriptor) {
+        do {
+            let url = directory.appendingPathComponent("playback.manifest.json")
+            var head = FileManager.default.fileExists(atPath: url.path)
+                ? try JSONDecoder().decode(BalancedPlaybackHead.self, from: Data(contentsOf: url))
+                : BalancedPlaybackHead(recordingID: item.recordingID)
+            if let index = head.streams.firstIndex(where: { $0.streamID == item.streamID }) {
+                if item.index < head.streams[index].segmentCount { return }
+                guard item.index == head.streams[index].segmentCount, item.startFrame == head.streams[index].endFrame else { throw BalancedAudioError.invalidManifest }
+                head.streams[index].segmentCount += 1; head.streams[index].endFrame += item.validFrames; head.streams[index].byteCount += item.byteCount
+            } else {
+                guard item.index == 0 else { throw BalancedAudioError.invalidManifest }
+                head.streams.append(BalancedPlaybackStreamHead(streamID: item.streamID, startFrame: item.startFrame,
+                    endFrame: item.startFrame + item.validFrames, segmentCount: 1, byteCount: item.byteCount))
+            }
+            try head.validate(); try BalancedAudioIO.save(head, to: url)
+        } catch { report(error) }
+    }
+
+    func finishCanonical(duration: TimeInterval) throws -> URL {
+        try queue.sync {
+            guard let canonicalRecordingID, duration.isFinite, duration > 0 else { throw BalancedAudioError.invalidManifest }
+            if canonicalWriters.isEmpty, hasIntentionalSilence { _ = try canonicalWriter(.microphone, startFrame: 0) }
+            guard !canonicalWriters.isEmpty else { throw MeetingRecorderError.message("未采集到音频，请检查系统权限和输入设备。") }
+            var manifests: [URL] = []
+            for writer in canonicalWriters.values { manifests.append(try writer.finish(untilFrame: Int64((duration * 16_000).rounded()))) }
+            for (kind, resampler) in resamplers {
+                let tail = try resampler.finish(); live?.append(tail.samples, kind: kind, offset: tail.offset)
+            }
+            live?.flush(); live = nil; resamplers.removeAll(); finished = true
+            return try MacSegmentedManifest.finalize(recordingID: canonicalRecordingID, root: directory, trackManifests: manifests)
+        }
+    }
+
     @discardableResult func finish(duration: TimeInterval? = nil) -> [MeetingAudioTrack] {
         queue.sync {
+            if canonicalRecordingID != nil {
+                for writer in canonicalWriters.values { do { try writer.pause() } catch { report(error) } }
+                live?.flush(); live = nil; resamplers.removeAll(); finished = true
+                return []
+            }
             if tracks.isEmpty, hasIntentionalSilence, let duration, duration > 0 {
                 // A deliberately muted session is a valid silent recording;
                 // a session with unavailable hardware still fails as before.

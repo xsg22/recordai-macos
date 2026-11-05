@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "${0:A:h:h}"
 root="$PWD"
+/bin/zsh Scripts/sync-recording-audio.zsh --check
 version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
 mkdir -p .vendor .models .build dist
 [[ -x .vendor/dws/dws && -x .vendor/lark-cli/lark-cli ]] || { print -u2 '缺少固定版本的官方账号组件：.vendor/dws/dws 或 .vendor/lark-cli/lark-cli'; exit 1; }

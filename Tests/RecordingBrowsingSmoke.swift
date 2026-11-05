@@ -5,7 +5,7 @@ import Foundation
 /// A real silent capture and real (muted) player exercise selection changes
 /// without requesting permissions or reading any personal recordings.
 @main struct RecordingBrowsingSmoke {
-    static func check(_ value: Bool, _ message: String = "") { precondition(value, message) }
+    static func check(_ value: Bool, _ message: String = "", line: UInt = #line) { precondition(value, "line \(line): \(message)") }
     @MainActor static func main() async throws {
         _ = NSApplication.shared
         let fm = FileManager.default
@@ -31,7 +31,7 @@ import Foundation
         let historicBytes = try Data(contentsOf: library.directory(for: historic.id).appendingPathComponent("meeting.json"))
         let originalAudioBytes = try Data(contentsOf: library.audioURLs(for: historic)[0])
         let capture = MeetingRecorder()
-        try await capture.start(sources: .muted, directory: root.appendingPathComponent("Captures"))
+        try await capture.start(sources: .muted, directory: library.directory(for: active.id).appendingPathComponent("Capture"))
         let namespace = "browsing-\(UUID().uuidString)"
         let state = AppState(storageURL: library.root, connectionNamespace: namespace,
                              speechModelStore: ASRModelStore(root: root.appendingPathComponent("NoModels")), recorder: capture)
