@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "reviewedAtUTC": "2026-11-05T03:17:46.724288+00:00",
+  "changedFilesScanned": 82,
+  "scanScope": "proposed public commit, staged diff, text literals, complete app bundle byte search, new images manually inspected",
+  "unresolvedFindings": 0,
+  "appFilesCheckedForPersonalBuildPath": 3512,
+  "acceptedCases": [
+    "loopback URLs for isolated tests",
+    "synthetic test phone numbers and test-only credentials",
+    "owner-authorized public email and website",
+    "public Git SSH transport"
+  ],
+  "excluded": [
+    "one unpublished screenshot containing masked existing-account information",
+    "local logs, raw account/session data, private recordings, models and dependencies",
+    "all iOS, Watch and private backend source"
+  ],
+  "newImagesReviewed": [
+    "library-0172.png",
+    "groups-0172.png",
+    "settings-0172.png",
+    "agent-0172.png"
+  ],
+  "limits": "Pattern scans and manual review are evidence of the checked scope, not a guarantee about every possible secret or unchanged historical commit."
+}

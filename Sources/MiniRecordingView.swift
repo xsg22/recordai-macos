@@ -155,7 +155,7 @@ struct MiniRecordingView: View {
                         .foregroundStyle(state.recording && !state.paused && !state.recordingIsMuted ? Color.red : mutedInk)
                     Text(L10n.text(state.recording ? clock(state.elapsed) : hasSession ? "已保存到本机" : "准备就绪"))
                         .font(.system(size: 16, weight: .semibold)).monospacedDigit().foregroundStyle(ink)
-                }.frame(width: 75, alignment: .leading).overlay { if !inline { MiniWindowDragRegion() } }.help(L10n.text("拖动此处移动录音条"))
+                }.frame(width: 75, alignment: .leading)
                 Group {
                     if state.miniShowsCaptions { captions }
                     else if state.recording {
@@ -169,7 +169,9 @@ struct MiniRecordingView: View {
                 Spacer(minLength: 0)
                 if state.recording {
                     RecordingSourceToggle(state: state, kind: .microphone, compact: true)
+                        .miniWindowControl()
                     RecordingSourceToggle(state: state, kind: .system, compact: true)
+                        .miniWindowControl()
                 }
                 icon("captions.bubble", label: state.miniShowsCaptions ? "切换为声波" : "显示实时字幕") { state.miniShowsCaptions.toggle() }
                 if state.recording {
@@ -179,6 +181,7 @@ struct MiniRecordingView: View {
                         .disabled(state.preparing || state.quitting)
                 } else if !state.locked && !hasSession {
                     Button(L10n.text("开始录音")) { state.toggleRecording() }.buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.syncing)
+                        .miniWindowControl()
                 } else if state.busy || state.preparing { ProgressView().controlSize(.small) }
                 icon(inline ? "arrow.uturn.backward" : "arrow.up.right", label: inline ? "返回正在录音" : "展开录音窗口") {
                     if state.recording { state.returnToRecording() } else { state.showRecordingWindow() }
@@ -191,6 +194,7 @@ struct MiniRecordingView: View {
                     Button(L10n.text("查看问题")) { state.showRecordingWindow() }.buttonStyle(RecordAISecondaryButtonStyle())
                     if state.canRetryMicrophone { Button(L10n.text("重试并继续")) { state.pauseRecording() }.buttonStyle(RecordAISecondaryButtonStyle()) }
                 }.padding(12).frame(height: 65).background(Color.orange.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
+                    .miniWindowControl()
             }
         }.padding(.horizontal, 14).padding(.vertical, 14)
             .frame(width: 525, height: state.error != nil || state.recordingIssue != nil ? 168 : 76)
@@ -199,6 +203,13 @@ struct MiniRecordingView: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous).fill(surface)
             }
             .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(ink.opacity(contrast == .increased ? 0.35 : 0.1), lineWidth: 1))
+            .overlayPreferenceValue(MiniWindowControlBounds.self) { anchors in
+                if !inline {
+                    GeometryReader { geometry in
+                        MiniWindowDragRegion(excludedRects: anchors.map { geometry[$0] })
+                    }
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .contextMenu { options }
     }
@@ -250,6 +261,7 @@ struct MiniRecordingView: View {
                 else if hoveredControl == symbol { hoveredControl = nil }
             }
             .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: hovered)
+            .miniWindowControl()
     }
     private func clock(_ seconds: Int) -> String {
         seconds >= 3600 ? String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60) : String(format: "%02d:%02d", seconds / 60, seconds % 60)
@@ -264,31 +276,72 @@ private struct MiniControlPressStyle: ButtonStyle {
     }
 }
 
-/// 仅覆盖无交互的状态/计时区域。直接把原始鼠标事件交给 AppKit，
-/// 避免 SwiftUI HostingView 吞掉背景拖拽，同时不拦截暂停和停止按钮。
+private struct MiniWindowControlBounds: PreferenceKey {
+    static var defaultValue: [Anchor<CGRect>] { [] }
+    static func reduce(value: inout [Anchor<CGRect>], nextValue: () -> [Anchor<CGRect>]) {
+        value.append(contentsOf: nextValue())
+    }
+}
+
+private extension View {
+    func miniWindowControl() -> some View {
+        anchorPreference(key: MiniWindowControlBounds.self, value: .bounds) { [$0] }
+    }
+}
+
+/// 覆盖整个面板的空白、状态与声波，交互控件的实际布局范围透传鼠标事件。
+/// SwiftUI 的 inline 录音条不安装此覆盖层，不能拖动主窗口。
 private struct MiniWindowDragRegion: NSViewRepresentable {
-    func makeNSView(context: Context) -> DragView { DragView() }
-    func updateNSView(_ nsView: DragView, context: Context) { }
-    final class DragView: NSView {
-        override init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            setAccessibilityElement(false)
+    var excludedRects: [CGRect]
+    func makeNSView(context: Context) -> MiniWindowDragView { MiniWindowDragView() }
+    func updateNSView(_ nsView: MiniWindowDragView, context: Context) {
+        nsView.excludedRects = excludedRects
+    }
+}
+
+final class MiniWindowDragView: NSView {
+    var excludedRects: [CGRect] = [] {
+        didSet { window?.invalidateCursorRects(for: self) }
+    }
+    override var isFlipped: Bool { true }
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setAccessibilityElement(false)
+    }
+    required init?(coder: NSCoder) { nil }
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let local = convert(point, from: superview)
+        guard !excludedRects.contains(where: { $0.contains(local) }) else { return nil }
+        return super.hitTest(point)
+    }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override var mouseDownCanMoveWindow: Bool { false }
+    private var dragStart: (mouse: NSPoint, origin: NSPoint)?
+    override func mouseDown(with event: NSEvent) {
+        guard let window else { return }
+        dragStart = (window.convertPoint(toScreen: event.locationInWindow), window.frame.origin)
+    }
+    override func mouseDragged(with event: NSEvent) {
+        guard let window, let start = dragStart else { return }
+        let mouse = window.convertPoint(toScreen: event.locationInWindow)
+        window.setFrameOrigin(NSPoint(x: start.origin.x + mouse.x - start.mouse.x,
+                                      y: start.origin.y + mouse.y - start.mouse.y))
+    }
+    override func mouseUp(with event: NSEvent) { dragStart = nil }
+    override func resetCursorRects() {
+        // 光标也避开按钮，不能把控件显示成可拖动区域。
+        var regions = [bounds]
+        for excluded in excludedRects {
+            regions = regions.flatMap { region -> [CGRect] in
+                let cut = region.intersection(excluded)
+                guard !cut.isNull, !cut.isEmpty else { return [region] }
+                return [CGRect(x: region.minX, y: region.minY, width: region.width, height: cut.minY - region.minY),
+                        CGRect(x: region.minX, y: cut.maxY, width: region.width, height: region.maxY - cut.maxY),
+                        CGRect(x: region.minX, y: cut.minY, width: cut.minX - region.minX, height: cut.height),
+                        CGRect(x: cut.maxX, y: cut.minY, width: region.maxX - cut.maxX, height: cut.height)]
+                    .filter { !$0.isEmpty }
+            }
         }
-        required init?(coder: NSCoder) { nil }
-        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-        override var mouseDownCanMoveWindow: Bool { false }
-        private var dragStart: (mouse: NSPoint, origin: NSPoint)?
-        override func mouseDown(with event: NSEvent) {
-            guard let window else { return }
-            dragStart = (window.convertPoint(toScreen: event.locationInWindow), window.frame.origin)
-        }
-        override func mouseDragged(with event: NSEvent) {
-            guard let window, let start = dragStart else { return }
-            let mouse = window.convertPoint(toScreen: event.locationInWindow)
-            window.setFrameOrigin(NSPoint(x: start.origin.x + mouse.x - start.mouse.x,
-                                          y: start.origin.y + mouse.y - start.mouse.y))
-        }
-        override func mouseUp(with event: NSEvent) { dragStart = nil }
-        override func resetCursorRects() { addCursorRect(bounds, cursor: .openHand) }
+        for region in regions { addCursorRect(region, cursor: .openHand) }
     }
 }

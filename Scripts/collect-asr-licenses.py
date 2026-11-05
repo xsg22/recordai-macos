@@ -11,7 +11,7 @@ for d in md.distributions():
    if p.is_file():
     dest=out/name/str(item).split('.dist-info/')[-1]
     dest.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,dest)
-(out/'MODELS.txt').write_text('Paraformer ONNX INT8: Apache-2.0, FunASR / sherpa-onnx conversion.\nQwen3-ASR-1.7B-8bit: Apache-2.0, Qwen / mlx-community conversion.\nSilero VAD: MIT, Silero Team.\nModel sources, pinned revisions and file hashes: Contents/Resources/ASRModels.json\n')
+(out/'MODELS.txt').write_text('Paraformer ONNX INT8: Apache-2.0, FunASR / sherpa-onnx conversion.\nQwen3-ASR-1.7B-8bit: Apache-2.0, Qwen / mlx-community conversion.\nQwen2.5-1.5B-Instruct-4bit: Apache-2.0, Qwen / mlx-community conversion; https://huggingface.co/mlx-community/Qwen2.5-1.5B-Instruct-4bit ; revision 8b403126fc14f14cfc99bb4cfa72ecbc129ea677. Downloaded separately for on-device hotword candidate extraction.\nSilero VAD: MIT, Silero Team.\nASR model sources, pinned revisions and file hashes: Contents/Resources/ASRModels.json\n')
 shutil.copy2(ROOT/'Resources/ASRLicenses/sherpa-onnx-APACHE.txt',out/'MODELS-APACHE-2.0.txt')
 
 for model in ['Sortformer','QwenAligner']:

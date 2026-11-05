@@ -31,7 +31,7 @@ func launchIfRequested(_ launch: Bool, action: String, root: URL) throws {
     guard launch else { return }
     guard action == "start_recording", root.standardizedFileURL.resolvingSymlinksInPath() == defaultAgentRoot.standardizedFileURL.resolvingSymlinksInPath(),
           ownApplicationURL.pathExtension == "app",
-          NSDictionary(contentsOf: ownApplicationURL.appendingPathComponent("Contents/Info.plist"))?["CFBundleIdentifier"] as? String == "com.byering.recordai" else {
+          NSDictionary(contentsOf: ownApplicationURL.appendingPathComponent("Contents/Info.plist"))?["CFBundleIdentifier"] as? String == "com.xsg.talktuck" else {
         throw CLIError.message("仅支持启动当前安装包和默认资料目录的录音；自定义目录不会唤起其他 App。")
     }
     let task = Process(); task.executableURL = URL(fileURLWithPath: "/usr/bin/open"); task.arguments = [ownApplicationURL.path]

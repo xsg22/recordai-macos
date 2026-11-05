@@ -1,0 +1,49 @@
+import Foundation
+import AVFoundation
+
+@MainActor final class MacLibraryAudioAdapter: LibraryAudioAdapter {
+    private let library: MeetingLibrary
+    init(library: MeetingLibrary) { self.library = library }
+    private func record(_ id: UUID, _ userId: UUID) throws -> MeetingRecord {
+        guard library.activeSyncUserId == userId else { throw LibraryAudioError.invalid }
+        let r = try library.load(id)
+        guard r.userId == userId,r.syncContent != nil,r.status != .recording,r.status != .transcribing else { throw LibraryAudioError.invalid };return r
+    }
+    func sources(_ id: UUID, userId: UUID) async throws -> [LibraryAudioSource] {
+        let r = try record(id,userId),urls = try library.audioURLs(for:r)
+        var sources: [LibraryAudioSource] = [];var offset = 0
+        for url in urls {
+            let duration = try await AVURLAsset(url:url).load(.duration);_ = try record(id,userId)
+            guard let ms = LibrarySyncCodec.milliseconds(duration.seconds),ms > 0 else { throw LibraryAudioError.invalid }
+            var start = offset
+            if let archive = r.syncedAudio,let i = archive.filenames.firstIndex(of:url.lastPathComponent),archive.manifest.parts.indices.contains(i) { start = archive.manifest.parts[i].timelineStartMs }
+            sources.append(LibraryAudioSource(url:url,durationMs:ms,timelineStartMs:start));offset = start+ms
+        }
+        return sources
+    }
+    func install(_ manifest: LibraryAudioManifest, files: [URL], userId: UUID) async throws {
+        let initial = try record(manifest.recordingId,userId)
+        guard initial.status == .completed,initial.pendingAudioFiles.isEmpty else { throw LibraryAudioError.invalid }
+        try LibraryAudioFiles.validate(manifest,id:manifest.recordingId)
+        guard files.count == manifest.parts.count else { throw LibraryAudioError.invalid }
+        var names: [String] = []
+        for (part,file) in zip(manifest.parts,files) {
+            let name = "synced-\(part.id.uuidString.lowercased()).\(part.fileExtension)"
+            let target = library.directory(for:manifest.recordingId).appendingPathComponent("Audio").appendingPathComponent(name)
+            try LibraryAudioFiles.install(file,at:target,part:part)
+            let duration = try await AVURLAsset(url:target).load(.duration);_ = try record(manifest.recordingId,userId)
+            guard duration.seconds.isFinite,duration.seconds > 0 else { throw LibraryAudioError.invalid };names.append(name)
+        }
+        var latest = try record(manifest.recordingId,userId)
+        guard latest.status == initial.status,latest.pendingAudioFiles.isEmpty,latest.audioFiles == initial.audioFiles,latest.audioDurations == initial.audioDurations else { throw LibraryAudioError.changed }
+        // Switch references atomically only after every original was checked. Existing files stay intact.
+        latest.audioFiles = names;latest.audioDurations = Dictionary(uniqueKeysWithValues:zip(names,manifest.parts).map { ($0.0,Double($0.1.durationMs)/1000) })
+        latest.syncedAudio = LibraryAudioArchive(manifest:manifest,filenames:names)
+        for i in latest.transcriptParagraphs.indices {
+            guard let start = latest.transcriptParagraphs[i].start,
+                  let index = manifest.parts.indices.last(where: { Double(manifest.parts[$0].timelineStartMs)/1000 <= start }) else { continue }
+            latest.transcriptParagraphs[i].audioFile = names[index];latest.transcriptParagraphs[i].localStart = start-Double(manifest.parts[index].timelineStartMs)/1000
+        }
+        _ = try library.save(latest)
+    }
+}

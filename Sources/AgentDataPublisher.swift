@@ -158,7 +158,7 @@ final class AgentDataPublisher {
         try Data(Self.instructions.utf8).write(to: root.appendingPathComponent("README.md"), options: .atomic)
     }
     static let instructions = """
-    # RecordAI · 本机 Agent 接口 v1
+    # TalkTuck · 本机 Agent 接口 v1
     用App包内 Contents/MacOS/recordai 执行 setup --json 获取 Skill 和安装说明，或执行 list、read UUID --format json|md|txt|srt、audio UUID、changes --since N 或 mcp。文件接入说明见 SETUP.md。
     MCP配置：command为该可执行文件的绝对路径，args为["mcp"]；不需要账号、不开放端口。
     默认只返回最终正文；read可显式增加--include-preview读取未定稿草稿。草稿不得视为最终转录。

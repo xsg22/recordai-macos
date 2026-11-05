@@ -37,7 +37,7 @@ struct ContinuousSegmentInfo: Codable, Equatable, Sendable {
 final class ContinuousRecordingSegmenter: @unchecked Sendable {
     private let policy: ContinuousSegmentPolicy
     private let directory: URL
-    private let queue = DispatchQueue(label: "com.byering.recordai.continuous-segments", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "com.xsg.talktuck.continuous-segments", qos: .userInitiated)
     private let onClosed: (ContinuousSegmentInfo) -> Void
     private let onError: ((Error) -> Void)?
     private var file: AVAudioFile?

@@ -12,6 +12,7 @@ enum MeetingRecordingAppend {
         if !record.text.isEmpty && !record.hasCurrentParagraphs {
             record.transcriptParagraphs = [TranscriptParagraph(text: record.text)]
         }
+        record.transcriptOrigin = .local
         let prior = record.text.isEmpty ? "" : "\n\n"
         if !output.text.isEmpty {
             var rows = output.paragraphs.isEmpty ? [TranscriptParagraph(text: output.text)] : output.paragraphs
@@ -37,6 +38,7 @@ enum MeetingRecordingAppend {
               !appending || files == record.pendingAudioFiles else {
             throw TranscriptionError.message("录音片段状态已变化，未追加文字，请重试。")
         }
+        record.transcriptOrigin = .local
         var paragraphs = appending && record.hasCurrentParagraphs ? record.transcriptParagraphs : []
         if appending && !record.text.isEmpty && paragraphs.isEmpty { paragraphs = [TranscriptParagraph(text: record.text)] }
         var text = appending ? record.text : ""

@@ -7,6 +7,32 @@ os.environ['TOKENIZERS_PARALLELISM']='false'
 import json,math,pathlib,sys,wave
 from language_policy import recognition_language, alignment_language
 
+def select_hotwords(words, context, limit=12):
+    matched=[w for w in words if w.casefold() in context.casefold()]
+    return (matched + [w for w in reversed(words) if w not in matched])[:limit]
+
+def extract_hotwords(model_path,input_path,output_path):
+    import mlx.core as mx
+    from mlx_audio.lm.models import qwen2
+    from mlx_audio.lm.generate import generate
+    from mlx_audio.utils import load_config,load_weights,apply_quantization
+    from transformers import AutoTokenizer
+    model_path=pathlib.Path(model_path).resolve(strict=True)
+    payload=json.loads(pathlib.Path(input_path).read_text())
+    system,prompt=payload['system'],payload['prompt']
+    if not isinstance(system,str) or not isinstance(prompt,str) or len(system)+len(prompt)>7000:raise ValueError('Invalid extraction input')
+    config=load_config(model_path)
+    if config.get('model_type')!='qwen2':raise ValueError('Invalid extraction model')
+    model=qwen2.Model(qwen2.ModelArgs.from_dict(config))
+    weights=load_weights(model_path);apply_quantization(model,config,weights)
+    model.load_weights(list(model.sanitize(weights).items()));mx.eval(model.parameters())
+    tokenizer=AutoTokenizer.from_pretrained(model_path,local_files_only=True,trust_remote_code=False)
+    # Qwen2.5's fixed chat framing; escape transcript-supplied special-token delimiters.
+    system=system.replace('<|','＜|');prompt=prompt.replace('<|','＜|')
+    text=f'<|im_start|>system\n{system}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n'
+    answer=generate(model,tokenizer,text,max_tokens=384,verbose=False)
+    pathlib.Path(output_path).write_text(json.dumps({'text':answer},ensure_ascii=False))
+
 def diarize(model_path,audio_path,output):
     import miniaudio,numpy as np
     import mlx.core as mx
@@ -57,12 +83,19 @@ def align_speakers(model_path,manifest_path,turns_path,output):
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
 
 def main():
+    if len(sys.argv)==5 and sys.argv[1]=='--extract-hotwords':
+        extract_hotwords(*sys.argv[2:]);return
     if len(sys.argv)==5 and sys.argv[1]=='--diarize':
         diarize(*sys.argv[2:]);return
     if len(sys.argv)==6 and sys.argv[1]=='--align-speakers':
         align_speakers(*sys.argv[2:]);return
-    if len(sys.argv)!=5:raise ValueError('usage: qwen-asr modelDirectory segmentsJSON language outputJSON')
-    model_path,manifest,language,output=sys.argv[1:]
+    if len(sys.argv) not in (5,6):raise ValueError('usage: qwen-asr modelDirectory segmentsJSON language outputJSON [hotwordsJSON]')
+    model_path,manifest,language,output=sys.argv[1:5]
+    hints=json.loads(pathlib.Path(sys.argv[5]).read_text()) if len(sys.argv)==6 else {}
+    words=hints.get('words',[])
+    if not isinstance(words,list) or len(words)>1000 or any(not isinstance(w,str) or not 2<=len(w)<=40 or '\n' in w or '\r' in w for w in words):raise ValueError('Invalid hotwords')
+    context=hints.get('context','')
+    if not isinstance(context,str) or len(context)>2000:raise ValueError('Invalid hotword context')
     model_path=pathlib.Path(model_path).resolve(strict=True)
     manifest=pathlib.Path(manifest).resolve(strict=True)
     clips=json.loads(manifest.read_text())
@@ -82,10 +115,12 @@ def main():
         model=load(model_path)
         for index,clip in enumerate(clips):
             with wave.open(clip['audio'],'rb') as w:audio=np.frombuffer(w.readframes(w.getnframes()),dtype='<i2').astype(np.float32)/32768
-            generated=model.generate(audio=audio,language=selected_language,max_tokens=512,temperature=0,
+            selected=select_hotwords(words,context)
+            generated=model.generate(audio=audio,language=selected_language,hotwords=selected or None,max_tokens=512,temperature=0,
                                      chunk_duration=30,min_chunk_duration=0.1,repetition_penalty=1.05,verbose=False)
             if generated.generation_tokens>=512:raise ValueError('Transcript token limit reached; partial result not saved')
             result.append(dict(text=generated.text.strip(),start=clip['start'],end=clip['end']))
+            context=(context+' '+generated.text)[-2000:]
             print('Qwen3-ASR: %d/%d'%(index+1,len(clips)),file=sys.stderr,flush=True)
             mx.clear_cache()
     output=pathlib.Path(output);temp=output.with_suffix('.partial')

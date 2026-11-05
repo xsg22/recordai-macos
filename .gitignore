@@ -1,7 +1,7 @@
 .build/
-.tools/
-.vendor/
-.models/
+/.tools
+/.vendor
+/.models
 dist/
 .DS_Store
 .build-check

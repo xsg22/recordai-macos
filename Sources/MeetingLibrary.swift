@@ -59,24 +59,28 @@ enum OrganizationError: LocalizedError {
 struct RecordingCollection: Codable, Equatable, Identifiable {
     var id = UUID()
     var name: String
+    var userId: UUID? = nil
+    var syncDeleted: Bool? = nil
 }
 struct LibraryOrganization: Codable, Equatable {
     var groups: [RecordingCollection] = []
     func group(_ id: UUID?) -> RecordingCollection? { groups.first { $0.id == id } }
-    mutating func setName(_ name: String, id: UUID?) throws -> UUID {
+    mutating func setName(_ name: String, id: UUID?, owner: UUID? = nil) throws -> UUID {
+        let owner = group(id)?.userId ?? owner
         let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !clean.isEmpty, clean.count <= 40, clean.rangeOfCharacter(from: .newlines) == nil,
-              !groups.contains(where: { $0.id != id && $0.name.compare(clean, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) else { throw OrganizationError.invalidName }
+              !groups.contains(where: { $0.id != id && $0.userId == owner && $0.name.compare(clean, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) else { throw OrganizationError.invalidName }
         let key = id ?? UUID()
         if let id, !groups.contains(where: { $0.id == id }) { throw MeetingLibraryError.missingMeeting }
         if let index = groups.firstIndex(where: { $0.id == key }) { groups[index].name = clean }
-        else { groups.append(RecordingCollection(id: key, name: clean)) }
+        else { groups.append(RecordingCollection(id: key, name: clean, userId: owner)) }
         return key
     }
 }
 
 /// seconds 沿用 0.1 版的转录处理耗时；duration 才是会议音频时长。
 struct MeetingRecord: Codable, Identifiable, Equatable {
+    var identitySchemaVersion = 2
     var id: UUID = UUID()
     var title: String
     var created: Date = Date()
@@ -98,6 +102,11 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
     var status: MeetingStatus = .completed
     var isStarred = false
     var groupID: UUID? = nil
+    var userId: UUID? = nil
+    var syncContent: LibrarySyncRecording? = nil
+    var syncedAudio: LibraryAudioArchive? = nil
+    var source: RecordingOrigin = .macos
+    var transcriptOrigin: TranscriptionOrigin = .local
     var actionItems: [MeetingActionItem] = []
     var attachments: [MeetingAttachment] = []
     var recoveryMessage: String? = nil
@@ -136,8 +145,19 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
         self.previewText = previewText
     }
 
+    var canSelectFinalForSync: Bool {
+        RecordingStateModel.allowsFinalTranscriptSync(transcriptOrigin,isFinal:status == .completed && pendingAudioFiles.isEmpty && (!text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || syncContent != nil))
+    }
+
+    var stateModel: RecordingStateModel {
+        let local: RecordingProcessingPhase = status == .transcribing ? .processing : (status == .failed ? .failed : (transcriptOrigin == .local && !text.isEmpty ? .ready : .notRequested))
+        return RecordingStateModel(origin: source, capture: status == .recording ? .recording : (status == .interrupted ? .interrupted : .finished),
+            localTranscription: local, remoteTranscription: syncContent?.formalOrigin == .remote ? .ready : .notRequested,
+            transfer: .localOnly, audio: !audioFiles.isEmpty ? .unverified : (syncContent != nil ? .remoteOnly : .missing))
+    }
+
     private enum CodingKeys: String, CodingKey {
-        case groupID, customSpeakerNameIDs
+        case identitySchemaVersion, groupID, customSpeakerNameIDs, userId, syncContent, syncedAudio, source, transcriptOrigin
         case captureWarnings, id, title, created, text, subtitles, language, seconds, duration, notes, summary, isStarred, actionItems, attachments
         case legacyLiveText, liveUtterances, transcriptParagraphs, speakerNames, speakerAliases, speakerAnalysisStatus, speakerAnalysisMessage
         case importedCaptureSessions, transcriptionEngine, previewEngine, pendingAudioFiles, audioDurations, audioFiles, recordingSessionMode, continuousSegmentFiles, status, recoveryMessage, updated, previewText, enhancedNotes, assistantEntries, summaryCitations, enhancedNotesCitations, summaryContextWasTruncated, enhancedNotesContextWasTruncated
@@ -145,6 +165,20 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
 
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
+        if let version = try values.decodeIfPresent(Int.self, forKey: .identitySchemaVersion) {
+            guard version == 2 else { throw DecodingError.dataCorruptedError(forKey: .identitySchemaVersion, in: values, debugDescription: "Unsupported identity schema") }
+        } else {
+            // Pre-account local records are safe to read as unowned. Never guess an old cloud identity.
+            struct AnyKey: CodingKey { var stringValue: String; init?(stringValue: String) { self.stringValue = stringValue }; var intValue: Int? { nil }; init?(intValue: Int) { return nil } }
+            let raw = try decoder.container(keyedBy: AnyKey.self)
+            let identityKeys = ["userId", "userID", "accountId", "accountID", "appleSub", "loginSubject", "syncContent", "syncedAudio"]
+            guard try identityKeys.allSatisfy({ name in
+                let key = AnyKey(stringValue: name)!
+                if !raw.contains(key) { return true }
+                return try raw.decodeNil(forKey: key)
+            }) else { throw DecodingError.dataCorruptedError(forKey: .identitySchemaVersion, in: values, debugDescription: "Legacy account ownership cannot be inferred") }
+        }
+        syncedAudio = try values.decodeIfPresent(LibraryAudioArchive.self,forKey:.syncedAudio)
         id = try values.decode(UUID.self, forKey: .id)
         title = try values.decode(String.self, forKey: .title)
         created = try values.decode(Date.self, forKey: .created)
@@ -163,6 +197,10 @@ struct MeetingRecord: Codable, Identifiable, Equatable {
         audioDurations = try values.decodeIfPresent([String: Double].self, forKey: .audioDurations) ?? [:]
         status = try values.decodeIfPresent(MeetingStatus.self, forKey: .status) ?? .completed
         groupID = try values.decodeIfPresent(UUID.self, forKey: .groupID)
+        userId = try values.decodeIfPresent(UUID.self, forKey: .userId)
+        syncContent = try values.decodeIfPresent(LibrarySyncRecording.self, forKey: .syncContent)
+        source = try values.decodeIfPresent(RecordingOrigin.self, forKey: .source) ?? syncContent.flatMap { RecordingOrigin(rawValue:$0.source) } ?? .macos
+        transcriptOrigin = try values.decodeIfPresent(TranscriptionOrigin.self, forKey: .transcriptOrigin) ?? (syncContent == nil ? .local : .remote)
         isStarred = try values.decodeIfPresent(Bool.self, forKey: .isStarred) ?? false
         actionItems = try values.decodeIfPresent([MeetingActionItem].self, forKey: .actionItems) ?? []
         attachments = try values.decodeIfPresent([MeetingAttachment].self, forKey: .attachments) ?? []
@@ -206,6 +244,8 @@ enum MeetingLibraryError: LocalizedError {
 /// 音频只保存会议目录内相对文件名；标题从不参与路径拼接。
 final class MeetingLibrary {
     let root: URL
+    var activeSyncUserId: UUID?
+    var didChange: (() -> Void)?
     private let manager: FileManager
     private(set) var warnings: [String] = []
     private(set) var publicationError: String?
@@ -221,32 +261,50 @@ final class MeetingLibrary {
         republishAgentData()
     }
 
-    func organization() throws -> LibraryOrganization {
+    private func rawOrganization() throws -> LibraryOrganization {
         let url = root.appendingPathComponent("organization.json")
         guard manager.fileExists(atPath: url.path) else { return LibraryOrganization() }
         return try JSONDecoder().decode(LibraryOrganization.self, from: Data(contentsOf: url))
     }
-    func saveOrganization(_ value: LibraryOrganization) throws {
+    func organization() throws -> LibraryOrganization {
+        var value = try rawOrganization()
+        value.groups = value.groups.filter { ($0.userId == nil || $0.userId == activeSyncUserId) && $0.syncDeleted != true }
+        return value
+    }
+    func saveOrganization(_ visible: LibraryOrganization) throws {
+        let raw = try rawOrganization().groups
+        let visibleIds = Set(visible.groups.map(\.id))
+        let hidden = raw.filter { !visibleIds.contains($0.id) && ($0.syncDeleted == true || ($0.userId != nil && $0.userId != activeSyncUserId)) }
+        let removed = raw.filter { !visibleIds.contains($0.id) && $0.syncDeleted != true && $0.userId != nil && $0.userId == activeSyncUserId }.map { row -> RecordingCollection in var row = row; row.syncDeleted = true; return row }
+        let value = LibraryOrganization(groups: visible.groups + hidden + removed)
+
         for rows in [value.groups] {
             guard Set(rows.map(\.id)).count == rows.count else { throw OrganizationError.invalidName }
-            var validated = LibraryOrganization()
-            for row in rows { _ = try validated.setName(row.name, id: nil) }
+            for owner in Set(rows.map { $0.userId }) {
+                var validated = LibraryOrganization()
+                for row in rows where row.userId == owner && row.syncDeleted != true { _ = try validated.setName(row.name, id: nil) }
+            }
         }
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(value).write(to: root.appendingPathComponent("organization.json"), options: .atomic)
-        republishAgentData()
+        republishAgentData(); didChange?()
     }
 
+    func syncDeletions(_ userId:UUID) throws -> Set<String> {
+        let groups = try rawOrganization().groups.filter { $0.userId == userId && $0.syncDeleted == true }.map { LibrarySyncValue.key(.group,$0.id) }
+        let records = try listTrashed().filter { $0.userId == userId }.map { LibrarySyncValue.key(.recording,$0.id) }
+        return Set(groups + records)
+    }
     func directory(for id: UUID) -> URL {
         meetingsDirectory.appendingPathComponent(id.uuidString, isDirectory: true)
     }
 
-    func load(_ id: UUID) throws -> MeetingRecord {
+    func load(_ id: UUID, includingHidden: Bool = false) throws -> MeetingRecord {
         let url = directory(for: id).appendingPathComponent("meeting.json")
         guard manager.fileExists(atPath: url.path) else { throw MeetingLibraryError.missingMeeting }
         let data = try Data(contentsOf: url)
         var record = try JSONDecoder().decode(MeetingRecord.self, from: data)
-        guard record.id == id else { throw MeetingLibraryError.missingMeeting }
+        guard record.id == id, includingHidden || record.userId == nil || record.userId == activeSyncUserId else { throw MeetingLibraryError.missingMeeting }
         // 0.14.0 未保存会话类型；仅在字段缺失且存在切片清单时识别旧持续录音。
         if record.recordingSessionMode == .conference,
            let fields = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -255,7 +313,9 @@ final class MeetingLibrary {
             record.recordingSessionMode = .continuous
         }
         let catalog = try organization()
-        record.groupID = catalog.group(record.groupID)?.id
+        if record.userId == nil { record.groupID = catalog.group(record.groupID)?.id }
+        else if let groupId = record.groupID, try rawOrganization().groups.contains(where: { $0.id == groupId && $0.syncDeleted == true }) { record.groupID = nil }
+        else if let group = catalog.group(record.groupID), group.userId != record.userId { record.groupID = nil }
         return record
     }
 
@@ -268,7 +328,8 @@ final class MeetingLibrary {
         for directory in directories {
             guard let id = UUID(uuidString: directory.lastPathComponent) else { continue }
             do {
-                let record = try load(id)
+                let record = try load(id,includingHidden:true)
+                guard record.userId == nil || record.userId == activeSyncUserId else { continue }
                 let search = [record.title, record.text].joined(separator: "\n")
                 if query.isEmpty || search.localizedStandardContains(query) { result.append(record) }
             } catch { warnings.append("录音 \(id.uuidString) 读取失败：\(error.localizedDescription)") }
@@ -278,6 +339,12 @@ final class MeetingLibrary {
 
     @discardableResult
     func save(_ record: MeetingRecord) throws -> MeetingRecord {
+        guard record.userId == nil || record.userId == activeSyncUserId else { throw MeetingLibraryError.missingMeeting }
+        let existingURL = directory(for:record.id).appendingPathComponent("meeting.json")
+        if manager.fileExists(atPath:existingURL.path) {
+            let existing = try load(record.id,includingHidden:true)
+            guard existing.userId == nil || existing.userId == record.userId else { throw MeetingLibraryError.missingMeeting }
+        }
         guard !record.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw MeetingLibraryError.invalidTitle
         }
@@ -285,7 +352,8 @@ final class MeetingLibrary {
         for attachment in record.attachments { _ = try attachmentURL(attachment, meeting: record.id) }
         var saved = record
         let catalog = try organization()
-        saved.groupID = catalog.group(saved.groupID)?.id
+        if saved.userId == nil { saved.groupID = catalog.group(saved.groupID)?.id }
+        else if let group = catalog.group(saved.groupID), group.userId != saved.userId { throw OrganizationError.invalidName }
         saved.updated = Date()
         let directory = directory(for: saved.id)
         try manager.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -294,7 +362,7 @@ final class MeetingLibrary {
         try encoder.encode(saved).write(to: directory.appendingPathComponent("meeting.json"), options: .atomic)
         do { try publisher.publish(saved, libraryRoot: root); publicationError = nil }
         catch { publicationError = "本机Agent快照更新失败，录音原件已保存：\(error.localizedDescription)" }
-        return saved
+        didChange?(); return saved
     }
 
     @discardableResult
@@ -498,9 +566,11 @@ final class MeetingLibrary {
                 guard let id = UUID(uuidString: directory.lastPathComponent),
                       (try? directory.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true,
                       let data = try? Data(contentsOf: directory.appendingPathComponent("meeting.json")),
-                      var record = try? JSONDecoder().decode(MeetingRecord.self, from: data), record.id == id else { return nil }
+                      var record = try? JSONDecoder().decode(MeetingRecord.self, from: data), record.id == id, record.userId == nil || record.userId == activeSyncUserId else { return nil }
                 let catalog = try organization()
-                record.groupID = catalog.group(record.groupID)?.id
+                if record.userId == nil { record.groupID = catalog.group(record.groupID)?.id }
+        else if let groupId = record.groupID, try rawOrganization().groups.contains(where: { $0.id == groupId && $0.syncDeleted == true }) { record.groupID = nil }
+        else if let group = catalog.group(record.groupID), group.userId != record.userId { record.groupID = nil }
                 return record
             }.sorted { $0.updated > $1.updated }
     }
@@ -513,6 +583,7 @@ final class MeetingLibrary {
         try manager.moveItem(at: directory(for: id), to: trashDirectory.appendingPathComponent(id.uuidString, isDirectory: true))
         do { try publisher.remove(id); publicationError = nil }
         catch { publicationError = "录音已移入回收站，本机Agent快照清理失败，请重新发布。" }
+        didChange?()
     }
 
     @discardableResult func restoreTrashed(_ id: UUID) throws -> MeetingRecord {
@@ -525,7 +596,7 @@ final class MeetingLibrary {
         let restored = try load(id)
         do { try publisher.publish(restored, libraryRoot: root); publicationError = nil }
         catch { publicationError = "录音已恢复，本机Agent快照暂未更新，请重新发布。" }
-        return restored
+        didChange?(); return restored
     }
 
     /// 用于初次发布和显式修复；不改变会议状态。

@@ -10,9 +10,9 @@ TalkTuck 是 macOS 本地录音与转录应用。支持录音、音频导入、�
 
 [产品介绍](https://xueshengguo.com/apps/talktuck/) · [个人主页](https://xueshengguo.com/) · [GitHub Releases](https://github.com/xsg22/talktuck/releases)
 
-**[下载 Mac 0.17.1 功能验证版](https://github.com/xsg22/talktuck/releases/tag/v0.17.1-functional.6)** · [DMG](https://github.com/xsg22/talktuck/releases/download/v0.17.1-functional.6/RecordAI-0.17.1-arm64.dmg) · [PKG](https://github.com/xsg22/talktuck/releases/download/v0.17.1-functional.6/RecordAI-0.17.1-arm64.pkg)
+**[下载 Mac 0.17.2（44）](https://github.com/xsg22/talktuck/releases/tag/v0.17.2)** · [DMG](https://github.com/xsg22/talktuck/releases/download/v0.17.2/TalkTuck-0.17.2-arm64.dmg) · [PKG](https://github.com/xsg22/talktuck/releases/download/v0.17.2/TalkTuck-0.17.2-arm64.pkg)
 
-适用于 Apple Silicon、macOS 14 或更新版本。当前公开安装包仍使用 RecordAI 名称和文件名；首次使用需下载语音模型。该包是功能验证预发布，采用临时签名，尚未经过 Apple 公证。
+适用于 Apple Silicon、macOS 14 或更新版本。安装包、应用名称与图标均已统一为 TalkTuck；首次使用需下载语音模型。该包是功能验证预发布，采用本地签名，尚未经过 Apple 公证。
 
 ## 在 Mac 上可以做什么
 
@@ -22,47 +22,27 @@ TalkTuck 是 macOS 本地录音与转录应用。支持录音、音频导入、�
 - **转录与回听**：导入已有音频，按段落定位原音，校正文字并导出 Markdown / SRT。
 - **Agent 接入**：让 Codex、Claude Code 等本机 Agent 通过 Skill、CLI 或 MCP 查询录音和转录，按需整理重点。
 
-## 产品实拍 · macOS
+## 产品实拍 · macOS 0.17.2（44）
 
-以下为 Mac 原生客户端截图，使用合成音频或隔离演示资料，不含私人录音。部分来自开发预览，图片保留截图时的 RecordAI 名称；它与 TalkTuck 是同一个产品。主功能与具体包的验证范围见[验证记录](Docs/validation/release-0.17.1-functional.2/README.md)。
+以下截图来自本版正式构建的原生客户端，使用独立资料目录和合成语音，不含私人录音、手机号或登录凭据。截图与本次验证范围见[发布验证记录](Docs/validation/release-0.17.2/README.md)。
 
-### 录音资料库与 Agent 接入
+### 录音、转录和原音回听
 
-录音、转录和原音放在一起；复制接入提示词，让习惯的 Agent 继续处理内容。
+用紧凑的段落查看发言内容，点击时间定位原音；资料仍保存在本机，Agent 可通过 CLI / MCP 查询定稿。
 
-![TalkTuck Mac 录音资料库、紧凑转录与 Agent 接入引导（隔离演示资料，开发预览）](Docs/images/talktuck-macos/library-agent.png)
+![TalkTuck 0.17.2 的录音资料库、波形与转录正文](Docs/images/talktuck-macos/library-0172.png)
 
-### 录音中分别控制声音来源
+### 分组整理
 
-麦克风和系统声音独立开关，实时文字显示在录音页下方。
+按工作、学习或访谈整理录音，分组筛选和全文搜索帮助找回内容；移除分组会保留录音。
 
-![TalkTuck macOS 录音页：麦克风与系统声音开关、实时字幕和录音控制（开发预览）](Docs/images/talktuck-macos/recording-sources.png)
+![TalkTuck 0.17.2 分组管理](Docs/images/talktuck-macos/groups-0172.png)
 
-### mini 悬浮窗
+### 更清晰的设置导航
 
-缩成小窗后仍可查看双行字幕、控制音源和暂停录音。
+录音与转录、本地模型、个人热词、TalkTuck 账号、第三方账号与 Agent 分开管理。界面语言与转录语言可以分别选择。
 
-![TalkTuck mini 录音悬浮窗：双行字幕、音源开关、暂停与停止（开发预览）](Docs/images/talktuck-macos/mini.png)
-
-### 按工作、学习等分组管理
-
-创建、重命名和移除分组；移除分组会保留录音。
-
-![TalkTuck Mac 分组管理：工作、学习分组及重命名和移除操作（开发预览）](Docs/images/talktuck-macos/groups.png)
-
-### 导入音频后的转录与回听
-
-下面是 0.17.1 候选包导入合成语音后得到的转录，支持发言人分段和按段回放。
-
-![TalkTuck macOS 深色界面：实际导入合成音频后的波形、发言人分段与转录正文](Docs/validation/release-0.17.1-functional.2/import-e2e/03-transcribed.jpg)
-
-### 英文界面与中英混合转录
-
-界面语言和转录语言可以分别选择，已有录音内容保持原样。
-
-![TalkTuck Mac 英文界面与中英混合转录实际效果](Docs/images/recordai-library-0170.jpg)
-
-![TalkTuck macOS 设置：独立选择界面语言、音源和转录语言](Docs/images/recordai-settings-0170.jpg)
+![TalkTuck 0.17.2 的设置导航、界面语言与录音设置](Docs/images/talktuck-macos/settings-0172.png)
 
 [完整设计册](Docs/design-v2/index.html) · [逐页验收记录](Docs/UI验收.md) · [截图来源](Docs/images/talktuck-macos/README.md)
 
@@ -92,7 +72,7 @@ python3 Scripts/test-recording-entry.py
 构建应用：
 
 ```zsh
-COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/RecordAI.app" /bin/zsh Scripts/build.zsh
+COHEAR_STAGE_ONLY=1 RECORD_AI_BUILD_APP_PATH="$PWD/.build/local/TalkTuck.app" /bin/zsh Scripts/build.zsh
 ```
 
 模型权重、第三方运行时二进制、安装包、录音与授权凭据不纳入仓库。模型推理验收需要另外下载模型和测试音频。
@@ -118,7 +98,7 @@ zsh Scripts/release.zsh
 
 CLI `setup --json`、MCP `get_agent_setup` 和本机 `AgentData/SETUP.md` 提供安装说明。录音控制另有显式 `--launch`、实际状态和命令回执查询，接入测试不会自动录音。详见 [接口与验证说明](Docs/Agent接口.md)。该功能随 0.16.1 功能验证版提供；真实各品牌 Agent 的加载兼容性尚未全部联测。
 
-![首次转录后的 Agent 接入引导（合成音频验收资料）](Docs/validation/release-0.16.2/import-e2e/03-transcribed.jpg)
+![TalkTuck 0.17.2 首次转录后的 Agent 接入引导（合成语音）](Docs/images/talktuck-macos/agent-0172.png)
 
 ## 开发预览：自适应分析报告
 
@@ -132,13 +112,13 @@ python3 -m unittest discover -s Tests/reporting -v
 
 ## 录音资料管理
 
-桌面主流程收敛为录音、转录、回听、分组与 Agent 接入。主阅读页直接展示转录正文，移除时间点、重复的时间线，以及内置笔记、摘要、问答、Live Q&A 和行动项的全部操作入口。转录采用时间、发言人、正文同一行的紧凑布局；右侧仅保留录音分组。设置仅管理语音识别模型，不再提供辅助总结模型入口。旧版保存的历史内容继续保存在磁盘上，分析由外部 Agent 按需处理。
+桌面主流程收敛为录音、转录、回听、分组与 Agent 接入。主阅读页直接展示转录正文，移除时间点、重复的时间线，以及内置笔记、摘要、问答、Live Q&A 和行动项的全部操作入口。转录采用时间、发言人、正文同一行的紧凑布局；右侧仅保留录音分组。设置分开管理语音识别模型、个人热词、TalkTuck 账号、第三方账号与 Agent 接入。旧版保存的历史内容继续保存在磁盘上，分析由外部 Agent 按需处理。
 
 - 一层分组，支持创建、重命名、移除、筛选与批量移动；已按最新范围移除标签功能，压缩侧栏控件，为录音列表留出更多空间。
 - 旧转录在阅读层合并短碎段并保留原始引用；新转录在发言人对齐后抑制连续短碎段，不强行合并完整短答。
 - CLI/MCP 可按分组、录音标题和正文查找，整理信息使用独立版本，不使正文引用失效。
 
-上述功能随 0.16.2 功能验证版交付。详细契约、兼容规则与验证命令见[资料管理说明](Docs/产品定位与资料管理.md)，当前候选包证据见[本版验证记录](Docs/validation/release-0.17.0/README.md)。私人音频和截图不作为公开示例提交。
+上述功能随 0.16.2 功能验证版交付。详细契约、兼容规则与验证命令见[资料管理说明](Docs/产品定位与资料管理.md)，当前安装包证据见[本版验证记录](Docs/validation/release-0.17.2/README.md)。私人音频和截图不作为公开示例提交。
 
 ```zsh
 zsh Scripts/test-library-management.zsh

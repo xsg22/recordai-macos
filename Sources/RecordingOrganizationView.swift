@@ -14,7 +14,7 @@ struct RecordingOrganizationPanel: View {
             if let record = state.current {
                 Picker(L10n.text("分组"), selection: Binding(get: { state.organization.group(record.groupID)?.id.uuidString ?? "" }, set: { _ = state.setGroup(UUID(uuidString: $0), recordIDs: [record.id]) })) {
                     Text(L10n.text("未分组")).tag("")
-                    ForEach(state.organization.groups) { Text($0.name).tag($0.id.uuidString) }
+                    ForEach(state.organization.groups.filter { $0.userId == record.userId }) { Text($0.name).tag($0.id.uuidString) }
                 }.pickerStyle(.menu).disabled(state.locked)
 
             }
@@ -45,7 +45,7 @@ struct CollectionManager: View {
                     if rows.isEmpty { Text(L10n.text("还没有分组")).foregroundStyle(.secondary).padding(30) }
                     ForEach(rows) { row in
                         HStack {
-                            Label(row.name, systemImage: "folder").frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment:.leading) { Label(row.name, systemImage: "folder");Text(L10n.text(row.userId == nil ? "本机分组" : "账号分组")).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth:.infinity,alignment:.leading)
                             Text(L10n.text("\(state.history.filter { $0.groupID == row.id }.count) 条录音")).foregroundStyle(.secondary)
                             Button(L10n.text("重命名")) { editingID = row.id; name = row.name }
                             Button(L10n.text("移除")) { removing = row }

@@ -13,7 +13,7 @@ enum QuitActivity: Equatable {
     }
     var title: String {
         switch self {
-        case .idle: return "退出倾听转录"
+        case .idle: return "退出 TalkTuck"
         case .recording: return "保存录音后退出？"
         case .transcribing: return "取消转录并退出？"
         case .saving: return "正在准备或保存录音"

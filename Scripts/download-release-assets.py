@@ -15,11 +15,11 @@ parser.add_argument('--destination', type=Path, required=True)
 parser.add_argument('--report', type=Path, required=True)
 parser.add_argument('--metadata', type=Path, help='Release JSON read through an authenticated GitHub connection; avoids anonymous API limits')
 args = parser.parse_args()
-match = re.fullmatch(r'v(\d+\.\d+\.\d+)-functional\.[1-9][0-9]*',args.tag)
-if not match: parser.error('Expected a RecordAI functional release tag')
+match = re.fullmatch(r'v(\d+\.\d+\.\d+)(?:-functional\.[1-9][0-9]*)?',args.tag)
+if not match: parser.error('Expected a TalkTuck version or functional release tag')
 version = match[1]
 dest = args.destination.resolve(); dest.mkdir(parents=True,exist_ok=True)
-api = 'https://api.github.com/repos/xsg22/recordai-macos/releases/tags/'+args.tag
+api = 'https://api.github.com/repos/xsg22/talktuck/releases/tags/'+args.tag
 direct = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 standard = urllib.request.build_opener()
 
@@ -39,11 +39,12 @@ if args.metadata:
 else:
     with request(api,alternate=True) as response: release = json.load(response)
 assert release['tag_name'] == args.tag and not release['draft']
-assert release['html_url'] == 'https://github.com/xsg22/recordai-macos/releases/tag/'+args.tag
+assert release['html_url'] == 'https://github.com/xsg22/talktuck/releases/tag/'+args.tag
 assets = {asset['name']:asset for asset in release['assets']}
-names = [f'RecordAI-{version}-arm64.{ext}' for ext in ['dmg','dmg.sha256','pkg','pkg.sha256']]
+prefix = 'TalkTuck' if f'TalkTuck-{version}-arm64.dmg' in assets else 'RecordAI'
+names = [f'{prefix}-{version}-arm64.{ext}' for ext in ['dmg','dmg.sha256','pkg','pkg.sha256']]
 assert all(name in assets for name in names),'Missing release assets'
-assert all(assets[name]['browser_download_url'] == f'https://github.com/xsg22/recordai-macos/releases/download/{args.tag}/{name}' for name in names)
+assert all(assets[name]['browser_download_url'] == f'https://github.com/xsg22/talktuck/releases/download/{args.tag}/{name}' for name in names)
 digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
 
 def verify(path):
@@ -52,7 +53,7 @@ def verify(path):
     assert meta['digest'] == 'sha256:'+digest(path),'Downloaded bytes differ from GitHub asset digest'
 
 def fetch(extension):
-    name = f'RecordAI-{version}-arm64.{extension}'
+    name = f'{prefix}-{version}-arm64.{extension}'
     meta = assets[name]; final = dest/name
     with request(assets[name+'.sha256']['browser_download_url']) as response: checksum = response.read()
     expected, filename = checksum.decode().split()

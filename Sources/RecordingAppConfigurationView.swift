@@ -6,10 +6,12 @@ struct RecordingAppConfigurationView: View {
     @ObservedObject var state: AppState
     @State private var section = "recording"
     @State private var showingSpeechModels = false
+    @State private var newHotword = ""
+    @StateObject private var hotwordModel = HotwordModelStore()
     init(state: AppState, initialSection: String = "recording") {
         self.state = state; _section = State(initialValue: initialSection)
     }
-    private let sections = [("recording", "录音与转录", "waveform"), ("models", "本地模型", "cpu"), ("accounts", "同步账号", "person.crop.circle"), ("data", "Agent 与数据", "externaldrive")]
+    private let sections = [("recording", "录音与转录", "waveform"), ("models", "本地模型", "cpu"), ("hotwords", "个人热词", "text.book.closed"), ("talktuck", "TalkTuck 账号", "person.crop.circle"), ("accounts", "第三方账号", "link"), ("data", "Agent 与数据", "externaldrive")]
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 6) {
@@ -21,6 +23,7 @@ struct RecordingAppConfigurationView: View {
                             .foregroundStyle(section == item.0 ? RecordAITheme.accent : .primary)
                             .background(section == item.0 ? RecordAITheme.accent.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 8))
                     }.buttonStyle(.plain).accessibilityAddTraits(section == item.0 ? .isSelected : [])
+                        .accessibilityIdentifier("settings-section-" + item.0)
                 }
                 Spacer()
                 Label(L10n.text("本机存储"), systemImage: "lock.shield").font(AppTypography.secondary).foregroundStyle(.secondary).padding(12)
@@ -31,6 +34,8 @@ struct RecordingAppConfigurationView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     switch section {
                     case "models": models
+                    case "hotwords": hotwordSettings
+                    case "talktuck": talkTuckAccount
                     case "accounts": accounts
                     case "data": data
                     default: recording
@@ -99,9 +104,81 @@ struct RecordingAppConfigurationView: View {
         }
     }
 
+    private var hotwordSettings: some View {
+        Group {
+            RecordAIPageHeader(title: L10n.text("个人热词"), subtitle: L10n.text("确认的人名、项目名和术语会用于后续本地最终转录。")) { EmptyView() }
+            RecordAICard {
+                HStack {
+                    Text(L10n.text("本地候选词模型")).font(AppTypography.heading)
+                    Spacer()
+                    Text(L10n.text(hotwordModel.ready ? "已就绪" : "尚未下载")).font(AppTypography.secondary)
+                }
+                Text(L10n.text("模型约 0.9 GB，下载后在本机提取候选词；不会上传转录。"))
+                    .font(AppTypography.secondary).foregroundStyle(.secondary)
+                if !hotwordModel.ready {
+                    Button(L10n.text("下载本地提取模型")) { hotwordModel.download() }.disabled(hotwordModel.busy)
+                }
+                if hotwordModel.busy { ProgressView(); Button(L10n.text("取消下载")) { hotwordModel.cancel() } }
+                if !hotwordModel.status.isEmpty { Text(L10n.text(hotwordModel.status)).font(AppTypography.secondary).foregroundStyle(.secondary) }
+            }.task { hotwordModel.refresh() }
+            RecordAICard {
+                Text(L10n.format("已确认 · {0}", String(state.hotwords.words.count))).font(AppTypography.heading)
+                HStack {
+                    TextField(L10n.text("输入专有名词"), text: $newHotword).textFieldStyle(.roundedBorder)
+                    Button(L10n.text("添加")) { if state.hotwords.add(newHotword) { newHotword = "" } }
+                }
+                ForEach(state.hotwords.words, id: \.self) { word in
+                    HStack { Text(word); Spacer(); Button(L10n.text("删除")) { state.hotwords.remove(word) } }
+                }
+                if state.hotwords.words.isEmpty { Text(L10n.text("还没有已确认的热词。")).foregroundStyle(.secondary) }
+                Text(L10n.text("优先选择标题或前文中出现的词，不足时补充最近确认的词，每段最多 12 个。"))
+                    .font(AppTypography.secondary).foregroundStyle(.secondary)
+            }
+            RecordAICard {
+                HStack {
+                    Text(L10n.format("待确认 · {0}", String(state.hotwords.candidates.count))).font(AppTypography.heading)
+                    Spacer()
+                    Button(L10n.text("从当前转录提取")) { state.hotwords.extract(from: state.text) }
+                        .disabled(state.hotwords.extracting || state.text.isEmpty || state.locked)
+                }
+                Text(L10n.text("候选词来自本地模型，可能有误；请对照录音确认拼写。")).font(AppTypography.secondary).foregroundStyle(.secondary)
+                ForEach(state.hotwords.candidates) { candidate in
+                    VStack(alignment: .leading) {
+                        HStack { Text(candidate.word).fontWeight(.semibold); Spacer(); Button(L10n.text("加入")) { state.hotwords.accept(candidate) }; Button(L10n.text("忽略")) { state.hotwords.reject(candidate) } }
+                        Text(candidate.context).font(AppTypography.secondary).foregroundStyle(.secondary).textSelection(.enabled)
+                    }
+                }
+                if !state.hotwords.status.isEmpty { Text(L10n.text(state.hotwords.status)).font(AppTypography.secondary).foregroundStyle(.secondary) }
+            }
+            RecordAICard {
+                HStack {
+                    Text(L10n.text(state.hotwordSync.status)).font(AppTypography.secondary)
+                    Spacer()
+                    if state.cloudAccount.isSignedIn { Button(L10n.text("立即同步")) { Task { await state.hotwordSync.synchronize() } }.disabled(state.hotwordSync.syncing) }
+                    else { Button(L10n.text("登录 TalkTuck")) { section = "talktuck" } }
+                }
+                Text(L10n.text("登录 TalkTuck 后，仅已确认热词自动同步；候选词和录音不会因热词同步而上传。"))
+                    .font(AppTypography.secondary).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var talkTuckAccount: some View {
+        Group {
+            RecordAIPageHeader(title: L10n.text("TalkTuck 账号"), subtitle: L10n.text("登录后，按需同步 iPhone 与 Mac 上的文字、分组和原音。")) { EmptyView() }
+            TalkTuckAccountPanel(store: state.cloudAccount).disabled(state.locked)
+            if state.cloudAccount.isSignedIn, state.cloudAccount.librarySyncAvailable, let engine = state.librarySync {
+                RecordAICard { LibrarySyncPanel(engine:engine,choices:state.history.filter { $0.userId == nil && $0.canSelectFinalForSync }.map { LibrarySyncChoice(id:$0.id,title:$0.title,isLocalFinal:$0.transcriptOrigin == .local) },groupNames:Dictionary(uniqueKeysWithValues:state.organization.groups.map { ($0.id,$0.name) })) }.disabled(state.locked)
+            }
+            if state.cloudAccount.isSignedIn, let audio = state.libraryAudioSync {
+                RecordAICard { LibraryAudioSyncPanel(engine:audio,choices:state.history.filter { $0.userId == state.cloudAccount.userId }.map { LibrarySyncChoice(id:$0.id,title:$0.title) }) }.disabled(state.locked)
+            }
+        }
+    }
+
     private var accounts: some View {
         Group {
-            RecordAIPageHeader(title: L10n.text("同步账号"), subtitle: L10n.text("连接个人账号，转录完成后预览并同步。")) { EmptyView() }
+            RecordAIPageHeader(title: L10n.text("第三方账号"), subtitle: L10n.text("连接钉钉、飞书或 Notion，按需发送选定的转录内容。")) { EmptyView() }
             RecordAISegmentedPicker(items: PersonalDestination.allCases.map { (L10n.text($0.rawValue), $0) }, selection: $state.syncDestination)
             AccountConnectionPanel(state: state)
             RecordAIInfo(text: L10n.text("只在你点击同步后发送选定文字。原始音频保留在本机。"))

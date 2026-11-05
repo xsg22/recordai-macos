@@ -5,6 +5,8 @@ enum TranscriptionError: LocalizedError {
     var errorDescription: String? { if case let .message(message) = self { return message }; return nil }
 }
 
+private struct HotwordHints: Encodable { let words: [String]; let context: String }
+
 struct TranscriptionOutput: Sendable {
     let text: String
     let subtitles: String
@@ -51,7 +53,7 @@ final class TranscriptionEngine: @unchecked Sendable {
         }
     }
 
-    func transcribe(audio: URL, model: URL, executable: URL, language: String) throws -> TranscriptionOutput {
+    func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "") throws -> TranscriptionOutput {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("CoHear-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -68,7 +70,9 @@ final class TranscriptionEngine: @unchecked Sendable {
         }
         if detected.isEmpty { return TranscriptionOutput(text: "", subtitles: "") }
         let output = directory.appendingPathComponent("transcript.json")
-        try run(executable, [model.path, manifest.path, language, output.path], directory: directory, stage: "Qwen语音定稿")
+        let hints = directory.appendingPathComponent("hotwords.json")
+        try JSONEncoder().encode(HotwordHints(words: hotwords, context: String(context.unicodeScalars.suffix(2000)))).write(to: hints, options: .atomic)
+        try run(executable, [model.path, manifest.path, language, output.path, hints.path], directory: directory, stage: "Qwen语音定稿")
         let response = try JSONDecoder().decode(QwenOutput.self, from: Data(contentsOf: output))
         guard response.segments.count == detected.count else {
             throw TranscriptionError.message("定稿未覆盖全部语音片段，未保存部分结果。")

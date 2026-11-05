@@ -1,0 +1,69 @@
+{
+  "version": "0.17.2",
+  "build": "44",
+  "bundleID": "com.xsg.talktuck",
+  "verifiedAtUTC": "2026-11-05T03:15:53.902124+00:00",
+  "sourceDigest": "401dde104851c0ca10504f81710f246f77543c363c80d5de15f09c4078674e74",
+  "mainBaseline": "953ae7b",
+  "applicationSHA256": "2998b3743857d257086c2039b4224ffaf8e0e3fe4fe6e846d1b5d8138034aad5",
+  "bundledEngineSHA256": "a909b79306be8553849a0395ac5a46c1fc8f2906a745c413ccfb857ec8bbeee0",
+  "packages": [
+    {
+      "file": "TalkTuck-0.17.2-arm64.dmg",
+      "bytes": 175034287,
+      "sha256": "03301aa213ffd310a3f5b5b8218d7dd35a89cea54fcffedfae4e2841b0fe3a74"
+    },
+    {
+      "file": "TalkTuck-0.17.2-arm64.pkg",
+      "bytes": 158221123,
+      "sha256": "f69301c2ddfc03f63c5f3e02dab0854ef08b1e558ef73196df99f70631cfd69c"
+    }
+  ],
+  "checks": {
+    "integratedRegressionExitCode": 0,
+    "packageVerificationExitCode": 0,
+    "nativeAcceptance": {
+      "actualNativeImport": true,
+      "realBundledASR": true,
+      "speakerAnalysisCompleted": true,
+      "paragraphs": 2,
+      "durationSeconds": 26.4759375,
+      "manualCorrection": "Talk Talk → TalkTuck; 代办 → 待办",
+      "correctionPreservesIDsAndTimestamps": true,
+      "rawSubtitlesUnchanged": true,
+      "audioSHA256Unchanged": true,
+      "groupCreationAndAssignment": true,
+      "actualCLIQueryAndMarkdownExport": true,
+      "actualMCPQuery": true,
+      "actualSegmentPlaybackAndAutoPause": true
+    },
+    "screenshots": [
+      {
+        "file": "Docs/images/talktuck-macos/library-0172.png",
+        "sha256": "f0421921f1995bdfda11dcc9722466b3d8f791069af6d1d379b1410c6dc4dcdc",
+        "source": "Production binary, synthetic speech, isolated recording data; manually checked for private content"
+      },
+      {
+        "file": "Docs/images/talktuck-macos/groups-0172.png",
+        "sha256": "7e6cdef953caa7a417a68d9d1b2f5f241a179f2f8d5ed6ce9cd1c4be23d61019",
+        "source": "Production binary, synthetic speech, isolated recording data; manually checked for private content"
+      },
+      {
+        "file": "Docs/images/talktuck-macos/settings-0172.png",
+        "sha256": "9616ef727588757a8d00ccbd9adc31669ba516c88ba167c0fe899b470db487ba",
+        "source": "Production binary, synthetic speech, isolated recording data; manually checked for private content"
+      },
+      {
+        "file": "Docs/images/talktuck-macos/agent-0172.png",
+        "sha256": "75514a0b32ac3922db1c3241e8cd8a5457ae02e51a9cad579ec52561b9766229",
+        "source": "Production binary, synthetic speech, isolated recording data; manually checked for private content"
+      }
+    ],
+    "isolatedAccountHotwordSync": "Existing login, offline merge, conflict retry, isolation and restore passed with synthetic accounts and loopback server"
+  },
+  "limits": [
+    "No fresh hardware recording, real SMS login or physical iPhone/Watch sync",
+    "No complete design-book UI sign-off",
+    "App ad-hoc signed; PKG unsigned; not Apple notarized"
+  ]
+}

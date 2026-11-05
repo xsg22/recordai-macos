@@ -59,6 +59,15 @@ struct PlaybackWaveformView: View {
                         .accessibilityValue(L10n.text("\(Int(state.playbackTime)) 秒，共 \(Int(duration)) 秒"))
                         .disabled(!state.canPlayCurrentRecording)
                 }
+                .overlay {
+                    Color.clear.contentShape(Rectangle())
+                        .gesture(DragGesture(minimumDistance: 0).onChanged { value in
+                            guard state.canPlayCurrentRecording, geometry.size.width > 0 else { return }
+                            let fraction = min(1, max(0, value.location.x / geometry.size.width))
+                            state.seek(Double(fraction) * duration)
+                        })
+                        .accessibilityHidden(true)
+                }
             }.frame(height: 78).overlay(RoundedRectangle(cornerRadius: 6).stroke(seeking ? accent : .clear, lineWidth: 2))
             if loading { Text(L10n.text("声波正在生成，可直接播放")).font(AppTypography.secondary).foregroundStyle(.secondary) }
             if let issue { Text(L10n.text(issue)).font(AppTypography.secondary).foregroundStyle(.secondary).lineLimit(2) }

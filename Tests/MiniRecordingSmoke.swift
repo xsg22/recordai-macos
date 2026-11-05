@@ -4,6 +4,19 @@ import Foundation
 @main struct MiniRecordingSmoke {
     @MainActor static func main() async throws {
         _ = NSApplication.shared
+        let dragContainer = NSView(frame: NSRect(x: 0, y: 0, width: 600, height: 100))
+        let drag = MiniWindowDragView(frame: NSRect(x: 20, y: 10, width: 525, height: 76))
+        dragContainer.addSubview(drag)
+        drag.excludedRects = [NSRect(x: 300, y: 14, width: 30, height: 32)]
+        for point in [NSPoint(x: 262, y: 3), NSPoint(x: 262, y: 73), NSPoint(x: 3, y: 38), NSPoint(x: 522, y: 38), NSPoint(x: 200, y: 38)] {
+            precondition(drag.hitTest(drag.convert(point, to: dragContainer)) === drag, "四边空白和非交互内容都能拖动")
+        }
+        let controlPoint = drag.convert(NSPoint(x: 315, y: 30), to: dragContainer)
+        precondition(drag.hitTest(controlPoint) == nil, "按钮事件必须透传，不能变成窗口拖动")
+        drag.excludedRects = [NSRect(x: 14, y: 72, width: 497, height: 65)]
+        precondition(drag.hitTest(controlPoint) === drag, "布局变化后旧控件位置重新可拖动")
+        drag.setFrameSize(NSSize(width: 525, height: 168))
+        precondition(drag.hitTest(drag.convert(NSPoint(x: 250, y: 100), to: dragContainer)) == nil, "错误提示中的文字与按钮事件透传")
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-mini-" + UUID().uuidString)
         let namespace = "mini-test-" + UUID().uuidString
         let defaults = UserDefaults(suiteName: namespace)!
@@ -66,6 +79,6 @@ import Foundation
         precondition(state.mainWindow === main && !requestedOpen && main.isVisible,
                      "点击 Dock 应恢复原有主窗口")
         controller.hide(); main.orderOut(nil)
-        print("PASS: 原生mini待开始不采集、展开收起不改录音/ASR/计时、菜单栏保会话、异常尺寸、置顶持久化、副屏恢复。无硬件采集。")
+        print("PASS: mini四边及背景拖动命中、控件透传、动态布局、待开始不采集、展开收起不改录音/ASR/计时、菜单栏保会话、异常尺寸、置顶持久化、副屏恢复。无硬件采集。")
     }
 }

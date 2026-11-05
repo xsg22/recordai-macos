@@ -3,9 +3,9 @@ set -euo pipefail
 cd "${0:A:h:h}"
 
 releaseVersion="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-appBundle="${RECORD_AI_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/RecordAI.app}"
-imagePath="$PWD/dist/RecordAI-${releaseVersion}-arm64.dmg"
-packagePath="$PWD/dist/RecordAI-${releaseVersion}-arm64.pkg"
+appBundle="${RECORD_AI_BUILD_APP_PATH:-$PWD/.build/release-${releaseVersion//./}/TalkTuck.app}"
+imagePath="$PWD/dist/TalkTuck-${releaseVersion}-arm64.dmg"
+packagePath="$PWD/dist/TalkTuck-${releaseVersion}-arm64.pkg"
 verificationRoot="$(mktemp -d "${TMPDIR:-/tmp}/recordai-package-verify.XXXXXX")"
 mountPath="$verificationRoot/image"
 mountAttached=0
@@ -26,6 +26,8 @@ verify_app() {
     [[ "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$bundle/Contents/Info.plist")" == "$releaseVersion" ]]
     [[ "$(lipo -archs "$bundle/Contents/MacOS/RecordAIApp")" == arm64 ]]
     [[ -x "$bundle/Contents/MacOS/recordai" ]]
+    [[ -f "$bundle/Contents/Resources/AppIcon.icns" ]]
+    cmp Resources/AppIcon.png "$bundle/Contents/Resources/AppIcon.png"
     [[ -f "$bundle/Contents/Resources/AgentSkill/recordai/SKILL.md" ]]
     cmp Resources/AgentSkill/recordai/SKILL.md "$bundle/Contents/Resources/AgentSkill/recordai/SKILL.md"
     "$bundle/Contents/MacOS/recordai" setup --json > "$verificationRoot/agent-setup.json"
@@ -44,16 +46,16 @@ PY
 }
 
 verify_app "$appBundle"
-(cd dist && shasum -c "RecordAI-${releaseVersion}-arm64.dmg.sha256" && shasum -c "RecordAI-${releaseVersion}-arm64.pkg.sha256")
+(cd dist && shasum -c "TalkTuck-${releaseVersion}-arm64.dmg.sha256" && shasum -c "TalkTuck-${releaseVersion}-arm64.pkg.sha256")
 hdiutil verify "$imagePath"
 mkdir "$mountPath"
 hdiutil attach -readonly -nobrowse -mountpoint "$mountPath" "$imagePath" >/dev/null
 mountAttached=1
-verify_app "$mountPath/RecordAI.app"
-cmp "$appBundle/Contents/MacOS/RecordAIApp" "$mountPath/RecordAI.app/Contents/MacOS/RecordAIApp"
-cmp "$appBundle/Contents/MacOS/recordai" "$mountPath/RecordAI.app/Contents/MacOS/recordai"
+verify_app "$mountPath/TalkTuck.app"
+cmp "$appBundle/Contents/MacOS/RecordAIApp" "$mountPath/TalkTuck.app/Contents/MacOS/RecordAIApp"
+cmp "$appBundle/Contents/MacOS/recordai" "$mountPath/TalkTuck.app/Contents/MacOS/recordai"
 pkgutil --expand-full "$packagePath" "$verificationRoot/package"
-packagedApp="$verificationRoot/package/Payload/RecordAI.app"
+packagedApp="$verificationRoot/package/Payload/TalkTuck.app"
 verify_app "$packagedApp"
 cmp "$appBundle/Contents/MacOS/RecordAIApp" "$packagedApp/Contents/MacOS/RecordAIApp"
 cmp "$appBundle/Contents/MacOS/recordai" "$packagedApp/Contents/MacOS/recordai"

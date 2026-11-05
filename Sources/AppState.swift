@@ -73,6 +73,8 @@ final class AppState: ObservableObject {
     @Published private(set) var agentSetupIssue: String?
     private let agentOnboarding: AgentOnboarding
     let speechModels: ASRModelStore
+    let hotwords: PersonalHotwords
+    let hotwordSync: HotwordSync
     @Published var syncDestination: PersonalDestination = .dingtalk
     @Published var syncing = false
     @Published var syncStatus = ""
@@ -112,6 +114,9 @@ final class AppState: ObservableObject {
     let dingTalkAccount: DingTalkAccountConnection
     let notionAccount: NotionAccountConnection
     let feishuAccount: FeishuAccountConnection
+    let cloudAccount: TalkTuckAccountStore
+    @Published private(set) var librarySync: LibrarySyncEngine?
+    @Published private(set) var libraryAudioSync: LibraryAudioSyncEngine?
     let dingTalk: MCPConnectionStore
     let feishu: MCPConnectionStore
     let notion: MCPConnectionStore
@@ -179,10 +184,15 @@ final class AppState: ObservableObject {
 
     init(storageURL: URL? = nil, connectionNamespace: String = "", speechModelStore: ASRModelStore? = nil,
          dingTalkConnection: DingTalkAccountConnection? = nil, feishuConnection: FeishuAccountConnection? = nil,
-         notionConnection: NotionAccountConnection? = nil, recorder: MeetingRecorder? = nil) {
+         notionConnection: NotionAccountConnection? = nil, recorder: MeetingRecorder? = nil,
+         cloudAccount: TalkTuckAccountStore? = nil) {
+        self.cloudAccount = cloudAccount ?? TalkTuckAccountStore()
         self.recorder = recorder ?? MeetingRecorder()
         storage = storageURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("CoHearTranscribe", isDirectory: true)
+        let personalHotwords = PersonalHotwords(root: storage)
+        hotwords = personalHotwords
+        hotwordSync = HotwordSync(hotwords: personalHotwords)
         agentOnboarding = AgentOnboarding(storage: storage)
         speechModels = speechModelStore ?? ASRModelStore()
         dingTalk = MCPConnectionStore(namespace: connectionNamespace + "dingtalk")
@@ -192,6 +202,8 @@ final class AppState: ObservableObject {
         notionAccount = notionConnection ?? NotionAccountConnection(store: notion)
         feishuAccount = feishuConnection ?? FeishuAccountConnection()
         speechModels.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
+        hotwords.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
+        hotwordSync.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
         dingTalkAccount.onProgress = { [weak self] message in
             self?.syncStatus = message
             self?.status = message
@@ -224,7 +236,45 @@ final class AppState: ObservableObject {
         recordAIControlTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.processRecordAICommands(); self?.publishRecordingStatus() }
         }
+        configureLibrarySync()
         publishRecordingStatus()
+    }
+
+    private func configureLibrarySync() {
+        guard let library else { return }
+        let adapter = MacLibrarySyncAdapter(library:library)
+        adapter.beforeRead = { [weak self] in if self?.saveEdits() == false { throw LibrarySyncError.unavailable } }
+        let sync = LibrarySyncEngine(root:storage.appendingPathComponent("Sync"),adapter:adapter)
+        librarySync = sync
+        let audio = LibraryAudioSyncEngine(root:storage.appendingPathComponent("Sync"),adapter:MacLibraryAudioAdapter(library:library))
+        libraryAudioSync = audio
+        audio.onInstalled = { [weak self] in self?.reloadSyncProjection();if let self { self.selectPlaybackSegment(max(0,(self.current?.audioFiles.count ?? 1)-1)) } }
+        library.didChange = { [weak sync] in Task { @MainActor in sync?.localDidChange() } }
+        sync.onProjection = { [weak self] in self?.reloadSyncProjection() }
+        cloudAccount.onSessionChange = { [weak self, weak sync] in
+            guard let self else { return }
+            self.hotwordSync.connect(self.cloudAccount.syncAccess)
+            guard let sync else { return }
+            _ = self.saveEdits(); audio.disconnect(); sync.disconnect()
+            if let access = self.cloudAccount.syncAccess {
+                do {
+                    try sync.connect(userId:access.userId,server:access.server,transport:LibrarySyncHTTP(server:access.server,token:access.token))
+                    try audio.connect(userId:access.userId,server:access.server,transport:LibraryAudioHTTP(server:access.server,token:access.token))
+                }
+                catch { self.error = "本机同步状态无法读取，已暂停同步。" }
+            }
+            self.reloadSyncProjection()
+        }
+    }
+    func reloadSyncProjection() {
+        guard let library else { return }
+        let editorWasClean = current.map { title == $0.title && text == $0.text } ?? true
+        do {
+            organization = try library.organization(); history = try library.list(); trashedHistory = try library.listTrashed()
+            if !groupFilter.isEmpty, !organization.groups.contains(where: { $0.id.uuidString == groupFilter }) { groupFilter = "" }
+            if let selection, !history.contains(where: { $0.id == selection }) { self.selection = nil; text = ""; title = ""; stopPlayback() }
+            else if editorWasClean, let current { title = current.title;text = current.text }
+        } catch { self.error = "读取录音资料库失败：\(error.localizedDescription)" }
     }
 
     private func publishRecordingStatus() {
@@ -397,6 +447,7 @@ final class AppState: ObservableObject {
         guard !locked, let library, saveEdits() else { return }
         do {
             var record = MeetingRecord(title: url.deletingPathExtension().lastPathComponent, language: language, status: .recorded)
+            record.source = .imported
             _ = try library.importAudio(url, into: &record)
             try update(record)
             select(record.id)
@@ -452,6 +503,8 @@ final class AppState: ObservableObject {
         }
         let engine = TranscriptionEngine(); self.engine = engine
         let selectedLanguage = language
+        let selectedHotwords = hotwords.words
+        let initialHotwordContext = record.title + "\n" + (appending ? String(record.text.suffix(1800)) : "")
         task = Task { [self] in
             let start = Date()
             var textCommitted = false
@@ -467,7 +520,7 @@ final class AppState: ObservableObject {
                     guard duration.isFinite, duration >= 0 else { throw TranscriptionError.message("录音时长无效。") }
                     let output = try await withTaskCancellationHandler {
                         try await Task.detached(priority: .userInitiated) {
-                            try engine.transcribe(audio: url, model: model, executable: executable, language: selectedLanguage)
+                            try engine.transcribe(audio: url, model: model, executable: executable, language: selectedLanguage, hotwords: selectedHotwords, context: initialHotwordContext)
                         }.value
                     } onCancel: { engine.cancel() }
                     outputs.append(output); durations.append(duration)
@@ -557,6 +610,7 @@ final class AppState: ObservableObject {
             transcriptionGeneration = nil
             timer?.invalidate(); timer = nil; busy = false; self.engine = nil; task = nil
             transcriptionRecordingID = nil
+            if textCommitted, let completed = try? library.load(id) { hotwords.extract(from: completed.text) }
         }
     }
 
@@ -858,13 +912,15 @@ final class AppState: ObservableObject {
             audio = try library.audioURLs(for: record)[index]
         } catch { self.error = "持续录音片段读取失败：\(error.localizedDescription)"; return }
         let engine = TranscriptionEngine()
+        let selectedHotwords = hotwords.words
+        let hotwordContext = record.title + "\n" + String(record.text.suffix(1800))
         continuousWorkerEngine = engine
         setContinuousSegmentStatus(segment.id, "transcribing")
         continuousWorker = Task { [self] in
             do {
                 let output = try await withTaskCancellationHandler {
                     try await Task.detached(priority: .utility) {
-                        try engine.transcribe(audio: audio, model: model, executable: executable, language: record.language)
+                        try engine.transcribe(audio: audio, model: model, executable: executable, language: record.language, hotwords: selectedHotwords, context: hotwordContext)
                     }.value
                 } onCancel: { engine.cancel() }
                 try Task.checkCancellation()
@@ -927,7 +983,7 @@ final class AppState: ObservableObject {
               record.pendingAudioFiles.isEmpty else { return }
         record.status = .completed
         record.speakerAnalysisStatus = continuousSegments.contains(where: { $0.status == "partial" || $0.status == "failed" }) ? .partial : .completed
-        do { try update(record); status = "持续录音已保存，全部片段处理完成" }
+        do { try update(record); status = "持续录音已保存，全部片段处理完成"; hotwords.extract(from: record.text) }
         catch { self.error = "保存持续录音完成状态失败：\(error.localizedDescription)" }
     }
 
@@ -1426,7 +1482,8 @@ extension AppState {
         guard !locked, let library, saveEdits() else { return false }
         do {
             var next = organization
-            _ = try next.setName(name, id: id)
+            let owner: UUID? = id != nil ? next.group(id)?.userId : (librarySync?.enabled == true ? cloudAccount.userId : nil)
+            _ = try next.setName(name, id: id, owner: owner)
             try library.saveOrganization(next)
             organization = next; history = try library.list()
             return true
@@ -1437,8 +1494,9 @@ extension AppState {
         do {
             var next = organization
             next.groups.removeAll { $0.id == id }
-            // 原子写目录；旧记录的已删除关联在读取时归为未分组，回收站恢复同样适用。
+            // 删除分组时持久清除关联，保留每条原音。
             try library.saveOrganization(next)
+            for var record in try library.list() where record.groupID == id { record.groupID = nil; _ = try library.save(record) }
             organization = next; history = try library.list(); trashedHistory = try library.listTrashed()
             if groupFilter == id.uuidString { groupFilter = "" }
             return true
@@ -1446,6 +1504,7 @@ extension AppState {
     }
     @discardableResult func setGroup(_ id: UUID?, recordIDs: Set<UUID>) -> Bool {
         guard id == nil || organization.group(id) != nil else { return false }
+        if let id, let group = organization.group(id), history.contains(where: { recordIDs.contains($0.id) && $0.userId != group.userId }) { return false }
         return changeOrganization(recordIDs) { $0.groupID = id }
     }
     private func changeOrganization(_ ids: Set<UUID>, change: (inout MeetingRecord) -> Void) -> Bool {

@@ -3,24 +3,24 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>RecordAI</string>
+	<string>TalkTuck</string>
 	<key>CFBundleExecutable</key>
 	<string>RecordAIApp</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.byering.recordai</string>
+	<string>com.xsg.talktuck</string>
 	<key>CFBundleName</key>
-	<string>RecordAI</string>
+	<string>TalkTuck</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.17.1</string>
+	<string>0.17.2</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.byering.recordai.oauth</string>
+			<string>com.xsg.talktuck.oauth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>recordai</string>
@@ -28,7 +28,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>39</string>
+	<string>44</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>NSAudioCaptureUsageDescription</key>

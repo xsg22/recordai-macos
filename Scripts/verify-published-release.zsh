@@ -8,7 +8,7 @@ acceptanceContext="${2:A}"
 fixtureDirectory="${3:A}"
 evidenceDirectory="${4:A}"
 version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
-app="$PWD/.build/published-${version//./}/RecordAI.app"
+app="$PWD/.build/published-${version//./}/TalkTuck.app"
 mkdir -p "$evidenceDirectory" "${app:h}"
 python3 - "$assetDirectory" "$acceptanceContext" "$version" <<'PY'
 from pathlib import Path
@@ -17,7 +17,7 @@ assets,context,version=Path(sys.argv[1]),Path(sys.argv[2]),sys.argv[3]
 backup=context.parent/'local-candidate-assets';backup.mkdir(exist_ok=True)
 sha=lambda path:hashlib.sha256(path.read_bytes()).hexdigest()
 for extension in ['dmg','pkg']:
-    source=assets/f'RecordAI-{version}-arm64.{extension}'
+    source=assets/f'TalkTuck-{version}-arm64.{extension}'
     expected,filename=source.with_name(source.name+'.sha256').read_text().split()
     assert filename==source.name and sha(source)==expected
     for path in [source,source.with_name(source.name+'.sha256')]:
@@ -40,9 +40,9 @@ cleanup() {
 }
 trap cleanup EXIT
 mkdir "$verificationTemp/image"
-hdiutil attach -readonly -nobrowse -mountpoint "$verificationTemp/image" "dist/RecordAI-${version}-arm64.dmg" >/dev/null
+hdiutil attach -readonly -nobrowse -mountpoint "$verificationTemp/image" "dist/TalkTuck-${version}-arm64.dmg" >/dev/null
 attached=1
-ditto "$verificationTemp/image/RecordAI.app" "$app"
+ditto "$verificationTemp/image/TalkTuck.app" "$app"
 hdiutil detach "$verificationTemp/image" >/dev/null
 attached=0
 RECORD_AI_BUILD_APP_PATH="$app" zsh Scripts/verify-release.zsh > "$evidenceDirectory/package-verification.log" 2>&1

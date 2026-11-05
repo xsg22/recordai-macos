@@ -5,6 +5,7 @@ root=Path(SPECPATH).parent
 mlx_data,mlx_binaries,mlx_hidden=collect_all('mlx')
 # Qwen模型通过类型名动态导入，只封装本次使用的ASR模块。
 hidden=mlx_hidden+collect_submodules('mlx_audio.stt.models.qwen3_asr')+collect_submodules('mlx_audio.vad.models.sortformer')+['mlx_audio.vad.utils', 'miniaudio',
+ 'mlx_audio.lm.models.qwen2','mlx_audio.lm.generate','mlx_audio.lm.models.cache',
  'mlx_audio.lm.sample_utils','transformers.models.qwen2.tokenization_qwen2',
  'transformers.models.whisper.feature_extraction_whisper','transformers.models.auto.tokenization_auto',
  'transformers.models.qwen2.tokenization_qwen2_fast']
