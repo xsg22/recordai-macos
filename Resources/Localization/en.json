@@ -1166,5 +1166,10 @@
   "粤语录完后转录": "Cantonese: transcribe after recording",
   "粤语将在录音结束后转录，原音会完整保存。": "Cantonese will be transcribed after recording. Original audio is preserved.",
   "录音前可在首页选择语种": "Choose the language on Home before recording",
-  "转录语言": "Transcription language"
+  "转录语言": "Transcription language",
+  "外观": "Appearance",
+  "浅色": "Light",
+  "深色": "Dark",
+  "跟随系统自动切换，或固定使用浅色、深色外观。": "Follow the system automatically, or always use light or dark appearance.",
+  "默认转录语言": "Default transcription language"
 }

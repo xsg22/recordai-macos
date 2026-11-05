@@ -1,6 +1,18 @@
 import Foundation
 @main struct TranscriptionLanguageSmoke {
     @MainActor static func main() {
+        let defaults = UserDefaults.standard
+        let old = defaults.object(forKey: TranscriptionLanguage.preferenceKey)
+        defer {
+            if let old { defaults.set(old, forKey: TranscriptionLanguage.preferenceKey) }
+            else { defaults.removeObject(forKey: TranscriptionLanguage.preferenceKey) }
+        }
+        defaults.removeObject(forKey: TranscriptionLanguage.preferenceKey)
+        precondition(TranscriptionLanguage.saved == "zh")
+        defaults.set("yue", forKey: TranscriptionLanguage.preferenceKey)
+        precondition(TranscriptionLanguage.saved == "yue")
+        defaults.set("invalid", forKey: TranscriptionLanguage.preferenceKey)
+        precondition(TranscriptionLanguage.saved == "zh")
         precondition(TranscriptionLanguage.allCases.map(\.rawValue) == ["zh","yue","en","auto"])
         precondition(RecordingSpeechLanguage.allCases.map(\.rawValue) == ["zh","yue","en"])
         precondition(TranscriptionLanguage.cantonese.supportsLivePreview)

@@ -11,7 +11,11 @@ with wave.open(str(a.audio),'rb') as w:
  samples=array.array('h');samples.frombytes(w.readframes(w.getnframes()))
 raw=array.array('f',(x/32768 for x in samples)).tobytes();step=1600*4
 error_log=(a.output/'worker.log').open('w')
-child=subprocess.Popen(['/usr/bin/sandbox-exec','-p','(version 1)(allow default)(deny network*)',str(a.engine),'--live',str(a.model),'yue'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=error_log,env=dict(os.environ,HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1'))
+# Match LiveTranscriptionSession, including its explicit hotword request file.
+# Some installed runtimes require this argument even for an empty vocabulary.
+hotwords=a.output/'hotwords.json'
+hotwords.write_text(json.dumps({'words':[],'context':''}))
+child=subprocess.Popen(['/usr/bin/sandbox-exec','-p','(version 1)(allow default)(deny network*)',str(a.engine),'--live',str(a.model),'yue',str(hotwords)],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=error_log,env=dict(os.environ,HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1'))
 messages=queue.Queue();events=[];begin=time.monotonic()
 def read():
  for line in child.stdout:

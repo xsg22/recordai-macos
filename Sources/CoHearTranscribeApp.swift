@@ -42,6 +42,7 @@ struct CoHearTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var state: AppState
     init() {
+        AppAppearance.shared.apply()
         _appLanguage = ObservedObject(wrappedValue: AppLanguage.shared)
         // Construct eagerly: StateObject's autoclosure may otherwise wait for
         // the first window, leaving a background launch without account services.
@@ -92,7 +93,6 @@ struct MainView: View {
     @State private var delivering = false
     @State private var recovering = false
     @State private var showingExecution = false
-    @State private var showingOrganization = false
     @State private var managingCollections = false
     @State private var batchMode = false
     @State private var batchIDs = Set<UUID>()
@@ -209,7 +209,7 @@ struct MainView: View {
                     missingMicrophoneView
                 } else if state.current != nil {
                     meetingToolbar
-                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution && !showingOrganization {
+                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution {
                         TalkTuckCard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
                     }
                     if let issue = state.recordingIssue, state.isViewingRecording {
@@ -244,7 +244,6 @@ struct MainView: View {
                     Spacer(minLength: 12)
                     captureCard.frame(maxWidth: 438).frame(maxWidth: .infinity)
                 }
-                if state.current != nil { recordingLanguagePicker }
             if !state.syncStatus.isEmpty { compactSyncFeedback }
                 if !state.speechModels.ready && state.current != nil && !missingMicrophone { modelDownloadBanner }
                 if missingMicrophone {
@@ -252,14 +251,7 @@ struct MainView: View {
                 } else if state.current == nil {
                     Spacer(minLength: 12)
                 } else {
-                    GeometryReader { geometry in
-                        HStack(alignment: .top, spacing: 24) {
-                            MeetingReadingView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)
-                            if geometry.size.width >= 900 {
-                                meetingInspector.frame(width: 310).frame(maxHeight: .infinity, alignment: .top)
-                            }
-                        }
-                    }
+                    MeetingReadingView(state: state).frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 if state.current != nil && (state.locked || state.transcriptPhase == .failed || state.agentPublicationError != nil || state.status.hasPrefix("已重试")) {
                 HStack(spacing: 8) {
@@ -299,12 +291,6 @@ struct MainView: View {
         .sheet(isPresented: Binding(get: { showingExecution || state.showExecutionTrace }, set: { value in showingExecution = value; state.showExecutionTrace = value })) { TalkTuckExecutionView(state: state) }
         .sheet(isPresented: $delivering) { RecordingDeliveryView(state: state) }
         .sheet(item: $state.deletionRequest) { record in ConfirmTrashView(state: state, record: record) }
-        .sheet(isPresented: $showingOrganization) {
-            VStack(alignment: .leading) {
-                HStack { Spacer(); Button(L10n.text("完成")) { showingOrganization = false } }
-                meetingInspector
-            }.padding(20).frame(width: 520, height: 500)
-        }
         .sheet(isPresented: $state.showSettings) { ConnectionsView(state: state) }
         .sheet(isPresented: Binding(get: { state.error != nil && !missingMicrophone }, set: { if !$0 && !missingMicrophone { state.error = nil } })) {
             TalkTuckErrorView(message: state.error ?? "", close: { state.error = nil }, retry: state.errorRetry == nil ? nil : { state.retryLastError() })
@@ -416,8 +402,6 @@ struct MainView: View {
             .background(TalkTuckTheme.sidebar, in: RoundedRectangle(cornerRadius: 12))
     }
 
-    private var meetingInspector: some View { MeetingInspector(state: state) }
-
     /// 会议详情只保留一条工具栏，把可编辑内容作为窗口主体。
     private var meetingToolbar: some View {
         ViewThatFits(in: .horizontal) {
@@ -443,19 +427,33 @@ struct MainView: View {
                     Spacer(minLength: 0)
                 }
                 if let record = state.current {
-                    HStack(spacing: 10) {
-                        Text(record.created, format: .dateTime.year().month().day().locale(L10n.locale))
-                        if state.isViewingRecording {
-                            Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale))
-                            Text(L10n.text("· 录音中"))
-                        } else {
-                            (Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale)) + Text("—") + Text(record.created.addingTimeInterval(record.duration), format: .dateTime.hour().minute().locale(L10n.locale)))
-                            Text("· " + recordingDurationText(record.duration))
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 12) {
+                            meetingMetadata(record)
+                            RecordingGroupMenu(state: state)
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            meetingMetadata(record)
+                            RecordingGroupMenu(state: state)
                         }
                     }.font(AppTypography.secondary).foregroundStyle(TalkTuckTheme.muted)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+    private func meetingMetadata(_ record: MeetingRecord) -> some View {
+        HStack(spacing: 10) {
+            Text(record.created, format: .dateTime.year().month().day().locale(L10n.locale))
+            if state.isViewingRecording {
+                Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale))
+                Text(L10n.text("· 录音中"))
+            } else {
+                (Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale)) + Text("—") + Text(record.created.addingTimeInterval(record.duration), format: .dateTime.hour().minute().locale(L10n.locale)))
+                Text("· " + recordingDurationText(record.duration))
+            }
+            Text("· " + L10n.text("转录语言") + "：" + (TranscriptionLanguage(rawValue: record.language)?.title ?? (record.language == "yue" ? L10n.text("粤语") : record.language)))
+                .accessibilityIdentifier("detail-transcription-language")
+        }.fixedSize(horizontal: true, vertical: false)
     }
     private func libraryMetadata(_ record: MeetingRecord) -> String {
         if state.recording, record.id == state.activeRecordingID {
@@ -485,13 +483,11 @@ struct MainView: View {
                         .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
                 }
             }
-            Button { showingOrganization = true } label: { Label(L10n.text("整理"), systemImage: "folder") }
             Button { delivering = true } label: { Label(L10n.text("导出"), systemImage: "square.and.arrow.up") }
                 .disabled(state.current == nil)
             Menu {
                 Button(L10n.text(state.editingTranscript ? "完成全文编辑" : "编辑全文")) { state.editingTranscript.toggle() }.disabled(state.locked)
                 Button(L10n.text("导入音频…")) { state.chooseAudio() }.disabled(state.locked)
-                Button(L10n.text("录音分组…")) { showingOrganization = true }
                 Button(L10n.text("执行追踪")) { showingExecution = true }
                 Menu(L10n.text("录音设置")) {
                     Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }

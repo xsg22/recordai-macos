@@ -3,6 +3,7 @@ import AppKit
 
 struct RecordingAppConfigurationView: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
+    @ObservedObject private var appAppearance = AppAppearance.shared
     @ObservedObject var state: AppState
     @State private var section = "recording"
     @State private var showingSpeechModels = false
@@ -55,6 +56,16 @@ struct RecordingAppConfigurationView: View {
         Group {
             TalkTuckPageHeader(title: L10n.text("录音与转录"), subtitle: L10n.text("设置下一次录音使用的音源和处理方式。")) { EmptyView() }
             TalkTuckCard(spacing: 0) {
+                TalkTuckSettingRow(title: L10n.text("外观")) {
+                    Picker(L10n.text("外观"), selection: $appAppearance.selection) {
+                        ForEach(InterfaceAppearance.allCases) { Text($0.title).tag($0) }
+                    }.labelsHidden().accessibilityLabel(L10n.text("外观"))
+                        .accessibilityIdentifier("settings-appearance")
+                }
+                Text(L10n.text("跟随系统自动切换，或固定使用浅色、深色外观。"))
+                    .font(AppTypography.secondary).foregroundStyle(.secondary)
+            }
+            TalkTuckCard(spacing: 0) {
                 TalkTuckSettingRow(title: L10n.text("界面语言")) {
                     Picker(L10n.text("界面语言"), selection: $appLanguage.selection) {
                         ForEach(InterfaceLanguage.allCases) { Text($0.name).tag($0) }
@@ -71,8 +82,8 @@ struct RecordingAppConfigurationView: View {
                     TalkTuckChoicePicker(title: "录音会话", items: RecordingSessionMode.allCases.map { ($0.title, $0) }, selection: $state.recordingSessionMode)
                 }
                 Divider()
-                TalkTuckSettingRow(title: L10n.text("转写语言")) {
-                    TalkTuckChoicePicker(title: L10n.text("转写语言"), items: TranscriptionLanguage.allCases.map { ($0.title, $0.rawValue) }, selection: $state.language)
+                TalkTuckSettingRow(title: L10n.text("默认转录语言")) {
+                    TalkTuckChoicePicker(title: L10n.text("默认转录语言"), items: TranscriptionLanguage.allCases.map { ($0.title, $0.rawValue) }, selection: $state.language)
                 }
                 Divider()
                 TalkTuckSettingRow(title: L10n.text("录音模式")) {

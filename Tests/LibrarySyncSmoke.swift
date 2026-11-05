@@ -55,6 +55,10 @@ import Foundation
             let page = try await client.changes(cursor:nil),formal = page.events.last { $0.id == recordingID }!.value!.recording!
             precondition(formal.formalOrigin == .local && formal.text == local.text)
             let encodedPage = try JSONEncoder().encode(page);precondition(!String(decoding:encodedPage,as:UTF8.self).contains("临时"))
+            // This synthetic active-capture row only tests live-text exclusion.
+            // Remove it before simulating process restart; otherwise recovery
+            // correctly turns it into a stopped metadata-only sync candidate.
+            try library.trash(live.id)
             let untouched = try library.load(unselected.id);precondition(untouched.userId == identity.userId)
             var active = record;active.status = .recording;active.text = "续录中的临时正文不得上传";_ = try library.save(active)
             engine.localDidChange();await engine.synchronize()

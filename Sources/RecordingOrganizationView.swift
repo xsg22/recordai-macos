@@ -1,24 +1,29 @@
 import SwiftUI
 
-struct RecordingOrganizationPanel: View {
+/// Assign the current recording without reserving a separate inspector column.
+struct RecordingGroupMenu: View {
     @ObservedObject private var appLanguage = AppLanguage.shared
     @ObservedObject var state: AppState
-    @State private var managing = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label(L10n.text("录音整理"), systemImage: "folder").font(AppTypography.heading)
-                Spacer()
-                Button { managing = true } label: { Image(systemName: "slider.horizontal.3") }.accessibilityLabel(L10n.text("管理分组"))
-            }
-            if let record = state.current {
+        if let record = state.current {
+            let group = state.organization.group(record.groupID)
+            let name = group?.userId == record.userId ? (group?.name ?? L10n.text("未分组")) : L10n.text("未分组")
+            Menu {
                 Picker(L10n.text("分组"), selection: Binding(get: { state.organization.group(record.groupID)?.id.uuidString ?? "" }, set: { _ = state.setGroup(UUID(uuidString: $0), recordIDs: [record.id]) })) {
                     Text(L10n.text("未分组")).tag("")
                     ForEach(state.organization.groups.filter { $0.userId == record.userId }) { Text($0.name).tag($0.id.uuidString) }
-                }.pickerStyle(.menu).disabled(state.locked)
-
+                }.pickerStyle(.inline)
+            } label: {
+                Label {
+                    Text(name).lineLimit(1).truncationMode(.middle)
+                } icon: {
+                    Image(systemName: "folder")
+                }
             }
-        }.sheet(isPresented: $managing) { CollectionManager(state: state) }
+            .menuStyle(.borderlessButton).frame(width: 160, alignment: .leading)
+            .disabled(state.locked).help(L10n.text("分组") + "：" + name)
+            .accessibilityLabel(L10n.text("分组")).accessibilityValue(name)
+        }
     }
 }
 

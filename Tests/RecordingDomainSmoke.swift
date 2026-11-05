@@ -1,7 +1,9 @@
 import Foundation
 
 @main struct RecordingDomainSmoke {
-    static func check(_ condition: Bool) { precondition(condition) }
+    static func check(_ condition: Bool, file: StaticString = #filePath, line: UInt = #line) {
+        precondition(condition, file: file, line: line)
+    }
     @MainActor static func main() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("recording-domain-"+UUID().uuidString)
         defer { try? FileManager.default.removeItem(at:root) }

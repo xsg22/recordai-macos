@@ -19,7 +19,8 @@ import Foundation
                 // While capture/ASR is active, keep the enrolled final snapshot; never read live fields.
                 guard var final = record.syncContent else { throw LibrarySyncError.unavailable }
                 final.title = record.title;final.groupId = record.groupID;final.isStarred = record.isStarred
-                final.durationMs = LibrarySyncCodec.milliseconds(record.duration); final.language = record.language
+                final.durationMs = record.duration == 0 && final.durationMs == nil ? nil : LibrarySyncCodec.milliseconds(record.duration)
+                final.language = record.language
                 values.append(.recording(final))
             }
         }
