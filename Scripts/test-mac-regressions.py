@@ -54,6 +54,7 @@ def main():
     parser.add_argument("--engine-dir", type=Path)
     parser.add_argument("--model-root", type=Path)
     parser.add_argument("--reuse-long-recording-result",type=Path,help="Prior passing run; reuse only when the long-capture test and all recording inputs are unchanged")
+    parser.add_argument("--reuse-compiled-from",type=Path,help="Reuse a compiled test app only when every source and test input hash matches")
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
     run = args.output_root.resolve()
@@ -110,7 +111,16 @@ def main():
         backend="isolated loopback, in-memory SQLite, fake SMS" if args.server_repo else "not selected",
         libraryRoot=str(run/"fixtures"), userLibraryModified=False, hardwareCapture=False), indent=2))
     compiler = ["xcrun", "swiftc", "-swift-version", "5", "-parse-as-library", "-target", "arm64-apple-macosx14.0", "-module-cache-path", run/"cache/swift"]
-    call("compile", compiler+sorted(frozen.glob("*.swift"))+["-o", executable], timeout=600, required=True)
+    if args.reuse_compiled_from:
+        prior = args.reuse_compiled_from.resolve()
+        assert json.loads((prior/"readiness.json").read_text())["inputs"] == inputs, "Compiled test inputs changed"
+        checked = next(x for x in json.loads((prior/"results.json").read_text()) if x["case"] == "compile")
+        assert checked["status"] == "PASS", "Prior test compile did not pass"
+        shutil.copy2(prior/"build/MacRegressions.app/Contents/MacOS/regressions",executable)
+        results.append(dict(checked,reusedFrom=str(prior),allInputHashesVerified=True))
+        print("compile: PASS (all source and test input hashes match prior run)",flush=True)
+    else:
+        call("compile", compiler+sorted(frozen.glob("*.swift"))+["-o", executable], timeout=600, required=True)
     def swift(case, *arguments, label=None, network=False, **extra):
         command = [executable, *arguments]
         if not network: command = ["/usr/bin/sandbox-exec", "-p", "(version 1)(allow default)(deny network*)", *command]
