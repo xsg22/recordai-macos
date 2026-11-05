@@ -1184,11 +1184,15 @@
   "正在准备音频导出…": "Preparing audio export…",
   "普通话和英语实时字幕使用中英双语模型，粤语实时字幕可能有数秒延迟；最终转录遵循所选语言。": "Mandarin and English live captions use a bilingual model. Cantonese captions may be delayed by a few seconds. Final transcription uses the selected language.",
   "恢复并继续录音": "Recover and continue recording",
-  "分段录音暂不支持原音云同步，原音仍保存在本机。": "Cloud sync does not yet support original audio from segmented recordings. The originals remain on this device.",
   "转录临时目录不可用，请检查存储设备。": "The transcription temporary directory is unavailable. Check the storage device.",
   "无法建立音频流。": "Could not create the audio stream.",
   "无法配置音频流。": "Could not configure the audio stream.",
   "音频片段时间无效。": "The audio segment timing is invalid.",
   "无法读取音频片段。": "Could not read the audio segment.",
-  "语音片段信息过大。": "The speech segment metadata is too large."
+  "语音片段信息过大。": "The speech segment metadata is too large.",
+  "音频格式无效。": "The audio format is invalid.",
+  "无法读取音频。": "Could not read the audio.",
+  "定稿未覆盖全部音频片段，原录音已保留。": "The final transcript did not cover every audio segment. The original recording is preserved.",
+  "转录时间不一致，原录音已保留。": "The transcript timing is inconsistent. The original recording is preserved.",
+  "音频片段读取不完整。": "The audio segment could not be read completely."
 }

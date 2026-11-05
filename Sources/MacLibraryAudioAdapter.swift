@@ -19,16 +19,38 @@ import AVFoundation
     }
     func sources(_ id: UUID, userId: UUID) async throws -> [LibraryAudioSource] {
         let r = try record(id,userId),urls = try library.audioURLs(for:r)
-        // The v1 cloud manifest cannot safely represent canonical multi-stream archives.
-        guard !urls.contains(where: { $0.pathExtension == "json" }) else { throw LibraryAudioError.canonicalProtocolRequired }
+        // Cloud clients receive ordinary, verified M4A files. Local capture
+        // references and immutable source segments remain untouched.
         var sources: [LibraryAudioSource] = [];var offset = 0
-        for url in urls {
+        var originals = Set<URL>()
+        for input in urls {
+            let original = try CanonicalAudioInput.originalManifest(for: input)
+            guard originals.insert(original).inserted else { continue }
+            let url: URL
+            var captureStart: Int?
+            if original.lastPathComponent == "final.manifest.json" {
+                if let context = try CanonicalCaptureContext.read(original.deletingLastPathComponent()) {
+                    guard let ms = LibrarySyncCodec.milliseconds(context.meetingOffset) else { throw LibraryAudioError.invalid }
+                    captureStart = ms
+                }
+                let cache = library.directory(for:id).appendingPathComponent("AudioExports",isDirectory:true)
+                try LibraryAudioFiles.directory(cache)
+                let export = Task.detached(priority:.utility) {
+                    let reader = try CanonicalAudioReader(manifestURL:original)
+                    guard let manifest = reader.manifest else { throw LibraryAudioError.invalid }
+                    return try CanonicalAudioExport.prepare(manifestURL:original,recordingID:manifest.recordingID,
+                        cacheRoot:cache,isCancelled:{ Task.isCancelled })
+                }
+                url = try await withTaskCancellationHandler { try await export.value } onCancel: { export.cancel() }
+            } else { url = original }
             let duration = try await AVURLAsset(url:url).load(.duration);_ = try record(id,userId)
             guard let ms = LibrarySyncCodec.milliseconds(duration.seconds),ms > 0 else { throw LibraryAudioError.invalid }
-            var start = offset
+            var start = captureStart ?? offset
             if let archive = r.syncedAudio,let i = archive.filenames.firstIndex(of:url.lastPathComponent),archive.manifest.parts.indices.contains(i) { start = archive.manifest.parts[i].timelineStartMs }
             sources.append(LibraryAudioSource(url:url,durationMs:ms,timelineStartMs:start));offset = start+ms
         }
+        let latest = try record(id,userId)
+        guard latest.audioFiles == r.audioFiles,latest.audioDurations == r.audioDurations else { throw LibraryAudioError.changed }
         return sources
     }
     func install(_ manifest: LibraryAudioManifest, files: [URL], userId: UUID) async throws {

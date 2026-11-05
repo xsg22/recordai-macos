@@ -1,6 +1,6 @@
 import Foundation
 import AVFoundation
-@main struct AlignmentSmoke {
+@main struct OfflineWindowSpeakerSmoke {
  static func main() throws {
   let base=URL(fileURLWithPath:CommandLine.arguments[1],isDirectory:true), models=base.appendingPathComponent("models"), bin=base.appendingPathComponent("bin"), audio=base.appendingPathComponent("audio.wav")
   try FileManager.default.createDirectory(at:bin,withIntermediateDirectories:true)

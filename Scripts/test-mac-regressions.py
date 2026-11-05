@@ -14,6 +14,7 @@ from pathlib import Path
 import plistlib
 import selectors
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -36,11 +37,18 @@ EXTRA = [
     ("remote-edit", "LibrarySyncRemoteEditSmoke", True), ("audio-retry", "LibraryAudioSmoke", True),
     ("hotword-sync", "HotwordSyncE2E", True), ("offline-asr", "OfflineASR", False),
     ("format-asr", "RecordingFormatSmoke", True), ("append-asr", "RecordingAppendSmoke", True),
+    ("canonical-capture", "MacCanonicalCaptureSmoke", True), ("canonical-long", "MacCanonicalLongCaptureSmoke", True),
+    ("segmented-manifest", "MacSegmentedManifestSmoke", False), ("segmented-track", "MacSegmentedTrackSmoke", False),
+    ("canonical-player", "MeetingAudioPlayerSmoke", True), ("canonical-transcription", "CanonicalTranscriptionSmoke", False),
+    ("offline-windows", "OfflineWindowSmoke", False), ("canonical-windows", "CanonicalOfflineWindowSmoke", False),
+    ("window-speakers", "OfflineWindowSpeakerSmoke", False), ("canonical-sync", "CanonicalAudioSyncSmoke", True),
+    ("canonical-real-asr", "CanonicalRealASRSmoke", False), ("existing-archives", "ExistingArchiveReadSmoke", True),
 ]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--existing-library", type=Path, help="Read-only source; selected archive recordings are copied to the output root")
     parser.add_argument("--server-repo", type=Path)
     parser.add_argument("--node", type=Path)
     parser.add_argument("--engine-dir", type=Path)
@@ -93,9 +101,10 @@ def main():
         (app/"Contents/Resources/Localization"/path.name).write_bytes(path.read_bytes())
     (app/"Contents/Info.plist").write_bytes(plistlib.dumps(dict(CFBundleIdentifier="com.xsg.talktuck.regressions", CFBundleExecutable="regressions", CFBundlePackageType="APPL")))
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip()
-    plan = ["compile"]+[x[0] for x in CORE]+["cli-compile", "cli-fixture", "cli-mcp", "group-cli", "localization-catalog", "agent-setup", "speaker-fragments", "language-policy", "reporting"]
-    if args.server_repo and args.node: plan += ["server-typecheck", "server-contracts", "account", "automatic-sync", "text-offline-seed", "remote-edit", "text-conflict-resolve", "audio-retry", "hotword-sync"]
-    if args.engine_dir and args.model_root: plan += ["synthesize", "convert", "offline-asr", "format-asr", "append-asr", "synthesize-cantonese", "convert-cantonese", "live-cantonese", "synthesize-english", "english-final-speakers"]
+    canonical_cases = ["canonical-capture","canonical-long","segmented-manifest","segmented-track","canonical-player","canonical-transcription","offline-windows","canonical-windows","window-speakers"]
+    plan = ["compile"]+canonical_cases+[x[0] for x in CORE]+["cli-compile", "cli-fixture", "cli-mcp", "group-cli", "localization-catalog", "agent-setup", "speaker-fragments", "language-policy", "reporting"]
+    if args.server_repo and args.node: plan += ["server-typecheck", "server-contracts", "account", "automatic-sync", "text-offline-seed", "remote-edit", "text-conflict-resolve", "audio-retry", "hotword-sync", "canonical-sync"]
+    if args.engine_dir and args.model_root: plan += ["synthesize", "convert", "offline-asr", "format-asr", "append-asr", "synthesize-cantonese", "convert-cantonese", "live-cantonese", "synthesize-english", "english-final-speakers", "canonical-real-asr", "quiet-real-asr"]
     (run/"readiness.json").write_text(json.dumps(dict(commit=commit, inputs=inputs, cases=plan, compiledEntrypoints=[x[0] for x in specs],
         backend="isolated loopback, in-memory SQLite, fake SMS" if args.server_repo else "not selected",
         libraryRoot=str(run/"fixtures"), userLibraryModified=False, hardwareCapture=False), indent=2))
@@ -104,11 +113,18 @@ def main():
     def swift(case, *arguments, label=None, network=False, **extra):
         command = [executable, *arguments]
         if not network: command = ["/usr/bin/sandbox-exec", "-p", "(version 1)(allow default)(deny network*)", *command]
-        return call(label or case, command, extra=dict(TALKTUCK_REGRESSION_CASE=case, **extra), timeout=360 if "asr" in case else 90)
+        return call(label or case, command, extra=dict(TALKTUCK_REGRESSION_CASE=case, **extra), timeout=900 if case == "canonical-long" else 360 if "asr" in case else 90)
     for case, _, _ in CORE:
         arguments = [run/"fixtures/cold-start"] if case == "cold-start" else []
         extra = {"TALKTUCK_TEST_AGENT_OUT": str(run/"fixtures/organization-agent")} if case == "organization" else {}
         swift(case, *arguments, **extra)
+    for case in canonical_cases:
+        directory = run/"fixtures"/case; directory.mkdir()
+        arguments = [directory]
+        if case == "canonical-transcription": arguments += [source/"Tests/CanonicalASRWorkerFake.py"]
+        if case == "canonical-windows": arguments += [source/"Tests/OfflineWindowWorkerFake.py"]
+        if case == "window-speakers": arguments += [source/"Tests/OfflineWindowSpeakerWorkerFake.py"]
+        swift(case,*arguments)
     cli = run/"build/talktuck"
     cli_compiler = [x for x in compiler if x != "-parse-as-library"]
     call("cli-compile", cli_compiler+[source/"Sources/AgentSchema.swift", source/"Sources/TalkTuckControl.swift", source/"Sources/AgentSetup.swift", source/"Native/AgentCLI/main.swift", "-o", cli], required=True)
@@ -141,6 +157,7 @@ def main():
         with fixture("test/support/mac-account-server.ts", "library", audio=True) as endpoint:
             swift("account", endpoint, network=True)
             swift("automatic-sync", endpoint, run/"fixtures/automatic-sync", network=True)
+            swift("canonical-sync", endpoint, run/"fixtures/canonical-sync", network=True)
             if swift("text-sync", "seed", run/"fixtures/text-sync", endpoint, label="text-offline-seed", network=True):
                 if swift("remote-edit", endpoint, network=True): swift("text-sync", "finish", run/"fixtures/text-sync", endpoint, label="text-conflict-resolve", network=True)
             swift("audio-retry", "seed", run/"fixtures/audio-retry", endpoint, network=True)
@@ -150,6 +167,8 @@ def main():
         engine = args.engine_dir.resolve(); models = args.model_root.resolve(); media = run/"fixtures/media"; media.mkdir()
         call("synthesize", ["say", "-v", "Tingting", "-r", "155", "-o", media/"speech.aiff", "今天的会议将测试本地转录，请保留原始录音。"])
         call("convert", ["afconvert", "-f", "WAVE", "-d", "LEI16@16000", "-c", "1", media/"speech.aiff", media/"speech.wav"])
+        swift("canonical-real-asr", media, media/"speech.wav", models/"Qwen3ASR", engine/"qwen-asr")
+        swift("canonical-real-asr", media, media/"speech.wav", models/"Qwen3ASR", engine/"qwen-asr", "--quiet", label="quiet-real-asr")
         swift("offline-asr", engine/"qwen-asr", models/"Qwen3ASR", media/"speech.wav", media/"offline.json")
         swift("format-asr", engine/"qwen-asr", models/"Qwen3ASR", media/"speech.aiff", media/"formats")
         # RecordingAppendSmoke's fixed fixture has a 14-second first part.
@@ -165,6 +184,16 @@ def main():
         call("live-cantonese", [sys.executable, source/"Scripts/test-live-cantonese.py", "--engine", engine/"qwen-asr", "--model", models/"Qwen3ASR", "--audio", media/"cantonese.wav", "--output", media/"live-cantonese", "--repeats", "2"])
         call("synthesize-english", ["say", "-v", "Samantha", "-r", "155", "-o", media/"english.aiff", "Welcome to the TalkTuck test. Please keep the original recording and organize it into a group. An external agent can read the final transcript."])
         swift("localization", engine/"qwen-asr", models/"Qwen3ASR", media/"english.aiff", "en", media/"english-result", label="english-final-speakers")
+    if args.existing_library:
+        plan.append("existing-archives")
+        copy = run/"fixtures/existing-library"; (copy/"Meetings").mkdir(parents=True)
+        source_root = args.existing_library.resolve()
+        for metadata in (source_root/"Meetings").glob("*/meeting.json"):
+            value = json.loads(metadata.read_text())
+            if not any(x.endswith(".aacarchive") for x in value.get("audioFiles",[])): continue
+            destination = copy/"Meetings"/metadata.parent.name
+            shutil.copytree(metadata.parent,destination,symlinks=True)
+        swift("existing-archives",copy)
     seen = {x["case"] for x in results}
     for case in plan:
         if case not in seen: results.append(dict(case=case, status="NOT_RUN", reason="Prerequisite did not pass"))

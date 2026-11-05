@@ -13,6 +13,9 @@ import AVFoundation
         while input.framePosition < input.length {
             try input.read(into: buffer)
             guard buffer.frameLength > 0 else { fatalError("empty input") }
+            if CommandLine.arguments.contains("--quiet"), let channels = buffer.floatChannelData {
+                for c in 0..<Int(buffer.format.channelCount) { for i in 0..<Int(buffer.frameLength) { channels[c][i] *= 0.05 } }
+            }
             try source.append(buffer, offset: Double(frames) / input.processingFormat.sampleRate)
             frames += AVAudioFramePosition(buffer.frameLength)
         }
@@ -27,7 +30,7 @@ import AVFoundation
         let temporary = base.appendingPathComponent("tmp")
         try FileManager.default.createDirectory(at: temporary, withIntermediateDirectories: true)
         let engine = TranscriptionEngine(temporaryRoot: temporary), model = URL(fileURLWithPath: CommandLine.arguments[3]), executable = URL(fileURLWithPath: CommandLine.arguments[4])
-        let output = try engine.transcribe(audio: audio, model: model, executable: executable, language: "zh", hotwords: ["产品"], context: "产品会议")
+        let output = try engine.transcribe(audio: audio, model: model, executable: executable, language: "zh", hotwords: ["产品"], context: "产品会议", offlineWindows:true)
         guard output.text.contains("录音"), output.text.contains("会议") else { fatalError("Unexpected synthetic transcript: \(output.text)") }
         print("REAL_ASR_TEXT=\(output.text)")
         let rows = try engine.analyzeSpeakers(audio: audio, model: model, executable: executable, transcript: output, language: "zh")

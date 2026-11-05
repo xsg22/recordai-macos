@@ -43,21 +43,33 @@ enum CanonicalAudioExport {
         let manifest = try JSONDecoder().decode(BalancedRecordingManifest.self, from: Data(contentsOf: manifestURL))
         try manifest.validate()
         guard manifest.recordingID == recordingID else { throw Failure.invalidArchive }
+        // A cached derivative must never hide a missing or damaged original.
+        let archiveRoot = manifestURL.deletingLastPathComponent()
+        for stream in manifest.streams {
+            for segment in stream.segments {
+                try checkCancellation()
+                let source = archiveRoot.appendingPathComponent(stream.streamID).appendingPathComponent(segment.filename)
+                guard source.standardizedFileURL.resolvingSymlinksInPath() == source.standardizedFileURL else { throw Failure.invalidArchive }
+                try BalancedAudioIO.validateFile(source,segment:segment,decode:false)
+            }
+        }
         let key = try manifest.digest()
         let frames = manifest.durationFrames
         guard frames > 0 else { throw Failure.invalidArchive }
         try FileManager.default.createDirectory(at: cacheRoot, withIntermediateDirectories: true)
         let pointer = cacheRoot.appendingPathComponent(key + ".json")
 
+        let lockKey = cacheRoot.standardizedFileURL.path + ":" + key
         condition.lock()
-        while running.contains(key) {
+        while running.contains(lockKey) {
             if isCancelled() { condition.unlock(); throw CancellationError() }
             _ = condition.wait(until: Date().addingTimeInterval(0.2))
         }
-        running.insert(key); condition.unlock()
-        defer { condition.lock(); running.remove(key); condition.broadcast(); condition.unlock() }
+        running.insert(lockKey); condition.unlock()
+        defer { condition.lock(); running.remove(lockKey); condition.broadcast(); condition.unlock() }
         try checkCancellation()
         if FileManager.default.fileExists(atPath: pointer.path) {
+          do {
             let entry = try JSONDecoder().decode(CacheEntry.self, from: Data(contentsOf: pointer))
             guard entry.manifestSHA256 == key, entry.frames == frames,
                   BalancedAudioSegment.validHash(entry.audioSHA256),
@@ -73,6 +85,12 @@ enum CanonicalAudioExport {
             }
             // iOS may evict a cached output independently of its pointer.
             try FileManager.default.removeItem(at: pointer)
+          } catch is CancellationError { throw CancellationError() }
+          catch {
+            // Only discard our derived receipt, never the source archive.
+            // A damaged or interrupted cache can be regenerated on retry.
+            try FileManager.default.removeItem(at:pointer)
+          }
         }
 
         let stage = cacheRoot.appendingPathComponent(".partial-" + UUID().uuidString + ".m4a")
@@ -116,7 +134,10 @@ enum CanonicalAudioExport {
         defer { if createdDestination && !committed { try? FileManager.default.removeItem(at: destination) } }
         if FileManager.default.fileExists(atPath: destination.path) {
             let existing = try hashFile(destination)
-            guard existing.0 == bytes, existing.1 == audioHash else { throw Failure.corruptCache }
+            if existing.0 != bytes || existing.1 != audioHash {
+                try FileManager.default.removeItem(at:destination)
+                try FileManager.default.moveItem(at:stage,to:destination); createdDestination = true
+            }
         } else { try FileManager.default.moveItem(at: stage, to: destination); createdDestination = true }
         try BalancedAudioIO.syncDirectory(cacheRoot)
         try checkCancellation()

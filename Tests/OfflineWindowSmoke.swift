@@ -1,6 +1,6 @@
 import Foundation
 import AVFoundation
-@main struct WindowTests {
+@main struct OfflineWindowSmoke {
  static func main() throws {
   precondition(TranscriptionEngine.removeExactOverlap("今天讨论产品的开发进度", "产品的开发进度接下来是测试") == "接下来是测试")
   precondition(TranscriptionEngine.removeExactOverlap("今天讨论产品的开发进度", "另外一个问题") == "另外一个问题")

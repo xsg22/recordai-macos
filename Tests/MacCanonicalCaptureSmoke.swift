@@ -223,8 +223,13 @@ import AVFoundation
         }
         _ = try enrollFixture(library.load(record.id))
         let cloudAdapter = MacLibraryAudioAdapter(library: library)
-        do { _ = try await cloudAdapter.sources(record.id, userId: userID); preconditionFailure("Metadata must never be uploaded as audio") }
-        catch LibraryAudioError.canonicalProtocolRequired { }
+        let canonicalSources = try await cloudAdapter.sources(record.id, userId:userID)
+        precondition(canonicalSources.count == 2 && canonicalSources.allSatisfy { $0.url.pathExtension == "m4a" })
+        precondition(canonicalSources.map(\.durationMs) == [2500,1000] && canonicalSources.map(\.timelineStartMs) == [0,2500])
+        let canonicalAudio = try AVAudioFile(forReading:canonicalSources[0].url)
+        precondition(canonicalAudio.length == 40_000)
+        for (url,hash) in hashes { let current = try BalancedAudioIO.hashFile(url).1; precondition(current == hash) }
+        let preservedArchive = try library.load(record.id); precondition(preservedArchive.audioFiles.first?.hasSuffix(".aacarchive") == true)
         var legacyCloud = MeetingRecord(title: "Legacy cloud fixture", text: "", status: .completed)
         _ = try library.importAudio(exported[0], into: &legacyCloud, recordingDuration: 2.5)
         legacyCloud = try enrollFixture(legacyCloud)
@@ -234,7 +239,7 @@ import AVFoundation
         try LibraryAudioFiles.validate(LibraryAudioManifest(recordingId: legacyCloud.id, version: 1, parts: parts), id: legacyCloud.id)
         let legacyHash = try BalancedAudioIO.hashFile(exported[0]).1
         precondition(parts[0].sha256 == legacyHash)
-        print("PASS: canonical cloud-v1 guard rejects metadata before upload; legacy M4A source, bytes and v1 manifest remain valid")
+        print("PASS: canonical cloud sources are verified complete M4A; original archive references and AAC hashes retained; legacy sources remain valid")
         print("PASS: production sink:48k stereo/system +16k mic, pause/resume/mute,40000 exact frames, no mixed master")
         print("PASS: actual library registers canonical archive in place, survives reopen, deduplicates registration, preserves edits and AAC hashes")
         print("PASS: actual canonical waveform, explicit compatible export and interrupted-capture recovery registration")

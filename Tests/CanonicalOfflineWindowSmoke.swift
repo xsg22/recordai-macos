@@ -1,5 +1,5 @@
 import Foundation
-@main struct CanonicalWindow {
+@main struct CanonicalOfflineWindowSmoke {
  static func main() throws {
   let base=URL(fileURLWithPath: CommandLine.arguments[1],isDirectory:true), bin=base.appendingPathComponent("bin"), root=base.appendingPathComponent("capture"), id=UUID()
   try FileManager.default.createDirectory(at:bin,withIntermediateDirectories:true)
