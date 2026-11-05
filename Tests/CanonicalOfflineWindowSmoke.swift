@@ -9,7 +9,7 @@ import Foundation
   try mic.append([Float](repeating:0.05,count:768000),startFrame:0)
   let manifest=try MacSegmentedManifest.finalize(recordingID:id,root:root,trackManifests:[try mic.finish()])
   setenv("WINDOW_TEST","1",1)
-  let result=try TranscriptionEngine(temporaryRoot:base).transcribe(audio:manifest,model:base,executable:worker,language:"zh",offlineWindows:true)
+  let result=try TranscriptionEngine(temporaryRoot:base).transcribe(audio:manifest,model:base,executable:worker,language:"zh",offlineWindows:true,windowSeconds:24,overlapSeconds:3)
   precondition(result.paragraphs.count == 3 && result.paragraphs.map(\.start) == [0, 21, 42])
   print("PASS: offline windows process canonical recording with relative timestamps")
  }

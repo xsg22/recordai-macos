@@ -15,6 +15,7 @@ final class LivePreviewRefiner: @unchecked Sendable {
     private var outstanding = 0
     private var stopped = false
     private var runningEngine: TranscriptionEngine?
+    private let policy = ASRWindowPolicy.load()
     private let sampleRate = 16_000
     private let maximumSamples = 16_000 * 60
 
@@ -37,7 +38,7 @@ final class LivePreviewRefiner: @unchecked Sendable {
 
     func submit(rows: [LiveUtterance], sessionOffset: Double) -> Submission {
         guard let first = rows.first, let last = rows.last, rows.allSatisfy({ $0.start.isFinite && $0.end.isFinite && $0.end >= $0.start }),
-              first.start >= sessionOffset - 0.01, last.end >= first.start else { return .discard }
+              first.start >= sessionOffset - 0.01, last.end >= first.start, last.end-first.start <= Double(policy.liveMaximumSeconds) else { return .discard }
         let begin = max(0, Int(((first.start - sessionOffset) * Double(sampleRate)).rounded(.down)))
         let end = max(begin, Int(((last.end - sessionOffset) * Double(sampleRate)).rounded(.up)))
         lock.lock()
@@ -79,7 +80,7 @@ final class LivePreviewRefiner: @unchecked Sendable {
                 lock.lock(); if stopped { lock.unlock(); return }; runningEngine = engine; lock.unlock()
                 defer { lock.lock(); runningEngine = nil; lock.unlock() }
                 NSLog("TalkTuck live refinement: recognition started")
-                let output = try engine.transcribe(audio: url, model: model, executable: executable, language: language, hotwords: hotwords, context: context)
+                let output = try engine.transcribe(audio: url, model: model, executable: executable, language: language, hotwords: hotwords, context: context, offlineWindows:true, windowSeconds:policy.liveMaximumSeconds, overlapSeconds:0)
                 lock.lock(); let allowed = !stopped; lock.unlock()
                 if allowed && !output.paragraphs.isEmpty { NSLog("TalkTuck live refinement: recognition completed"); onResult(rows, output.paragraphs) }
                 else if allowed { NSLog("TalkTuck live refinement: empty result") }

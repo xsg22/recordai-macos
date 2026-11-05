@@ -6,6 +6,7 @@ os.environ['TRANSFORMERS_OFFLINE']='1'
 os.environ['TOKENIZERS_PARALLELISM']='false'
 import json,math,pathlib,struct,sys,wave
 from language_policy import recognition_language, alignment_language
+from inference_policy import MAX_ASR_SECONDS, MAX_ALIGNMENT_SECONDS, validate_clip, generate_complete, configure_memory
 
 def select_hotwords(words, context, limit=12):
     matched=[w for w in words if w.casefold() in context.casefold()]
@@ -65,7 +66,7 @@ def diarize(model_path,audio_path,output,streaming=False):
             else:merged.append(turn.copy())
     pathlib.Path(output).write_text(json.dumps(dict(turns=sorted(merged,key=lambda x:x['start']),duration=offset)))
 
-def stream_clips():
+def stream_clips(max_seconds=MAX_ASR_SECONDS):
     stream=sys.stdin.buffer
     while True:
         prefix=stream.read(4)
@@ -77,7 +78,7 @@ def stream_clips():
         if len(raw)!=size:raise ValueError('Incomplete clip metadata')
         item=json.loads(raw);frames=item.get('frames')
         start,end=item.get('start'),item.get('end')
-        if not isinstance(frames,int) or not 0<frames<=480000 or not isinstance(start,(int,float)) or not isinstance(end,(int,float)) or not (math.isfinite(start) and math.isfinite(end) and 0<=start<end and end-start<=30):raise ValueError('Invalid clip metadata')
+        validate_clip(item,max_seconds)
         data=stream.read(frames*4)
         if len(data)!=frames*4:raise ValueError('Incomplete clip PCM')
         yield item,data
@@ -89,10 +90,10 @@ def transcribe_stream(model_path,language,output,hints_path):
     hints=json.loads(pathlib.Path(hints_path).read_text());words=hints.get('words',[]);context=hints.get('context','')
     if not isinstance(words,list) or len(words)>1000 or any(not isinstance(w,str) or not 2<=len(w)<=40 or '\n' in w or '\r' in w for w in words):raise ValueError('Invalid hotwords')
     if not isinstance(context,str) or len(context)>2000:raise ValueError('Invalid hotword context')
+    configure_memory(mx)
     model=load(pathlib.Path(model_path).resolve(strict=True));selected_language=recognition_language(language);result=[]
     for clip,data in stream_clips():
-        generated=model.generate(audio=np.frombuffer(data,dtype='<f4'),language=selected_language,hotwords=select_hotwords(words,context) or None,max_tokens=512,temperature=0,chunk_duration=30,min_chunk_duration=0.1,repetition_penalty=1.05,verbose=False)
-        if generated.generation_tokens>=512:raise ValueError('Transcript token limit reached; partial result not saved')
+        generated=generate_complete(model,np.frombuffer(data,dtype='<f4'),language=selected_language,hotwords=select_hotwords(words,context) or None)
         result.append(dict(text=generated.text.strip(),start=clip['start'],end=clip['end']))
         context=(context+' '+generated.text)[-2000:];mx.clear_cache()
     output=pathlib.Path(output);temp=output.with_suffix('.partial')
@@ -105,7 +106,7 @@ def align_stream(model_path,turns_path,output):
     from speaker_attribution import attribute
     turns=json.loads(pathlib.Path(turns_path).read_text())['turns']
     model=load(pathlib.Path(model_path).resolve(strict=True));paragraphs=[]
-    for index,(clip,data) in enumerate(stream_clips()):
+    for index,(clip,data) in enumerate(stream_clips(MAX_ALIGNMENT_SECONDS)):
         text=clip.get('text');language=clip.get('language','auto')
         if not isinstance(text,str) or not text or len(text)>100000:raise ValueError('Invalid alignment text')
         aligned=model.generate(audio=np.frombuffer(data,dtype='<f4'),text=text,language=alignment_language(language,text))
@@ -169,7 +170,7 @@ def main():
     for clip in clips:
         start,end=clip['start'],clip['end']
         path=pathlib.Path(clip['audio']).resolve(strict=True)
-        if path.parent!=manifest.parent or not (math.isfinite(start) and math.isfinite(end) and 0<=start<end and end-start<=30):
+        if path.parent!=manifest.parent or not (math.isfinite(start) and math.isfinite(end) and 0<=start<end and end-start<=MAX_ASR_SECONDS):
             raise ValueError('Invalid speech clip')
         with wave.open(str(path),'rb') as w:
             if w.getframerate()!=16000 or w.getnchannels()!=1 or w.getsampwidth()!=2:raise ValueError('Expected mono PCM16 16kHz')
@@ -178,13 +179,13 @@ def main():
         import numpy as np
         import mlx.core as mx
         from mlx_audio.stt import load
+        configure_memory(mx)
         model=load(model_path)
         for index,clip in enumerate(clips):
             with wave.open(clip['audio'],'rb') as w:audio=np.frombuffer(w.readframes(w.getnframes()),dtype='<i2').astype(np.float32)/32768
+            validate_clip(dict(frames=len(audio),start=clip['start'],end=clip['end']))
             selected=select_hotwords(words,context)
-            generated=model.generate(audio=audio,language=selected_language,hotwords=selected or None,max_tokens=512,temperature=0,
-                                     chunk_duration=30,min_chunk_duration=0.1,repetition_penalty=1.05,verbose=False)
-            if generated.generation_tokens>=512:raise ValueError('Transcript token limit reached; partial result not saved')
+            generated=generate_complete(model,audio,language=selected_language,hotwords=selected or None)
             result.append(dict(text=generated.text.strip(),start=clip['start'],end=clip['end']))
             context=(context+' '+generated.text)[-2000:]
             print('Qwen3-ASR: %d/%d'%(index+1,len(clips)),file=sys.stderr,flush=True)

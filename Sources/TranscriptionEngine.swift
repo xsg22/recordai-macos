@@ -141,10 +141,10 @@ final class TranscriptionEngine: @unchecked Sendable {
     }
     private func writeClip(_ reader: CanonicalAudioReader, start: Double, end: Double,
                            metadata: [String: Any] = [:], to output: FileHandle) throws {
-        guard start.isFinite, end.isFinite, start >= 0, end > start, end - start <= 30,
+        guard start.isFinite, end.isFinite, start >= 0, end > start, end - start <= Double(ASRWindowPolicy.maximumAlignmentSeconds),
               end <= Double(reader.durationFrames) / 16_000 + 0.0001 else { throw TranscriptionError.message("音频片段时间无效。") }
         let first = Int64((start * 16_000).rounded()), last = min(reader.durationFrames, Int64((end * 16_000).rounded()))
-        guard last > first, last - first <= 480_000 else { throw TranscriptionError.message("音频片段时间无效。") }
+        guard last > first, last - first <= Int64(ASRWindowPolicy.maximumAlignmentSeconds * 16_000) else { throw TranscriptionError.message("音频片段时间无效。") }
         var header = metadata; header["start"] = start; header["end"] = end; header["frames"] = Int(last - first)
         let data = try JSONSerialization.data(withJSONObject: header)
         guard data.count <= 65_536 else { throw TranscriptionError.message("语音片段信息过大。") }
@@ -155,7 +155,8 @@ final class TranscriptionEngine: @unchecked Sendable {
 
     // Offline recognition keeps quiet speech: only near-digital silence is skipped.
     private func fixedWindowTranscribe(audio: URL, model: URL, executable: URL, language: String,
-                                       hotwords: [String], context: String, directory: URL) throws -> TranscriptionOutput {
+                                       hotwords: [String], context: String, directory: URL, windowSeconds:Int, overlapSeconds:Int) throws -> TranscriptionOutput {
+        guard windowSeconds > 0, windowSeconds <= ASRWindowPolicy.maximumASRSeconds, overlapSeconds >= 0, overlapSeconds < windowSeconds else { throw TranscriptionError.message("音频片段时间无效。") }
         let canonical = try canonicalReader(for: audio)
         var wave: AVAudioFile?
         if canonical == nil {
@@ -173,7 +174,7 @@ final class TranscriptionEngine: @unchecked Sendable {
         }
         var windows: [(Int64, Int64)] = []; var start: Int64 = 0
         while start < frames {
-            let end = min(frames, start + 24 * 16_000)
+            let end = min(frames, start + Int64(windowSeconds * 16_000))
             var cursor = start; var peak: Float = 0
             while cursor < end {
                 let b = try read(cursor, Int(min(4096, end - cursor)))
@@ -182,7 +183,7 @@ final class TranscriptionEngine: @unchecked Sendable {
                 cursor += Int64(b.frameLength)
             }
             if peak > 2.0 / 32768.0 { windows.append((start, end)) }
-            if end == frames { break }; start += 21 * 16_000
+            if end == frames { break }; start += Int64((windowSeconds-overlapSeconds) * 16_000)
         }
         if windows.isEmpty { return TranscriptionOutput(text: "", subtitles: "") }
         let output = directory.appendingPathComponent("transcript.json"), hints = directory.appendingPathComponent("hotwords.json")
@@ -245,10 +246,10 @@ final class TranscriptionEngine: @unchecked Sendable {
         return String(current[end...])
     }
 
-    func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "", offlineWindows: Bool = false) throws -> TranscriptionOutput {
+    func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "", offlineWindows: Bool = false, windowSeconds:Int? = nil, overlapSeconds:Int? = nil) throws -> TranscriptionOutput {
         let directory = try temporaryDirectory(prefix: "CoHear-")
         defer { try? FileManager.default.removeItem(at: directory) }
-        if offlineWindows { return try fixedWindowTranscribe(audio: audio, model: model, executable: executable, language: language, hotwords: hotwords, context: context, directory: directory) }
+        if offlineWindows { return try fixedWindowTranscribe(audio: audio, model: model, executable: executable, language: language, hotwords: hotwords, context: context, directory: directory, windowSeconds:windowSeconds ?? ASRWindowPolicy.load(language:language).offlineSeconds, overlapSeconds:overlapSeconds ?? ASRWindowPolicy.load().overlapSeconds) }
         let segmenter = executable.deletingLastPathComponent().appendingPathComponent("paraformer-live")
         let paraformer = model.deletingLastPathComponent().appendingPathComponent("Paraformer")
         let segments = directory.appendingPathComponent("segments", isDirectory: true)
@@ -343,7 +344,7 @@ final class TranscriptionEngine: @unchecked Sendable {
             for (index, paragraph) in transcript.paragraphs.enumerated() {
                 try checkCancelled()
                 guard let start = paragraph.start, let end = paragraph.end, start.isFinite, end.isFinite,
-                      start >= 0, end > start, end-start <= 30, end <= Double(reader.length)/16_000 + 0.0001 else {
+                      start >= 0, end > start, end-start <= Double(ASRWindowPolicy.maximumAlignmentSeconds), end <= Double(reader.length)/16_000 + 0.0001 else {
                     throw TranscriptionError.message("文字与录音片段不一致，未强行添加发言人。")
                 }
                 let first = Int64((start*16_000).rounded()), last = min(reader.length, Int64((end*16_000).rounded()))

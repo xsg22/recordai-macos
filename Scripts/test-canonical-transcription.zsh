@@ -17,7 +17,7 @@ export TMPDIR=tmp PYTHONDONTWRITEBYTECODE=1
 xcrun swiftc -module-cache-path cache -swift-version 5 -parse-as-library \
   "$projectRoot/Sources/ResilientRecordingJournal.swift" "$projectRoot/Sources/BalancedWatchSync.swift" \
   "$projectRoot/Sources/CanonicalAudioReader.swift" "$projectRoot/Sources/CanonicalAudioInput.swift" "$projectRoot/Sources/MacSegmentedTrackWriter.swift" \
-  "$projectRoot/Sources/MacSegmentedManifest.swift" "$projectRoot/Sources/TranscriptionEngine.swift" \
+  "$projectRoot/Sources/MacSegmentedManifest.swift" "$projectRoot/Sources/ASRWindowPolicy.swift" "$projectRoot/Sources/TranscriptionEngine.swift" \
   Paragraph.swift "$projectRoot/Tests/CanonicalTranscriptionSmoke.swift" -o canonical-asr-smoke
 ./canonical-asr-smoke fixtures "$projectRoot/Tests/CanonicalASRWorkerFake.py"
 print "Evidence directory: $runDir"

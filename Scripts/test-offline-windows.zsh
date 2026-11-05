@@ -13,7 +13,7 @@ Path(sys.argv[2]).write_text(s[:s.index('struct LiveUtterance')]+s[s.index('stru
 PY
 cd "$runDir"
 export TMPDIR=tmp PYTHONDONTWRITEBYTECODE=1
-common=("$projectRoot/Sources/BalancedWatchSync.swift" "$projectRoot/Sources/CanonicalAudioReader.swift" "$projectRoot/Sources/CanonicalAudioInput.swift" "$projectRoot/Sources/TranscriptionEngine.swift" Paragraph.swift)
+common=("$projectRoot/Sources/BalancedWatchSync.swift" "$projectRoot/Sources/CanonicalAudioReader.swift" "$projectRoot/Sources/CanonicalAudioInput.swift" "$projectRoot/Sources/ASRWindowPolicy.swift" "$projectRoot/Sources/TranscriptionEngine.swift" Paragraph.swift)
 xcrun swiftc -module-cache-path cache -swift-version 5 -parse-as-library $common "$projectRoot/Tests/OfflineWindowSmoke.swift" -o window-smoke
 ./window-smoke "$runDir/tmp"
 xcrun swiftc -module-cache-path cache -swift-version 5 -parse-as-library "$projectRoot/Sources/ResilientRecordingJournal.swift" $common "$projectRoot/Sources/MacSegmentedTrackWriter.swift" "$projectRoot/Sources/MacSegmentedManifest.swift" "$projectRoot/Tests/CanonicalOfflineWindowSmoke.swift" -o canonical-window-smoke

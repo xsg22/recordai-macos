@@ -25,6 +25,11 @@ import Foundation
   let safe=LivePreviewRefiner.replacing(rows:rows,original:[first,second],refined:[fabricated,project],hotwords:words)!
   precondition(safe[1]==first && safe[2].text=="TalkTuck")
   precondition(LivePreviewRefiner.replacing(rows:rows,original:[first],refined:[fabricated],hotwords:words)==nil)
+  let unused=URL(fileURLWithPath:"/window-policy-no-files-created")
+  let refiner=LivePreviewRefiner(model:unused,executable:unused,language:"zh",hotwords:[],context:"",scratchRoot:unused) { _,_ in fatalError("Oversized optional refinement must not run") }
+  let tooLong=LiveUtterance(text:"Preserved original caption",start:0,end:31)
+  guard case .discard = refiner.submit(rows:[tooLong],sessionOffset:0) else { fatalError("Unbounded live window accepted") }
+  refiner.cancel();precondition(tooLong.text=="Preserved original caption")
   print("PASS: time-based mapping preserves individual bounds, rejects stale results and filters hotword-list hallucination")
  }
 }

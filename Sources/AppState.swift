@@ -147,6 +147,7 @@ final class AppState: ObservableObject {
     private var liveGeneration: UUID?
     private var liveCommitted: [LiveUtterance] = []
     private var livePendingRefinement: [LiveUtterance] = []
+    private var liveWindowPolicy = ASRWindowPolicy.load()
     private var liveCurrentPartial = ""
     private var liveHasRefinement = false
     private var liveRefiner: LivePreviewRefiner?
@@ -1151,6 +1152,7 @@ final class AppState: ObservableObject {
             record.legacyLiveText = record.previewText; try? update(record)
         }
         liveRefiner?.cancel(); liveRefiner = nil
+        liveWindowPolicy = ASRWindowPolicy.load()
         liveCommitted = []; livePendingRefinement = []; liveCurrentPartial = ""; liveHasRefinement = false; liveText = livePrefix; livePartial = ""; liveStatus = ""
         liveGeneration = UUID()
         recorder.onAudio = nil
@@ -1205,8 +1207,15 @@ final class AppState: ObservableObject {
                 let row = LiveUtterance(text: value, start: liveSegmentOffset + event.start, end: liveSegmentOffset + event.end)
                 liveCommitted.append(row)
                 if let refiner = liveRefiner {
+                    // Flush the existing complete utterances before a new row
+                    // would exceed the transport bound. Original captions stay
+                    // in liveCommitted even if optional refinement is busy.
+                    if let first = livePendingRefinement.first, row.end-first.start > Double(liveWindowPolicy.liveMaximumSeconds) {
+                        _ = refiner.submit(rows:livePendingRefinement,sessionOffset:liveSegmentOffset)
+                        livePendingRefinement = []
+                    }
                     livePendingRefinement.append(row)
-                    if let first = livePendingRefinement.first, row.end - first.start >= 8 {
+                    if let first = livePendingRefinement.first, row.end - first.start >= Double(liveWindowPolicy.liveTargetSeconds) {
                         let submitted = refiner.submit(rows: livePendingRefinement, sessionOffset: liveSegmentOffset)
                         if submitted != .retry { livePendingRefinement = [] }
                     }
