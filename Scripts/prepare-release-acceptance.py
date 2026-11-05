@@ -19,7 +19,7 @@ args = parser.parse_args()
 if args.context.exists(): parser.error('Choose a new context path; prior acceptance evidence is preserved.')
 app = args.app.resolve(strict=True)
 info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
-if info['CFBundleIdentifier'] != 'com.byering.recordai': parser.error('Use the actual production candidate bundle.')
+if info['CFBundleIdentifier'] != 'com.xsg.talktuck': parser.error('Use the actual production candidate bundle.')
 subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
 scratch = Path(tempfile.mkdtemp(prefix='recordai-release-'+info['CFBundleShortVersionString']+'-'))
 home = scratch/'Home'; library = home/'Library/Application Support/CoHearTranscribe'

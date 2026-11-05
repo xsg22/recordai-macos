@@ -176,7 +176,7 @@ final class MCPConnectionStore: NSObject, ObservableObject {
             }
             status = "正在获取浏览器授权地址…"
             let registered = try await postJSON(try secureURL(registration), body: [
-                "client_name": "倾听转录", "redirect_uris": [Self.redirectURI],
+                "client_name": "TalkTuck", "redirect_uris": [Self.redirectURI],
                 "grant_types": (metadata["grant_types_supported"] as? [String])?.contains("refresh_token") == true ? ["authorization_code", "refresh_token"] : ["authorization_code"], "response_types": ["code"], "token_endpoint_auth_method": "none"
             ])
             guard let clientID = registered["client_id"] as? String,

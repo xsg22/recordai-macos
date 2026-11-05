@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "${0:A:h:h}"
 root="$PWD"
+/bin/zsh Scripts/sync-recording-audio.zsh --check
 version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)"
 mkdir -p .vendor .models .build dist
 [[ -x .vendor/dws/dws && -x .vendor/lark-cli/lark-cli ]] || { print -u2 '缺少固定版本的官方账号组件：.vendor/dws/dws 或 .vendor/lark-cli/lark-cli'; exit 1; }
@@ -9,7 +10,7 @@ mkdir -p .vendor .models .build dist
 [[ "$(shasum -a 256 .vendor/lark-cli/lark-cli | cut -d ' ' -f 1)" == '558a4b3db4beb63ab71f2d2dbc42506846535bc1276f707764ff94809e8441a0' ]] || { print -u2 '飞书组件校验失败'; exit 1; }
 
 /bin/zsh Scripts/prepare-asr.zsh
-app="${RECORD_AI_BUILD_APP_PATH:-$root/.build/release/RecordAI.app}"
+app="${RECORD_AI_BUILD_APP_PATH:-$root/.build/release/TalkTuck.app}"
 [[ ! -d "$app" ]] || /bin/rm -rf "$app"
 mkdir -p "$app/Contents/"{MacOS,Resources/Engine,Resources/Licenses}
 mkdir -p "$app/Contents/Resources/"{Accounts,Integrations}
@@ -24,6 +25,7 @@ xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx14.0 \
 ditto Resources/AgentSkill "$app/Contents/Resources/AgentSkill"
 ditto Resources/Localization "$app/Contents/Resources/Localization"
 cp Resources/Info.plist "$app/Contents/Info.plist"
+cp Resources/AppIcon.png "$app/Contents/Resources/AppIcon.png"
 mkdir -p "$app/Contents/Resources/Engine/ASR"
 ditto .build/qwen-runtime/qwen-asr "$app/Contents/Resources/Engine/ASR"
 cp .build/paraformer-live "$app/Contents/Resources/Engine/ASR/"
@@ -51,24 +53,24 @@ if rg '/opt/homebrew|/Users/' .build/engine-linkage.txt; then
 fi
 # 全部构建和签名成功后才替换交付目录，失败不覆盖可用旧版。
 if [[ "${COHEAR_STAGE_ONLY:-0}" != "1" ]]; then
-    ditto "$app" "$root/dist/RecordAI.app.new"
-    [[ ! -d "$root/dist/RecordAI.app" ]] || mv "$root/dist/RecordAI.app" "$root/.build/previous-recordai-$(date +%s).app"
-    mv "$root/dist/RecordAI.app.new" "$root/dist/RecordAI.app"
-    app="$root/dist/RecordAI.app"
+    ditto "$app" "$root/dist/TalkTuck.app.new"
+    [[ ! -d "$root/dist/TalkTuck.app" ]] || mv "$root/dist/TalkTuck.app" "$root/.build/previous-recordai-$(date +%s).app"
+    mv "$root/dist/TalkTuck.app.new" "$root/dist/TalkTuck.app"
+    app="$root/dist/TalkTuck.app"
 fi
 stage="$root/.build/dmg-${version}"
 mkdir -p "$stage"
-ditto "$app" "$stage/RecordAI.app"
+ditto "$app" "$stage/TalkTuck.app"
 ln -sfn /Applications "$stage/Applications"
 cp Resources/安装说明.txt "$stage/安装说明.txt"
-image="$root/dist/RecordAI-${version}-arm64.dmg"
+image="$root/dist/TalkTuck-${version}-arm64.dmg"
 [[ ! -f "$image" ]] || mv "$image" "$root/.build/previous.dmg"
-hdiutil create -volname '倾听转录' -srcfolder "$stage" -ov -format UDZO "$image"
+/bin/zsh Scripts/create-dmg.zsh "$stage" "$image" TalkTuck
 image_name="${image:t}"
 (cd "$root/dist" && shasum -a 256 "$image_name" > "$image_name.sha256")
-pkg="$root/dist/RecordAI-${version}-arm64.pkg"
+pkg="$root/dist/TalkTuck-${version}-arm64.pkg"
 pkgbuild --component "$app" --install-location /Applications \
-    --identifier com.byering.recordai --version "$version" "$pkg"
+    --identifier com.xsg.talktuck --version "$version" "$pkg"
 pkg_name="${pkg:t}"
 (cd "$root/dist" && shasum -a 256 "$pkg_name" > "$pkg_name.sha256")
 print "安装包：$image"

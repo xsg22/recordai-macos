@@ -1,4 +1,4 @@
 interface:
-  display_name: "RecordAI"
+  display_name: "TalkTuck"
   short_description: "Query local transcripts and control recording on request"
   default_prompt: "Use $recordai to find my latest recording transcript."

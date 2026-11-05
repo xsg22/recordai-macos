@@ -27,15 +27,20 @@ import UniformTypeIdentifiers
 
 @main
 struct CoHearTranscribeApp: App {
-    @ObservedObject private var appLanguage = AppLanguage.shared
+    @ObservedObject private var appLanguage: AppLanguage
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var state = AppState()
+    @StateObject private var state: AppState
+    init() {
+        LegacyPreferencesMigration.runForInstalledApp()
+        _appLanguage = ObservedObject(wrappedValue: AppLanguage.shared)
+        _state = StateObject(wrappedValue: AppState())
+    }
     var body: some Scene {
         WindowGroup(id: "recordings") {
             MainView(state: state)
                 .environment(\.locale, appLanguage.locale)
                 .background(RecordingWindowObserver(state: state).frame(width: 0, height: 0))
-                .onAppear { delegate.attach(state); NSApp.activate(ignoringOtherApps: true) }
+                .onAppear { delegate.attach(state); NSApp.activate(ignoringOtherApps: true); Task { await state.cloudAccount.restore() } }
                 .frame(minWidth: 1040, minHeight: 760)
                 .font(AppTypography.body)
                 .controlSize(.extraLarge)
@@ -51,14 +56,14 @@ struct CoHearTranscribeApp: App {
             CommandGroup(replacing: .appSettings) {
                 SettingsLink { Text(L10n.text("设置…")) }.keyboardShortcut(",")
             }
-            CommandMenu("RecordAI") {
+            CommandMenu("TalkTuck") {
                 Button(L10n.text("打开执行追踪")) { state.showExecutionTrace = true }
             }
         }
         MenuBarExtra(isInserted: Binding(get: { state.miniMode || state.recording || state.preparing || state.busy || state.recoveryBusy }, set: { _ in })) {
             RecordingMenuBarView(state: state)
         } label: {
-            Label(L10n.text(state.recording ? (state.paused ? "录音已暂停" : state.recordingIsMuted ? "静音录制" : "正在录音") : state.locked ? "正在处理录音" : "倾听转录"), systemImage: state.recording ? (state.paused ? "pause.circle" : "record.circle") : "waveform")
+            Label(L10n.text(state.recording ? (state.paused ? "录音已暂停" : state.recordingIsMuted ? "静音录制" : "正在录音") : state.locked ? "正在处理录音" : "TalkTuck"), systemImage: state.recording ? (state.paused ? "pause.circle" : "record.circle") : "waveform")
         }
         Settings {
             RecordingAppConfigurationView(state: state)
@@ -98,7 +103,7 @@ struct MainView: View {
                 HStack(spacing: 10) {
                     RecordAILogo()
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("RecordAI").font(.system(size: 20, weight: .semibold))
+                        Text("TalkTuck").font(.system(size: 20, weight: .semibold))
                         Text(L10n.text("本地录音 · AI 转写")).font(AppTypography.secondary).foregroundStyle(.secondary)
                     }
                 }.padding(.bottom, 8)
@@ -162,7 +167,7 @@ struct MainView: View {
                     .disabled(!state.canBrowseRecordings)
                 HStack(spacing: 16) {
                     SettingsLink { Label(L10n.text("设置"), systemImage: "gearshape").frame(maxWidth: .infinity, minHeight: 32, alignment: .leading) }
-                        .buttonStyle(.plain).help(L10n.text("转录、同步账号与本机Agent"))
+                        .buttonStyle(.plain).help(L10n.text("录音、TalkTuck 账号、第三方账号与 Agent"))
                     Button { showingExecution = true } label: { Label(L10n.text("执行追踪"), systemImage: "point.3.connected.trianglepath.dotted").frame(minHeight: 32) }
                         .buttonStyle(.plain).help(L10n.text("查看采集、ASR、转录和Agent发布状态"))
                 }.font(AppTypography.secondary).fixedSize(horizontal: false, vertical: true)
@@ -317,7 +322,7 @@ struct MainView: View {
     }
     @ViewBuilder private func organizeMenu(ids: Set<UUID>) -> some View {
         Button(L10n.text("未分组")) { _ = state.setGroup(nil, recordIDs: ids) }
-        ForEach(state.organization.groups) { group in Button(group.name) { _ = state.setGroup(group.id, recordIDs: ids) } }
+        ForEach(state.organization.groups.filter { group in state.history.filter { ids.contains($0.id) }.allSatisfy { $0.userId == group.userId } }) { group in Button(group.name) { _ = state.setGroup(group.id, recordIDs: ids) } }
     }
     @ViewBuilder private func recordingMenu(_ record: MeetingRecord) -> some View {
         if state.trashedHistory.contains(where: { $0.id == record.id }) {
@@ -328,7 +333,7 @@ struct MainView: View {
                 Button { _ = state.setGroup(nil, recordIDs: [record.id]) } label: {
                     Label(L10n.text("未分组"), systemImage: record.groupID == nil ? "checkmark" : "folder")
                 }
-                ForEach(state.organization.groups) { group in
+                ForEach(state.organization.groups.filter { $0.userId == record.userId }) { group in
                     Button { _ = state.setGroup(group.id, recordIDs: [record.id]) } label: {
                         Label(group.name, systemImage: record.groupID == group.id ? "checkmark" : "folder")
                     }
@@ -536,7 +541,7 @@ struct MainView: View {
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(accent.opacity(0.08))).rotationEffect(.degrees(-7))
                 .shadow(color: accent.opacity(0.08), radius: 18, y: 12).padding(.bottom, 12)
             Text(L10n.text(state.history.isEmpty ? "开始你的第一段录音" : "开始一段新录音")).font(.system(size: 27, weight: .semibold))
-            Text(L10n.text("会议、访谈、课程、灵感…\nRecordAI 帮你录音、转写和整理，\n让重要的内容不再遗漏。"))
+            Text(L10n.text("会议、访谈、课程、灵感…\nTalkTuck 帮你录音、转写和整理，\n让重要的内容不再遗漏。"))
                 .font(.system(size: 14)).lineSpacing(9).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 8).padding(.bottom, 14)
             ZStack {
                 Button { state.toggleRecording() } label: { Label(L10n.text("开始录音"), systemImage: "mic").padding(.trailing, 24).frame(maxWidth: .infinity) }
@@ -591,7 +596,7 @@ struct ConnectionsView: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            RecordAIPageHeader(title: L10n.text("同步账号"), subtitle: L10n.text("连接个人账号，转录完成后预览并同步。")) { Button(L10n.text("完成")) { dismiss() }.keyboardShortcut(.cancelAction) }
+            RecordAIPageHeader(title: L10n.text("第三方账号"), subtitle: L10n.text("连接钉钉、飞书或 Notion，按需发送选定的转录内容。")) { Button(L10n.text("完成")) { dismiss() }.keyboardShortcut(.cancelAction) }
             RecordAISegmentedPicker(items: PersonalDestination.allCases.map { ($0.rawValue, $0) }, selection: $state.syncDestination)
             AccountConnectionPanel(state: state)
             RecordAIInfo(text: L10n.text(state.syncDestination == .feishu && state.feishuAccount.hasPendingAuthorization ? "已有待处理授权时优先继续，不重复申请。重新申请前需确认旧申请已失效。" : "只在你点击同步后发送选定文字。原始音频保留在本机。"))

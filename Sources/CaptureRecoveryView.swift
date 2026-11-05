@@ -27,7 +27,7 @@ struct CaptureRecoveryView: View {
                     ForEach(Array(state.recoveryCandidates.enumerated()), id: \.element.id) { index, candidate in
                         RecordAICard {
                             Text(String(format: L10n.text("录音片段 · %02d"), index + 1)).font(AppTypography.heading)
-                            Text(L10n.text("可恢复约 \(durationText(candidate.duration)) · \(candidate.existingMix != nil ? "已有完整混音" : "原始音轨合成")"))
+                            Text(L10n.text("可恢复约 \(durationText(candidate.duration)) · \(candidate.canonical ? "原始 AAC 片段" : candidate.existingMix != nil ? "已有完整混音" : "原始音轨合成")"))
                                 .font(AppTypography.secondary).foregroundStyle(.secondary)
                             VStack(spacing: 0) {
                             ForEach(Array(candidate.tracks.enumerated()), id: \.offset) { trackIndex, track in
@@ -40,6 +40,10 @@ struct CaptureRecoveryView: View {
                             }
                             }
                             ForEach(candidate.warnings, id: \.self) { Text(L10n.text($0)).font(AppTypography.secondary).foregroundStyle(.orange) }
+                            Button(L10n.text("恢复并继续录音")) {
+                                state.recoverCapture(candidate, continueAfterSaving: true)
+                                dismiss()
+                            }.disabled(state.locked)
                             Button(L10n.text(candidate.warnings.isEmpty ? "恢复并保存此片段" : "仅恢复可读取的音轨")) { state.recoverCapture(candidate) }
                                 .buttonStyle(RecordAIPrimaryButtonStyle()).disabled(state.locked)
                         }

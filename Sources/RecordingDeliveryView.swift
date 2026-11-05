@@ -7,12 +7,12 @@ struct RecordingCanvasView: View {
     @ObservedObject var state: AppState
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if state.isViewingRecording && (state.compactRecordingUI || !state.activeRecordingProfile.usesLiveASR) {
+            if state.isViewingRecording && (state.compactRecordingUI || !state.liveEnabled) {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(L10n.text(state.paused ? "录音已暂停" : "后台录音中")).font(AppTypography.heading).padding(.bottom, 6)
-                    Text(L10n.text(state.activeRecordingProfile.usesLiveASR ? "实时识别继续运行。可展开正文查看最新文字。" : "当前不加载实时识别模型，停止并保存后自动生成转录。"))
+                    Text(L10n.text(state.liveEnabled ? "实时识别继续运行。可展开正文查看最新文字。" : "当前不加载实时识别模型，停止并保存后自动生成转录。"))
                         .font(.system(size: 14)).foregroundStyle(.secondary)
-                    if state.mainWindowVisible && state.activeRecordingProfile.usesLiveASR {
+                    if state.mainWindowVisible && state.liveEnabled {
                         Button(L10n.text("展开实时正文")) { state.expandedRealtime = true }
                     }
                 }.padding(.horizontal, 20).padding(.top, 44).padding(.bottom, 20).frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)

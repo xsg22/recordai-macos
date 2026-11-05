@@ -25,7 +25,7 @@ struct QuitConfirmationView: View {
     static func present(_ activity: QuitActivity, parent: NSWindow?, completion: @escaping (Bool) -> Void) {
         guard activeWindow == nil else { completion(false); return }
         let panel = QuitConfirmationWindow(contentRect: NSRect(x: 0, y: 0, width: 470, height: 272), styleMask: [.titled], backing: .buffered, defer: false)
-        panel.title = "RecordAI"
+        panel.title = "TalkTuck"
         panel.isOpaque = false; panel.backgroundColor = .clear; panel.hasShadow = true
         panel.isReleasedWhenClosed = false
         activeWindow = panel

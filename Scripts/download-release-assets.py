@@ -41,7 +41,8 @@ else:
 assert release['tag_name'] == args.tag and not release['draft']
 assert release['html_url'] == 'https://github.com/xsg22/recordai-macos/releases/tag/'+args.tag
 assets = {asset['name']:asset for asset in release['assets']}
-names = [f'RecordAI-{version}-arm64.{ext}' for ext in ['dmg','dmg.sha256','pkg','pkg.sha256']]
+prefix = 'TalkTuck' if f'TalkTuck-{version}-arm64.dmg' in assets else 'RecordAI'
+names = [f'{prefix}-{version}-arm64.{ext}' for ext in ['dmg','dmg.sha256','pkg','pkg.sha256']]
 assert all(name in assets for name in names),'Missing release assets'
 assert all(assets[name]['browser_download_url'] == f'https://github.com/xsg22/recordai-macos/releases/download/{args.tag}/{name}' for name in names)
 digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -52,7 +53,7 @@ def verify(path):
     assert meta['digest'] == 'sha256:'+digest(path),'Downloaded bytes differ from GitHub asset digest'
 
 def fetch(extension):
-    name = f'RecordAI-{version}-arm64.{extension}'
+    name = f'{prefix}-{version}-arm64.{extension}'
     meta = assets[name]; final = dest/name
     with request(assets[name+'.sha256']['browser_download_url']) as response: checksum = response.read()
     expected, filename = checksum.decode().split()

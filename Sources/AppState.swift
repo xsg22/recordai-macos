@@ -73,6 +73,8 @@ final class AppState: ObservableObject {
     @Published private(set) var agentSetupIssue: String?
     private let agentOnboarding: AgentOnboarding
     let speechModels: ASRModelStore
+    let hotwords: PersonalHotwords
+    let hotwordSync: HotwordSync
     @Published var syncDestination: PersonalDestination = .dingtalk
     @Published var syncing = false
     @Published var syncStatus = ""
@@ -107,14 +109,19 @@ final class AppState: ObservableObject {
     @Published var livePartial = ""
     @Published var transcriptPhase: TranscriptPhase = .idle
     private var transcriptionGeneration: UUID?
+    private var recordingBaseDuration: Double = 0
     private var liveSegmentOffset: Double = 0
     @Published var liveStatus = ""
     let dingTalkAccount: DingTalkAccountConnection
     let notionAccount: NotionAccountConnection
     let feishuAccount: FeishuAccountConnection
+    let cloudAccount: TalkTuckAccountStore
+    @Published private(set) var librarySync: LibrarySyncEngine?
+    @Published private(set) var libraryAudioSync: LibraryAudioSyncEngine?
     let dingTalk: MCPConnectionStore
     let feishu: MCPConnectionStore
     let notion: MCPConnectionStore
+    private let captureStarter: @MainActor (MeetingRecorder, MeetingCaptureRequest) async throws -> Void
     private let recorder: MeetingRecorder
     private var continuousSegmenter: ContinuousRecordingSegmenter?
     private var continuousWorker: Task<Void, Never>?
@@ -126,7 +133,8 @@ final class AppState: ObservableObject {
     var continuousFailedCount: Int { continuousSegments.filter { $0.status == "failed" }.count }
     private var timer: Timer?
     private var playbackTimer: Timer?
-    private var player: AVAudioPlayer?
+    private var player: MeetingAudioPlayer?
+    private let playbackFactory: @MainActor (URL) throws -> MeetingAudioPlayer
     private var task: Task<Void, Never>?
     private var engine: TranscriptionEngine?
     @Published private(set) var recordingID: UUID?
@@ -179,10 +187,22 @@ final class AppState: ObservableObject {
 
     init(storageURL: URL? = nil, connectionNamespace: String = "", speechModelStore: ASRModelStore? = nil,
          dingTalkConnection: DingTalkAccountConnection? = nil, feishuConnection: FeishuAccountConnection? = nil,
-         notionConnection: NotionAccountConnection? = nil, recorder: MeetingRecorder? = nil) {
+         notionConnection: NotionAccountConnection? = nil, recorder: MeetingRecorder? = nil,
+         cloudAccount: TalkTuckAccountStore? = nil,
+         captureStarter: @escaping @MainActor (MeetingRecorder, MeetingCaptureRequest) async throws -> Void = { recorder, request in
+             try await recorder.start(mode: request.mode, directory: request.directory, sessionMode: request.sessionMode,
+                 meetingOffset: request.meetingOffset, segmenter: request.segmenter)
+         },
+         playbackFactory: @escaping @MainActor (URL) throws -> MeetingAudioPlayer = { try MeetingAudioPlayer(contentsOf: $0) }) {
+        self.captureStarter = captureStarter
+        self.playbackFactory = playbackFactory
+        self.cloudAccount = cloudAccount ?? TalkTuckAccountStore()
         self.recorder = recorder ?? MeetingRecorder()
         storage = storageURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("CoHearTranscribe", isDirectory: true)
+        let personalHotwords = PersonalHotwords(root: storage)
+        hotwords = personalHotwords
+        hotwordSync = HotwordSync(hotwords: personalHotwords)
         agentOnboarding = AgentOnboarding(storage: storage)
         speechModels = speechModelStore ?? ASRModelStore()
         dingTalk = MCPConnectionStore(namespace: connectionNamespace + "dingtalk")
@@ -192,6 +212,8 @@ final class AppState: ObservableObject {
         notionAccount = notionConnection ?? NotionAccountConnection(store: notion)
         feishuAccount = feishuConnection ?? FeishuAccountConnection()
         speechModels.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
+        hotwords.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
+        hotwordSync.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
         dingTalkAccount.onProgress = { [weak self] message in
             self?.syncStatus = message
             self?.status = message
@@ -224,7 +246,45 @@ final class AppState: ObservableObject {
         recordAIControlTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.processRecordAICommands(); self?.publishRecordingStatus() }
         }
+        configureLibrarySync()
         publishRecordingStatus()
+    }
+
+    private func configureLibrarySync() {
+        guard let library else { return }
+        let adapter = MacLibrarySyncAdapter(library:library)
+        adapter.beforeRead = { [weak self] in if self?.saveEdits() == false { throw LibrarySyncError.unavailable } }
+        let sync = LibrarySyncEngine(root:storage.appendingPathComponent("Sync"),adapter:adapter)
+        librarySync = sync
+        let audio = LibraryAudioSyncEngine(root:storage.appendingPathComponent("Sync"),adapter:MacLibraryAudioAdapter(library:library))
+        libraryAudioSync = audio
+        audio.onInstalled = { [weak self] in self?.reloadSyncProjection();if let self { self.selectPlaybackSegment(max(0,(self.current?.audioFiles.count ?? 1)-1)) } }
+        library.didChange = { [weak sync] in Task { @MainActor in sync?.localDidChange() } }
+        sync.onProjection = { [weak self] in self?.reloadSyncProjection() }
+        cloudAccount.onSessionChange = { [weak self, weak sync] in
+            guard let self else { return }
+            self.hotwordSync.connect(self.cloudAccount.syncAccess)
+            guard let sync else { return }
+            _ = self.saveEdits(); audio.disconnect(); sync.disconnect()
+            if let access = self.cloudAccount.syncAccess {
+                do {
+                    try sync.connect(userId:access.userId,server:access.server,transport:LibrarySyncHTTP(server:access.server,token:access.token))
+                    try audio.connect(userId:access.userId,server:access.server,transport:LibraryAudioHTTP(server:access.server,token:access.token))
+                }
+                catch { self.error = "本机同步状态无法读取，已暂停同步。" }
+            }
+            self.reloadSyncProjection()
+        }
+    }
+    func reloadSyncProjection() {
+        guard let library else { return }
+        let editorWasClean = current.map { title == $0.title && text == $0.text } ?? true
+        do {
+            organization = try library.organization(); history = try library.list(); trashedHistory = try library.listTrashed()
+            if !groupFilter.isEmpty, !organization.groups.contains(where: { $0.id.uuidString == groupFilter }) { groupFilter = "" }
+            if let selection, !history.contains(where: { $0.id == selection }) { self.selection = nil; text = ""; title = ""; stopPlayback() }
+            else if editorWasClean, let current { title = current.title;text = current.text }
+        } catch { self.error = "读取录音资料库失败：\(error.localizedDescription)" }
     }
 
     private func publishRecordingStatus() {
@@ -397,6 +457,7 @@ final class AppState: ObservableObject {
         guard !locked, let library, saveEdits() else { return }
         do {
             var record = MeetingRecord(title: url.deletingPathExtension().lastPathComponent, language: language, status: .recorded)
+            record.source = .imported
             _ = try library.importAudio(url, into: &record)
             try update(record)
             select(record.id)
@@ -452,6 +513,8 @@ final class AppState: ObservableObject {
         }
         let engine = TranscriptionEngine(); self.engine = engine
         let selectedLanguage = record.language
+        let selectedHotwords = hotwords.words
+        let initialHotwordContext = record.title + "\n" + (appending ? String(record.text.suffix(1800)) : "")
         task = Task { [self] in
             let start = Date()
             var textCommitted = false
@@ -463,11 +526,11 @@ final class AppState: ObservableObject {
                 for (index, url) in urls.enumerated() {
                     try Task.checkCancellation()
                     status = "正在本地识别第 \(index + 1)/\(urls.count) 段录音…"
-                    let duration = try await AVURLAsset(url: url).load(.duration).seconds
+                    let duration = try await Task.detached(priority: .utility) { try CaptureRecovery.audioDuration(url) }.value
                     guard duration.isFinite, duration >= 0 else { throw TranscriptionError.message("录音时长无效。") }
                     let output = try await withTaskCancellationHandler {
                         try await Task.detached(priority: .userInitiated) {
-                            try engine.transcribe(audio: url, model: model, executable: executable, language: selectedLanguage)
+                            try engine.transcribe(audio: url, model: model, executable: executable, language: selectedLanguage, hotwords: selectedHotwords, context: initialHotwordContext)
                         }.value
                     } onCancel: { engine.cancel() }
                     outputs.append(output); durations.append(duration)
@@ -557,6 +620,7 @@ final class AppState: ObservableObject {
             transcriptionGeneration = nil
             timer?.invalidate(); timer = nil; busy = false; self.engine = nil; task = nil
             transcriptionRecordingID = nil
+            if textCommitted, let completed = try? library.load(id) { hotwords.extract(from: completed.text) }
         }
     }
 
@@ -573,7 +637,34 @@ final class AppState: ObservableObject {
         startRecording(continuing: false)
     }
 
-    func continueRecording() { startRecording(continuing: true) }
+    func continueRecording() {
+        guard !locked, !syncing, let record = current, let library else { return }
+        guard saveEdits() else { return }
+        let audio: [URL]
+        do { audio = try library.audioURLs(for: record) }
+        catch { self.error = error.localizedDescription; return }
+        recoveryBusy = true
+        recoveryTask = Task {
+            do {
+                let worker = Task.detached(priority: .utility) {
+                    try CaptureRecovery.scan(meetingID: record.id, meetingDirectory: library.directory(for: record.id),
+                        managedAudio: audio, importedSessions: record.importedCaptureSessions)
+                }
+                let scan = try await withTaskCancellationHandler { try await worker.value } onCancel: { worker.cancel() }
+                try Task.checkCancellation()
+                recoveryBusy = false; recoveryTask = nil
+                guard current?.id == record.id else { return }
+                guard scan.warnings.isEmpty else {
+                    error = "部分中断录音尚未恢复，请先检查原轨：" + scan.warnings.joined(separator: "；"); return
+                }
+                if let candidate = scan.candidates.first { recoverCapture(candidate, continueAfterSaving: true) }
+                else { startRecording(continuing: true) }
+            } catch {
+                recoveryBusy = false; recoveryTask = nil
+                self.error = "继续录音前检查未完成：" + error.localizedDescription
+            }
+        }
+    }
 
     /// 在开始新会话前固定处理策略；录音中不因窗口或设置变化关闭ASR。
     func prepareRecordingProfile() {
@@ -589,24 +680,18 @@ final class AppState: ObservableObject {
         guard !busy, !preparing, !quitting, !recoveryBusy, continuousWorker == nil else { return }
         guard !recording, !syncing, let library else { return }
         speechModels.refresh()
-        guard speechModels.ready else { showModelDownload = true; return }
-        let recordingLanguage = continuing ? (current?.language ?? language) : language
-        guard model != nil, ASRResources.executable("qwen-asr") != nil,
-              !recordingProfile.usesLiveASR || recordingLanguage == "yue" || (ASRResources.paraformer != nil && ASRResources.executable("paraformer-live") != nil) else {
-            error = "语音引擎缺失，请重新安装 App。"; return
-        }
         if continuing && current == nil { return }
-        if continuing, let current, recordingSessionMode == .continuous, !current.pendingAudioFiles.isEmpty {
-            error = "这条持续录音还有待处理片段，请先重试转录。"; return
-        }
-        if continuing, let current, current.pendingAudioFiles.isEmpty, !current.audioFiles.isEmpty, current.text.isEmpty {
-            error = "已有录音尚未完成转录，请先转录已有录音。"; return
-        }
+        if continuing, let current { recordingSessionMode = current.recordingSessionMode }
         if recordingMode.needsMicrophone {
             do { try MeetingRecorder.requireMicrophone() }
             catch { self.error = error.localizedDescription; return }
         }
         prepareRecordingProfile()
+        let recordingLanguage = continuing ? (current?.language ?? language) : language
+        let liveResourcesReady = recordingLanguage == "yue"
+            ? (model != nil && ASRResources.executable("qwen-asr") != nil)
+            : (speechModels.ready && ASRResources.paraformer != nil && ASRResources.executable("paraformer-live") != nil)
+        liveEnabled = activeRecordingProfile.usesLiveASR && TranscriptionLanguage(rawValue: recordingLanguage)?.supportsLivePreview == true && liveResourcesReady
         error = nil
         if activeRecordingProfile != .realtime || activeRecordingSessionMode == .continuous { showMiniRecorder() }
         continuousSegments = []
@@ -617,6 +702,11 @@ final class AppState: ObservableObject {
             var record = continuing ? current! : MeetingRecord(title: L10n.text("录音 ") + Date().formatted(Date.FormatStyle(date: .numeric, time: .shortened).locale(L10n.locale)), language: language, status: .recording)
             let original = record
             do {
+                recordingBaseDuration = record.duration
+                if activeRecordingSessionMode == .continuous {
+                    let directory = library.directory(for: record.id).appendingPathComponent("Capture/Segments")
+                    continuousSegments = ContinuousRecordingQueue.pending(try ContinuousRecordingQueue.load(directory), record: record)
+                }
                 record.recordingSessionMode = activeRecordingSessionMode
                 record.status = .recording; record.recoveryMessage = nil
                 try update(record)
@@ -628,15 +718,14 @@ final class AppState: ObservableObject {
                 let directory = library.directory(for: record.id).appendingPathComponent("Capture", isDirectory: true)
                 let segmentDirectory = directory.appendingPathComponent("Segments", isDirectory: true)
                 if activeRecordingSessionMode == .continuous {
-                    continuousSegmenter = ContinuousRecordingSegmenter(directory: segmentDirectory, onError: { [weak self] issue in
+                    continuousSegmenter = ContinuousRecordingSegmenter(directory: segmentDirectory, timelineOffset: recordingBaseDuration, onError: { [weak self] issue in
                         Task { @MainActor in self?.error = "持续录音切片中断，原始音轨仍在保存：\(issue.localizedDescription)" }
                     }) { [weak self] segment in
                         Task { @MainActor in self?.receiveContinuousSegment(segment) }
                     }
                 }
-                try await recorder.start(mode: recordingMode, directory: directory,
-                                         sessionMode: activeRecordingSessionMode,
-                                         segmenter: continuousSegmenter)
+                try await captureStarter(recorder, MeetingCaptureRequest(mode: recordingMode, directory: directory,
+                    sessionMode: activeRecordingSessionMode, meetingOffset: recordingBaseDuration, segmenter: continuousSegmenter))
                 activeRecordingSources = recorder.activeSources
                 switchingRecordingSource = nil
                 recording = true; paused = false; elapsed = 0
@@ -649,6 +738,7 @@ final class AppState: ObservableObject {
                 self.error = error.localizedDescription; recordingID = nil
             }
             preparing = false
+            if recording, activeRecordingSessionMode == .continuous { processNextContinuousSegment() }
         }
     }
 
@@ -675,12 +765,58 @@ final class AppState: ObservableObject {
             catch { recoveryStatus = "检查未完成：" + error.localizedDescription }
         }
     }
-    func recoverCapture(_ candidate: CaptureRecoveryCandidate) {
+    func recoverCapture(_ candidate: CaptureRecoveryCandidate, continueAfterSaving: Bool = false) {
         guard !locked else { return }
         guard current?.id == candidate.meetingID, let library else {
             recoveryStatus = "录音已切换或本地库不可用，请关闭后重新检查。"; return
         }
         saveEdits(); stopPlayback()
+        if candidate.canonical {
+            recoveryBusy = true; recoveryStatus = "正在恢复分段录音…"
+            recoveryTask = Task {
+                defer { recoveryBusy = false; recoveryTask = nil }
+                var shouldContinue = false
+                do {
+                    let manifest = try await CaptureRecovery.finalizeCanonical(candidate)
+                    try Task.checkCancellation()
+                    var record = try library.load(candidate.meetingID)
+                    let originalDuration = record.duration
+                    if record.recordingSessionMode == .continuous {
+                        let planning = Task.detached(priority: .utility) {
+                            let context = try CanonicalCaptureContext.read(candidate.directory)
+                            let base = context?.meetingOffset ?? max(0, originalDuration - candidate.duration)
+                            let directory = candidate.directory.deletingLastPathComponent().appendingPathComponent("Segments")
+                            let reader = try CanonicalAudioReader(manifestURL: manifest)
+                            let chapters = try ContinuousRecordingQueue.recover(recordingID: candidate.id,
+                                frames: reader.durationFrames, meetingOffset: base, directory: directory)
+                            return (base, chapters)
+                        }
+                        let (base, chapters) = try await planning.value
+                        try Task.checkCancellation()
+                        _ = try library.importAudio(manifest, into: &record, captureSession: candidate.id, persist: false)
+                        for chapter in chapters {
+                            _ = try library.importAudio(chapter.url, into: &record, recordingDuration: chapter.duration, captureSession: chapter.id, timelineEnd: chapter.start + chapter.duration, persist: false)
+                            if let file = record.importedCaptureSessions[chapter.id.uuidString], !record.continuousSegmentFiles.contains(file) {
+                                record.continuousSegmentFiles.append(file)
+                            }
+                        }
+                        record.duration = max(originalDuration, base + candidate.duration)
+                    } else {
+                        _ = try library.importAudio(manifest, into: &record, recordingDuration: candidate.duration, captureSession: candidate.id, persist: false)
+                    }
+                    record.status = .recorded
+                    record.captureWarnings.append(contentsOf: candidate.warnings)
+                    record.recoveryMessage = "录音已恢复，原始片段保留，可继续转录。"
+                    record = try library.save(record); publishStoredRecord(record)
+                    if selection == record.id { select(record.id, saveCurrent: false) }
+                    recoveryCandidates.removeAll { $0.id == candidate.id }; recoveryStatus = "录音已恢复并保存。"
+                    shouldContinue = continueAfterSaving
+                } catch is CancellationError { recoveryStatus = "已取消恢复，原始片段保留" }
+                catch { recoveryStatus = "恢复未完成：" + error.localizedDescription }
+                if shouldContinue { recoveryBusy = false; Task { @MainActor in self.continueRecording() } }
+            }
+            return
+        }
         let destination: URL
         do { destination = try library.recoveryDestination(for: candidate.meetingID) }
         catch { recoveryStatus = "恢复未完成：" + error.localizedDescription; return }
@@ -688,6 +824,7 @@ final class AppState: ObservableObject {
         recoveryTask = Task {
             defer { recoveryBusy = false; recoveryTask = nil }
             var prepared = false
+            var shouldContinue = false
             let worker = Task.detached(priority: .utility) { try await CaptureRecovery.prepare(candidate, destination: destination) }
             do {
                 let duration = try await withTaskCancellationHandler { try await worker.value } onCancel: { worker.cancel() }
@@ -700,10 +837,12 @@ final class AppState: ObservableObject {
                 if selection == record.id { select(record.id, saveCurrent: false) }
                 recoveryCandidates.removeAll { $0.id == candidate.id }
                 recoveryStatus = "恢复音频已保存，原文和原轨保留；关闭窗口后可继续转录。"
+                shouldContinue = continueAfterSaving
             } catch {
                 if prepared { try? FileManager.default.removeItem(at: destination) }
                 recoveryStatus = error is CancellationError ? "已取消恢复，原轨保留" : "恢复未完成，原轨保留：" + error.localizedDescription
             }
+            if shouldContinue { recoveryBusy = false; Task { @MainActor in self.continueRecording() } }
         }
     }
     func cancelRecovery() { recoveryTask?.cancel(); recoveryStatus = "正在取消，请等待当前文件操作收尾…" }
@@ -711,9 +850,15 @@ final class AppState: ObservableObject {
     func pauseRecording() {
         guard recording, !preparing else { return }
         if paused {
-            let resumed = recorder.resume()
-            paused = recorder.state == .paused
-            if resumed { recordingIssue = nil }
+            preparing = true
+            Task {
+                let resumed = await recorder.resumeAfterDraining()
+                paused = recorder.state == .paused
+                if resumed { recordingIssue = nil }
+                preparing = false
+                status = paused ? "录音已暂停" : recordingIsMuted ? "静音录制" : "正在录音"
+            }
+            return
         }
         else { recorder.pause(); paused = true }
         status = paused ? "录音已暂停" : recordingIsMuted ? "静音录制" : "正在录音"
@@ -766,7 +911,7 @@ final class AppState: ObservableObject {
                 if activeRecordingSessionMode == .continuous {
                     // 完整混音用于回放；识别队列只消费已经按边界关闭的片段，避免整段音频重复识别。
                     _ = try library.importAudio(result.audioURL, into: &record, recordingDuration: nil, captureSession: UUID(uuidString: result.audioURL.deletingLastPathComponent().lastPathComponent))
-                    record.duration = max(record.duration, result.seconds)
+                    record.duration = max(record.duration, recordingBaseDuration + result.seconds)
                     record.status = .recorded
                 } else {
                     _ = try library.importAudio(result.audioURL, into: &record, recordingDuration: result.seconds, captureSession: UUID(uuidString: result.audioURL.deletingLastPathComponent().lastPathComponent))
@@ -775,6 +920,7 @@ final class AppState: ObservableObject {
                     record.recoveryMessage = "已保存中断前的音频：" + warning
                     record = try library.save(record)
                 }
+                record = try library.save(record)
                 publishStoredRecord(record)
                 if selection == id { select(id, saveCurrent: false) }
                 status = result.warning == nil ? "录音已保存，可以开始转录" : "中断前音频已保存，正在处理已有录音"
@@ -805,7 +951,7 @@ final class AppState: ObservableObject {
                     processNextContinuousSegment()
                     finishContinuousIfDrained()
                 } else {
-                    liveStatus = activeRecordingProfile.usesLiveASR ? "实时预览已保存，正在生成完整定稿…" : "录音已保存，正在生成完整定稿…"
+                    liveStatus = liveEnabled ? "实时预览已保存，正在生成完整定稿…" : "录音已保存，正在生成完整定稿…"
                     if let stoppedID { transcribe(recordingID: stoppedID) }
                 }
             }
@@ -817,8 +963,9 @@ final class AppState: ObservableObject {
               let library, let id = recordingID ?? current?.id,
               var record = history.first(where: { $0.id == id }) else { return }
         do {
-            _ = try library.importAudio(segment.url, into: &record, recordingDuration: segment.duration, captureSession: segment.id)
-            record.duration = max(record.duration, segment.start + segment.duration)
+            let priorDuration = record.duration
+            _ = try library.importAudio(segment.url, into: &record, recordingDuration: segment.duration, captureSession: segment.id, timelineEnd: segment.start + segment.duration)
+            record.duration = max(priorDuration, segment.start + segment.duration)
             if let file = record.importedCaptureSessions[segment.id.uuidString], !record.continuousSegmentFiles.contains(file) {
                 record.continuousSegmentFiles.append(file)
             }
@@ -859,13 +1006,15 @@ final class AppState: ObservableObject {
             audio = try library.audioURLs(for: record)[index]
         } catch { self.error = "持续录音片段读取失败：\(error.localizedDescription)"; return }
         let engine = TranscriptionEngine()
+        let selectedHotwords = hotwords.words
+        let hotwordContext = record.title + "\n" + String(record.text.suffix(1800))
         continuousWorkerEngine = engine
         setContinuousSegmentStatus(segment.id, "transcribing")
         continuousWorker = Task { [self] in
             do {
                 let output = try await withTaskCancellationHandler {
                     try await Task.detached(priority: .utility) {
-                        try engine.transcribe(audio: audio, model: model, executable: executable, language: record.language)
+                        try engine.transcribe(audio: audio, model: model, executable: executable, language: record.language, hotwords: selectedHotwords, context: hotwordContext)
                     }.value
                 } onCancel: { engine.cancel() }
                 try Task.checkCancellation()
@@ -928,7 +1077,7 @@ final class AppState: ObservableObject {
               record.pendingAudioFiles.isEmpty else { return }
         record.status = .completed
         record.speakerAnalysisStatus = continuousSegments.contains(where: { $0.status == "partial" || $0.status == "failed" }) ? .partial : .completed
-        do { try update(record); status = "持续录音已保存，全部片段处理完成" }
+        do { try update(record); status = "持续录音已保存，全部片段处理完成"; hotwords.extract(from: record.text) }
         catch { self.error = "保存持续录音完成状态失败：\(error.localizedDescription)" }
     }
 
@@ -939,14 +1088,8 @@ final class AppState: ObservableObject {
         }
         let manifest = library.directory(for: record.id).appendingPathComponent("Capture/Segments/segments.json")
         do {
-            let stored = try JSONDecoder().decode([ContinuousSegmentInfo].self, from: Data(contentsOf: manifest))
-            continuousSegments = stored.map { segment in
-                var item = segment
-                if let file = record.importedCaptureSessions[segment.id.uuidString], record.pendingAudioFiles.contains(file) {
-                    item.status = "queued"
-                }
-                return item
-            }
+            let stored = try ContinuousRecordingQueue.load(manifest.deletingLastPathComponent())
+            continuousSegments = ContinuousRecordingQueue.pending(stored, record: record)
             continuousMeetingID = record.id
             continuousProcessingCount = continuousSegments.filter { $0.status == "completed" || $0.status == "partial" }.count
             processNextContinuousSegment()
@@ -1070,7 +1213,7 @@ final class AppState: ObservableObject {
         if playing { player?.pause(); playing = false; playbackTimer?.invalidate(); return }
         do {
             if player == nil {
-                player = try AVAudioPlayer(contentsOf: audio)
+                player = try playbackFactory(audio)
                 player?.currentTime = max(0, min(playbackTime, player?.duration ?? 0))
             }
             guard let player else { return }
@@ -1082,6 +1225,7 @@ final class AppState: ObservableObject {
     private func startPlayer() throws {
         guard let player else { return }
         player.volume = playbackVolume
+        player.playbackEndTime = paragraphPlaybackEnd
         guard player.play() else { throw TranscriptionError.message("音频无法播放。") }
         playing = true; playbackTime = player.currentTime
         playbackTimer?.invalidate()
@@ -1185,8 +1329,18 @@ final class AppState: ObservableObject {
         panel.prompt = L10n.text("导出到此文件夹")
         guard panel.runModal() == .OK, let parent = panel.url else { return }
         do {
-            let destination = try exportAudio(to: parent, recordingID: id)
-            NSWorkspace.shared.activateFileViewerSelecting([destination]); status = "全部录音片段已导出"
+            guard saveEdits(), let record = history.first(where: { $0.id == id }), let library else { return }
+            let audio = try library.audioURLs(for: record), cache = try CanonicalAudioExport.defaultCacheRoot()
+            status = "正在准备音频导出…"
+            Task {
+                do {
+                    let destination = try await Task.detached(priority: .utility) {
+                        try MeetingAudioExport.prepare(audio: audio, parent: parent, recordingID: id, cacheRoot: cache,
+                            cancelled: { Task.isCancelled })
+                    }.value
+                    NSWorkspace.shared.activateFileViewerSelecting([destination]); status = "全部录音片段已导出"
+                } catch { self.error = "音频导出失败，原始录音保留：\(error.localizedDescription)" }
+            }
         } catch { self.error = "音频导出失败，原始录音保留：\(error.localizedDescription)" }
     }
     func exportAudio(to parent: URL, recordingID: UUID) throws -> URL {
@@ -1195,19 +1349,8 @@ final class AppState: ObservableObject {
         }
         let audio = try library.audioURLs(for: record)
         guard !audio.isEmpty else { throw TranscriptionError.message("没有可导出的音频。") }
-        let temporary = parent.appendingPathComponent(".cohear-export-" + UUID().uuidString)
-        let destination = parent.appendingPathComponent("录音-" + record.id.uuidString + "-" + UUID().uuidString)
-        do {
-            try FileManager.default.createDirectory(at: temporary, withIntermediateDirectories: true)
-            for (index, url) in audio.enumerated() {
-                try FileManager.default.copyItem(at: url, to: temporary.appendingPathComponent(String(format: "%02d", index + 1) + "-" + url.lastPathComponent))
-            }
-            try FileManager.default.moveItem(at: temporary, to: destination)
-            return destination
-        } catch {
-            try? FileManager.default.removeItem(at: temporary)
-            throw error
-        }
+        return try MeetingAudioExport.prepare(audio: audio, parent: parent, recordingID: record.id,
+                                            cacheRoot: CanonicalAudioExport.defaultCacheRoot())
     }
 
     func deleteCurrent() {
@@ -1361,7 +1504,7 @@ final class AppState: ObservableObject {
         selectPlaybackSegment(index)
         guard let audio else { return }
         do {
-            let prepared = try AVAudioPlayer(contentsOf: audio)
+            let prepared = try playbackFactory(audio)
             guard let range = TranscriptPlaybackRange(paragraph: latest, record: record, duration: prepared.duration) else {
                 throw TranscriptionError.message("这段文字缺少有效的音频时间范围，无法单句回放。")
             }
@@ -1431,7 +1574,8 @@ extension AppState {
         guard !locked, let library, saveEdits() else { return false }
         do {
             var next = organization
-            _ = try next.setName(name, id: id)
+            let owner: UUID? = id != nil ? next.group(id)?.userId : (librarySync?.enabled == true ? cloudAccount.userId : nil)
+            _ = try next.setName(name, id: id, owner: owner)
             try library.saveOrganization(next)
             organization = next; history = try library.list()
             return true
@@ -1442,8 +1586,9 @@ extension AppState {
         do {
             var next = organization
             next.groups.removeAll { $0.id == id }
-            // 原子写目录；旧记录的已删除关联在读取时归为未分组，回收站恢复同样适用。
+            // 删除分组时持久清除关联，保留每条原音。
             try library.saveOrganization(next)
+            for var record in try library.list() where record.groupID == id { record.groupID = nil; _ = try library.save(record) }
             organization = next; history = try library.list(); trashedHistory = try library.listTrashed()
             if groupFilter == id.uuidString { groupFilter = "" }
             return true
@@ -1451,6 +1596,7 @@ extension AppState {
     }
     @discardableResult func setGroup(_ id: UUID?, recordIDs: Set<UUID>) -> Bool {
         guard id == nil || organization.group(id) != nil else { return false }
+        if let id, let group = organization.group(id), history.contains(where: { recordIDs.contains($0.id) && $0.userId != group.userId }) { return false }
         return changeOrganization(recordIDs) { $0.groupID = id }
     }
     private func changeOrganization(_ ids: Set<UUID>, change: (inout MeetingRecord) -> Void) -> Bool {

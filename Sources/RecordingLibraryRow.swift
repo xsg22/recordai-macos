@@ -6,7 +6,7 @@ struct RecordingLibraryRow: View {
     let metadata: String
     var groupName: String? = nil
     private var symbol: String {
-        if record.status == .completed { return "mic" }
+        if record.status == .completed || record.status == .recorded { return record.stateModel.origin.symbol }
         return record.status == .recording ? "record.circle" : "clock"
     }
     private var iconColor: Color { record.status == .recording ? .red : record.status == .completed ? RecordAITheme.ink : .orange }

@@ -117,7 +117,7 @@ write(evidence/'ui-contracts.json',dict(recorded_at=now,sourceDigest=digest,exit
 write(evidence/'candidate-package.json',dict(recorded_at=now,version=version,sourceDigest=digest,script_exit_code=0,
     main_binary_sha256=sha(app/'Contents/MacOS/RecordAIApp'),cli_sha256=sha(app/'Contents/MacOS/recordai'),
     embedded_asr_sha256=sha(app/'Contents/Resources/Engine/ASR/qwen-asr'),
-    artifacts={path.name:sha(path) for path in (ROOT/'dist').glob(f'RecordAI-{version}-arm64.*') if path.suffix in ['.dmg','.pkg']}))
+    artifacts={path.name:sha(path) for path in (ROOT/'dist').glob(f'TalkTuck-{version}-arm64.*') if path.suffix in ['.dmg','.pkg']}))
 binding_path = ROOT/'Docs/design-v2/validation/functional-release-binding.json'
 binding = json.loads(binding_path.read_text())
 previous_evidence = ROOT/binding['evidenceRoot']

@@ -13,7 +13,7 @@ struct AgentConnectionView: View {
                 Spacer()
                 if onboarding { Button(L10n.text("稍后")) { state.dismissAgentOnboarding() } }
             }
-            Text(L10n.text("复制提示词，发给 Codex、Claude Code、WorkBuddy、豆包等助手。由助手安装 RecordAI Skill，并验证转录查询。"))
+            Text(L10n.text("复制提示词，发给 Codex、Claude Code、WorkBuddy、豆包等助手。由助手安装 TalkTuck Skill（recordai），并验证转录查询。"))
                 .font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 12) {
                 Button(L10n.text(copied ? "再次复制接入提示词" : "复制接入提示词")) { copied = state.copyAgentPrompt() }

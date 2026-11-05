@@ -11,6 +11,10 @@ struct LibrarySmoke {
         let legacy = """
         [{"id":"\(oldID)","title":"旧会议","created":0,"text":"中文","subtitles":"字幕","language":"zh","seconds":12}]
         """
+        let ambiguous = Data("{\"id\":\"\(oldID)\",\"title\":\"旧会议\",\"created\":0,\"userId\":\"\(UUID().uuidString)\"}".utf8)
+        expectFailure("旧账号归属不猜测") { _ = try JSONDecoder().decode(MeetingRecord.self, from: ambiguous) }
+        let unsupported = Data("{\"identitySchemaVersion\":1,\"id\":\"\(oldID)\",\"title\":\"旧会议\",\"created\":0}".utf8)
+        expectFailure("未知身份版本不回退") { _ = try JSONDecoder().decode(MeetingRecord.self, from: unsupported) }
         let history = temp.appendingPathComponent("history.json")
         try Data(legacy.utf8).write(to: history)
         let library = try MeetingLibrary(root: temp)

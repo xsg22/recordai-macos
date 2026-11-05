@@ -32,14 +32,15 @@ struct RecordAILogo: View {
     var size: CGFloat = 44
     var body: some View {
         Group {
-            if let icon = NSImage(named: "AppIcon") {
+            if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
+               let icon = NSImage(contentsOf: url) {
                 Image(nsImage: icon).resizable().interpolation(.high).scaledToFit().scaleEffect(1.2)
             } else {
                 Image(systemName: "waveform").font(.system(size: size * 0.5, weight: .bold))
                     .foregroundStyle(.white).frame(width: size, height: size)
                     .background(Color(red: 0.03, green: 0.08, blue: 0.23), in: RoundedRectangle(cornerRadius: size * 0.24))
             }
-        }.frame(width: size, height: size).clipped().accessibilityLabel("RecordAI")
+        }.frame(width: size, height: size).clipped().accessibilityLabel("TalkTuck")
     }
 }
 
