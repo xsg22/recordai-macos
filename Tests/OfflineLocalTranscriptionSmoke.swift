@@ -5,7 +5,9 @@ import CryptoKit
   let args = CommandLine.arguments
   let audio = URL(fileURLWithPath:args[3]), before = try Data(contentsOf:audio)
   let started = Date()
-  let result = try TranscriptionEngine().transcribe(audio:audio,model:URL(fileURLWithPath:args[2]),executable:URL(fileURLWithPath:args[1]),language:"zh")
+  let temporary = URL(fileURLWithPath:args[4]).deletingLastPathComponent().appendingPathComponent("asr-tmp")
+  try FileManager.default.createDirectory(at:temporary,withIntermediateDirectories:true)
+  let result = try TranscriptionEngine(temporaryRoot:temporary).transcribe(audio:audio,model:URL(fileURLWithPath:args[2]),executable:URL(fileURLWithPath:args[1]),language:"zh")
   precondition(!result.text.isEmpty && result.text.range(of:"[\\p{Han}]",options:.regularExpression) != nil)
   let after = try Data(contentsOf:audio)
   precondition(after == before)

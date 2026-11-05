@@ -412,7 +412,8 @@ final class MeetingLibrary {
 
     /// 复制而非移动用户原始文件。复制完成后才写元数据；保存失败则撤销复制。
     @discardableResult
-    func importAudio(_ source: URL, into record: inout MeetingRecord, recordingDuration: Double? = nil, captureSession: UUID? = nil) throws -> URL {
+    func importAudio(_ source: URL, into record: inout MeetingRecord, recordingDuration: Double? = nil, captureSession: UUID? = nil, timelineEnd: Double? = nil, persist: Bool = true) throws -> URL {
+        if let timelineEnd, !timelineEnd.isFinite || timelineEnd < 0 { throw MeetingLibraryError.missingAudio }
         if let duration = recordingDuration, !duration.isFinite || duration < 0 {
             throw MeetingLibraryError.missingAudio
         }
@@ -420,6 +421,28 @@ final class MeetingLibrary {
             let existing = try audioURL(file, meeting: record.id)
             guard manager.fileExists(atPath: existing.path) else { throw MeetingLibraryError.missingAudio }
             return existing
+        }
+        if source.lastPathComponent == "final.manifest.json" {
+            guard let session = UUID(uuidString: source.deletingLastPathComponent().lastPathComponent) else { throw MeetingLibraryError.unsafeAudioPath }
+            let file = "capture_" + session.uuidString + ".aacarchive"
+            let managed = try audioURL(file, meeting: record.id)
+            guard source.standardizedFileURL.resolvingSymlinksInPath() == managed.standardizedFileURL.resolvingSymlinksInPath(),
+                  let size = try manager.attributesOfItem(atPath: managed.path)[.size] as? NSNumber,
+                  size.int64Value > 0, size.int64Value <= 32 * 1024 * 1024 else { throw MeetingLibraryError.unsafeAudioPath }
+            let manifest = try JSONDecoder().decode(BalancedRecordingManifest.self, from: Data(contentsOf: managed))
+            try manifest.validate(); guard manifest.recordingID == session else { throw MeetingLibraryError.unsafeAudioPath }
+            let original = record
+            if !record.audioFiles.contains(file) {
+                record.audioFiles.append(file)
+                record.importedCaptureSessions[session.uuidString] = file
+                if recordingDuration != nil {
+                    let duration = Double(manifest.durationFrames) / 16_000
+                    record.pendingAudioFiles.append(file); record.audioDurations[file] = duration; record.duration = timelineEnd.map { max(record.duration, $0) } ?? (record.duration + duration)
+                    record.status = .recorded
+                }
+            }
+            do { if persist { record = try save(record) } } catch { record = original; throw error }
+            return managed
         }
         let original = record
         var isDirectory: ObjCBool = false
@@ -439,10 +462,10 @@ final class MeetingLibrary {
         if let duration = recordingDuration {
             record.pendingAudioFiles.append(file)
             record.audioDurations[file] = duration
-            record.duration += duration
+            record.duration = timelineEnd.map { max(record.duration, $0) } ?? (record.duration + duration)
             record.status = .recorded
         }
-        do { record = try save(record) }
+        do { if persist { record = try save(record) } }
         catch {
             record = original
             try? manager.removeItem(at: destination)
@@ -532,6 +555,17 @@ final class MeetingLibrary {
     private func audioURL(_ filename: String, meeting id: UUID) throws -> URL {
         guard !filename.isEmpty, filename != ".", filename != "..",
               !filename.contains("/"), !filename.contains("\\") else { throw MeetingLibraryError.unsafeAudioPath }
+        if filename.hasPrefix("capture_"), filename.hasSuffix(".aacarchive") {
+            let raw = String(filename.dropFirst(8).dropLast(11))
+            guard let session = UUID(uuidString: raw), raw == session.uuidString else { throw MeetingLibraryError.unsafeAudioPath }
+            let meeting = directory(for: id).resolvingSymlinksInPath().standardizedFileURL
+            let capture = meeting.appendingPathComponent("Capture"), archive = capture.appendingPathComponent(session.uuidString)
+            let final = archive.appendingPathComponent("final.manifest.json")
+            for component in [directory(for: id), capture, archive, final] {
+                if (try? component.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true { throw MeetingLibraryError.unsafeAudioPath }
+            }
+            return final
+        }
         let audioDirectory = directory(for: id).appendingPathComponent("Audio", isDirectory: true)
         let destination = audioDirectory.appendingPathComponent(filename)
         // resolvingSymlinksInPath 对目标不存在的符号链接不一定解析，显式拒绝所有链接。
