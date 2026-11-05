@@ -10,7 +10,6 @@ struct CaptureRecoveryCandidate: Identifiable, Sendable {
     let existingMix: URL?
     let duration: Double
     let warnings: [String]
-    var canonical: Bool = false
 }
 struct CaptureRecoveryScan: Sendable {
     var candidates: [CaptureRecoveryCandidate] = []
@@ -36,32 +35,6 @@ enum CaptureRecovery {
                 // Foundation枚举可能返回/private/var，而解析后的系统路径是/var；统一后再验证真实边界。
                 let directory = entry.resolvingSymlinksInPath().standardizedFileURL
                 guard directory.deletingLastPathComponent().path == root.path else { throw MeetingRecorderError.message("原轨目录超出录音范围。") }
-                var canonicalFrames: Int64 = 0
-                var foundCanonical = false
-                for streamID in ["microphone", "system"] {
-                    let folder = directory.appendingPathComponent(streamID)
-                    guard fm.fileExists(atPath: folder.appendingPathComponent("session.json").path) else { continue }
-                    foundCanonical = true
-                    guard folder.resolvingSymlinksInPath().path == folder.path else { throw MeetingLibraryError.unsafeAudioPath }
-                    let state = try ResilientRecordingSession.inspect(directory: folder)
-                    guard state.id == session, state.unreadableIndices.isEmpty else { throw BalancedAudioError.integrityFailure }
-                    let bindingURL = folder.appendingPathComponent("stream.json")
-                    guard bindingURL.resolvingSymlinksInPath().path == bindingURL.path,
-                          let bindingSize = try fm.attributesOfItem(atPath: bindingURL.path)[.size] as? NSNumber,
-                          bindingSize.int64Value > 0, bindingSize.int64Value <= 65_536 else { throw BalancedAudioError.invalidManifest }
-                    let binding = try JSONSerialization.jsonObject(with: Data(contentsOf: bindingURL)) as? [String: Any]
-                    guard binding?["recordingID"] as? String == session.uuidString,
-                          binding?["streamID"] as? String == streamID,
-                          let offset = binding?["startFrame"] as? NSNumber, offset.int64Value >= 0,
-                          offset.int64Value <= BalancedAudioSegment.maximumTimelineFrames - state.frames else { throw BalancedAudioError.invalidManifest }
-                    canonicalFrames = max(canonicalFrames, offset.int64Value + state.frames)
-                }
-                if foundCanonical {
-                    guard canonicalFrames > 0 else { continue }
-                    result.candidates.append(CaptureRecoveryCandidate(id: session, meetingID: meetingID, directory: directory,
-                        tracks: [], existingMix: nil, duration: Double(canonicalFrames) / 16_000, warnings: [], canonical: true))
-                    continue
-                }
                 let manifest = directory.appendingPathComponent("recording.json")
                 guard manifest.resolvingSymlinksInPath().path == manifest.path else { throw MeetingRecorderError.message("录音清单路径不安全。") }
                 let manifestSize = try fm.attributesOfItem(atPath: manifest.path)[.size] as? NSNumber
@@ -113,27 +86,10 @@ enum CaptureRecovery {
         return result
     }
     static func audioDuration(_ url: URL) throws -> Double {
-        if let reader = try CanonicalAudioInput.reader(for: url) {
-            return Double(reader.durationFrames) / 16_000
-        }
         let file = try AVAudioFile(forReading: url)
         let duration = Double(file.length) / file.processingFormat.sampleRate
         guard duration.isFinite, duration > 0 else { throw MeetingRecorderError.message("音频为空。") }
         return duration
-    }
-    static func finalizeCanonical(_ candidate: CaptureRecoveryCandidate) async throws -> URL {
-        guard candidate.canonical else { throw BalancedAudioError.invalidManifest }
-        for attempt in 0..<100 {
-            try Task.checkCancellation()
-            let worker = Task.detached(priority: .utility) {
-                try MacSegmentedManifest.recoverAndFinalize(recordingID: candidate.id, root: candidate.directory)
-            }
-            do { return try await worker.value }
-            catch let error as CocoaError where error.code == .fileWriteFileExists && attempt < 99 {
-                try await Task.sleep(for: .milliseconds(50))
-            }
-        }
-        throw CocoaError(.fileWriteFileExists)
     }
     private static func digest(_ url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url); defer { try? handle.close() }

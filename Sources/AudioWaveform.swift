@@ -37,37 +37,31 @@ actor AudioWaveformStore {
            !cached.peaks.isEmpty, cached.peaks.allSatisfy({ $0.isFinite && $0 >= 0 && $0 <= 1 }) {
             remember(cached); return cached
         }
-        let reader = try CanonicalAudioInput.reader(for: url)
-        let file = reader == nil ? try AVAudioFile(forReading: url, commonFormat: .pcmFormatFloat32, interleaved: false) : nil
-        let format = reader?.format ?? file!.processingFormat
-        let frames = reader?.durationFrames ?? file!.length
-        guard frames > 0, format.sampleRate > 0,
+        let file = try AVAudioFile(forReading: url, commonFormat: .pcmFormatFloat32, interleaved: false)
+        let format = file.processingFormat
+        guard file.length > 0, format.sampleRate > 0,
               let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 8192) else {
             throw MeetingRecorderError.message("音频为空或无法生成声波。")
         }
-        let duration = Double(frames) / format.sampleRate
+        let frames = file.length, duration = Double(frames) / format.sampleRate
         guard duration.isFinite, duration > 0 else { throw MeetingRecorderError.message("音频时长无效。") }
         let bins = max(1, Int(min(2048, min(Double(frames), ceil(duration * 40)))))
         var peaks = [Float](repeating: 0, count: bins)
         var offset: AVAudioFramePosition = 0
         while offset < frames {
             try Task.checkCancellation()
-            try autoreleasepool {
-            let active: AVAudioPCMBuffer
-            if let reader { active = try reader.read(startFrame: offset, count: 8192) }
-            else { try file!.read(into: buffer, frameCount: AVAudioFrameCount(min(8192, frames - offset))); active = buffer }
-            guard active.frameLength > 0, let channels = active.floatChannelData else {
+            try file.read(into: buffer, frameCount: AVAudioFrameCount(min(8192, frames - offset)))
+            guard buffer.frameLength > 0, let channels = buffer.floatChannelData else {
                 throw MeetingRecorderError.message("音频读取提前结束，声波未完成。")
             }
-            for frame in 0..<Int(active.frameLength) {
+            for frame in 0..<Int(buffer.frameLength) {
                 let bin = min(bins - 1, Int(Double(offset + Int64(frame)) / Double(frames) * Double(bins)))
                 for channel in 0..<Int(format.channelCount) {
                     let value = abs(channels[channel][frame])
                     if value.isFinite { peaks[bin] = max(peaks[bin], min(1, value)) }
                 }
             }
-            offset += Int64(active.frameLength)
-            }
+            offset += Int64(buffer.frameLength)
         }
         try Task.checkCancellation()
         guard try identity(url) == key else { throw MeetingRecorderError.message("音频已变化，请重新加载声波。") }

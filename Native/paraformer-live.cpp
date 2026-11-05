@@ -96,46 +96,9 @@ static int segment(const std::string &models,const char *file,const char *output
     SherpaOnnxVoiceActivityDetectorFlush(vad);drain();manifest<<"]";manifest.close();
     SherpaOnnxDestroyVoiceActivityDetector(vad);return 0;
 }
-// Bounded-memory VAD for canonical audio. Float32 mono PCM arrives on stdin;
-// only timestamps are retained. The caller reads the detected windows from
-// the original archive on demand, so no full-length WAV or PCM is written.
-static int segmentTimestamps(const std::string &models,const char *output) {
-    auto *vad=makeVAD(models+"/silero_vad.onnx");
-    if(!vad)throw std::runtime_error("Silero VAD加载失败");
-    struct Turn { int64_t start,end; };
-    std::vector<Turn> turns;
-    int64_t total=0;
-    auto drain=[&] {
-        while(!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
-            auto *s=SherpaOnnxVoiceActivityDetectorFront(vad);
-            const int64_t begin=std::max<int64_t>(0,static_cast<int64_t>(s->start)-1600);
-            const int64_t end=static_cast<int64_t>(s->start)+s->n+1600;
-            for(int64_t position=begin;position<end;position+=25*16000)
-                turns.push_back({position,std::min<int64_t>(end,position+25*16000)});
-            SherpaOnnxDestroySpeechSegment(s);SherpaOnnxVoiceActivityDetectorPop(vad);
-        }
-    };
-    float buffer[512];
-    while(true) {
-        const size_t count=std::fread(buffer,sizeof(float),512,stdin);
-        if(count) { SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad,buffer,static_cast<int>(count)); total+=count; drain(); }
-        if(count<512) { if(std::ferror(stdin))throw std::runtime_error("音频流读取失败"); break; }
-    }
-    SherpaOnnxVoiceActivityDetectorFlush(vad);drain();SherpaOnnxDestroyVoiceActivityDetector(vad);
-    std::ofstream manifest(output); if(!manifest)throw std::runtime_error("无法写入语音片段");
-    manifest.precision(12);manifest<<"[";bool first=true;
-    for(const auto &turn:turns) {
-        const int64_t end=std::min(total,turn.end); if(end<=turn.start)continue;
-        if(!first)manifest<<",";
-        first=false;
-        manifest<<"{\"start\":"<<turn.start/16000.0<<",\"end\":"<<end/16000.0<<"}";
-    }
-    manifest<<"]";if(!manifest)throw std::runtime_error("写入语音片段失败");return 0;
-}
 int main(int argc,char **argv) {
     try {
         if(argc==5 && std::string(argv[1])=="segment")return segment(argv[2],argv[3],argv[4]);
-        if(argc==4 && std::string(argv[1])=="segment-timestamps")return segmentTimestamps(argv[2],argv[3]);
         const bool xasr=argc==6 && std::string(argv[1])=="xasr";
         if(argc!=3 && !xasr)throw std::runtime_error("usage: paraformer-live modelDirectory language OR xasr modelDirectory language vadPath hotwordsPath OR segment modelDirectory wav outputDirectory");
         const std::string requestedLanguage=argv[xasr?3:2];
