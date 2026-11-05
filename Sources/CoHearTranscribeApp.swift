@@ -42,7 +42,6 @@ struct CoHearTranscribeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var state: AppState
     init() {
-        LegacyPreferencesMigration.runForInstalledApp()
         _appLanguage = ObservedObject(wrappedValue: AppLanguage.shared)
         // Construct eagerly: StateObject's autoclosure may otherwise wait for
         // the first window, leaving a background launch without account services.
