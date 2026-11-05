@@ -3,7 +3,7 @@ import Foundation
 
 @main struct ASRModelDownloadSmoke {
     @MainActor static func main() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-models-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("talktuck-models-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let payload = Data("model-fixture".utf8)
         let hash = SHA256.hash(data: payload).map { String(format: "%02x", $0) }.joined()

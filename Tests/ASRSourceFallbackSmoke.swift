@@ -4,7 +4,7 @@ import Foundation
 @main struct ASRSourceFallbackSmoke {
     @MainActor static func main() async throws {
         let base = URL(string: CommandLine.arguments[1])!
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-source-fallback-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("talktuck-source-fallback-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let payload = Data("model-fixture".utf8)
         let hash = SHA256.hash(data: payload).map { String(format: "%02x", $0) }.joined()

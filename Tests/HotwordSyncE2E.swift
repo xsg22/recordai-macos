@@ -7,7 +7,7 @@ import Foundation
 @main struct HotwordSyncE2E {
     @MainActor static func main() async throws {
         let url = URL(string: CommandLine.arguments[1])!
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let a = PersonalHotwords(root: root.appendingPathComponent("a")), b = PersonalHotwords(root: root.appendingPathComponent("b"))
         let authA = TalkTuckAccountStore(baseURL:url, credentials:MemoryCredentials(), deviceId:UUID())

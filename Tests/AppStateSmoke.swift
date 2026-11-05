@@ -4,7 +4,7 @@ import AVFoundation
 @main
 struct AppStateSmoke {
     @MainActor static func main() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-state-test-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("cohear-state-test-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         var original = MeetingRecord(title: "中文会议", text: "旧文本", notes: "保留重要决定", status: .completed)

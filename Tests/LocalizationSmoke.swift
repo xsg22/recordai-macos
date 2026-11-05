@@ -21,7 +21,7 @@ import Foundation
         preferences.selection = .english
         precondition(defaults.string(forKey: AppLanguage.preferenceKey) == "en")
         precondition(preferences.effective == .english && preferences.locale.identifier == "en")
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("TalkTuck-language-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("TalkTuck-language-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)
         var record = MeetingRecord(title: "完成{1}", text: "保存。\nHello, TalkTuck.", status: .completed)

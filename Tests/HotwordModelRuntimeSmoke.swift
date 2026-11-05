@@ -10,7 +10,7 @@ enum ASRResources {
 }
 @main struct HotwordModelRuntimeSmoke {
     @MainActor static func main() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at:root) }
         let source = "今天讨论了 Aurora 项目，TalkTuck 是 Mac 客户端。接下来会检查 Qwen3-ASR 的热词。"
         let store = PersonalHotwords(root:root)

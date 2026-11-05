@@ -64,7 +64,7 @@ struct LiveAudioSmoke {
         precondition(abs(converted.count - 16_000) < 32, "重采样不能持续丢帧或增长")
         precondition(amplitude(converted, frequency: 440, range: 3200..<12800) > 0.25)
 
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("live-audio-smoke-\(UUID().uuidString)")
+        let directory = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("live-audio-smoke-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         var delivered = 0

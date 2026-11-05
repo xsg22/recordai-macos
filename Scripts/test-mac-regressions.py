@@ -61,7 +61,7 @@ def main():
     run.mkdir(parents=True, exist_ok=False)
     for name in ["build", "tmp", "cache", "evidence", "fixtures"]: (run/name).mkdir()
     env = dict(os.environ, TMPDIR=str(run/"tmp")+"/", XDG_CACHE_HOME=str(run/"cache"),
-               SWIFT_USE_OLD_DRIVER="1", PYTHONDONTWRITEBYTECODE="1", NODE_COMPILE_CACHE=str(run/"cache/node"),
+               SWIFT_USE_OLD_DRIVER="1", PYTHONDONTWRITEBYTECODE="1", RECORD_AI_TRANSCRIPTION_TMP_ROOT=str(run/"tmp"), NODE_COMPILE_CACHE=str(run/"cache/node"),
                CLANG_MODULE_CACHE_PATH=str(run/"cache/clang"), SWIFT_MODULECACHE_PATH=str(run/"cache/swift"),
                HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1", HF_HOME=str(run/"cache/huggingface"))
     if args.node: env["PATH"] = str(args.node.resolve().parent)+os.pathsep+env["PATH"]

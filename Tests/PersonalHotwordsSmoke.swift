@@ -2,7 +2,7 @@ import Foundation
 
 @main struct PersonalHotwordsSmoke {
     @MainActor static func main() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let store = PersonalHotwords(root: root, modelAvailable: { true }, generate: { _, _ in
             "[\"TalkTuck\",\"不存在的名字\",\"TalkTuck\"]"

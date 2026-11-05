@@ -2,7 +2,7 @@ import Foundation
 @main struct OptionalModelTransferSmoke {
     static func main() async throws {
         let base = CommandLine.arguments[1]
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-transfer-test-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("cohear-transfer-test-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         let destination = root.appendingPathComponent("download.partial")

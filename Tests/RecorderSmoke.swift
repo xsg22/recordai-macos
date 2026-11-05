@@ -16,7 +16,7 @@ struct RecorderSmoke {
         precondition(timeline.slices(at: 102, frames: 4800, sampleRate: 48_000).isEmpty)
         let afterPause = timeline.slices(at: 103.5, frames: 4800, sampleRate: 48_000)
         precondition(afterPause[0].offset == 1.5)
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("recorder-smoke-\(UUID().uuidString)")
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("recorder-smoke-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         // 在没有默认输入设备的机器上验证真实启动与重试均安全失败。

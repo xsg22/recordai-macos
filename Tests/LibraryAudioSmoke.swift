@@ -33,7 +33,7 @@ final class LostAudioReply: LibraryAudioTransport {
         let token = (try JSONSerialization.jsonObject(with:data) as! [String:Any])["token"] as! String
         let text = LibrarySyncHTTP(server:server,token:token),identity = try await text.identity(),http = LibraryAudioHTTP(server:server,token:token)
         let library = try MeetingLibrary(root:root);library.activeSyncUserId = identity.userId
-        let systemTemp = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-system-alias-"+UUID().uuidString)
+        let systemTemp = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("talktuck-system-alias-"+UUID().uuidString)
         try LibraryAudioFiles.directory(systemTemp)
         defer { try? FileManager.default.removeItem(at:systemTemp) }
         let link = systemTemp.appendingPathComponent("redirect")

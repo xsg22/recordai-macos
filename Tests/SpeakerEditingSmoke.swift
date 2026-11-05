@@ -1,7 +1,7 @@
 import Foundation
 @main struct SpeakerEditingSmoke {
     @MainActor static func main() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-edit-speakers-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("cohear-edit-speakers-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)
         var record = MeetingRecord(title: "发言人纠错", text: "你好。\nHello.", notes: "原始手稿", status: .completed)

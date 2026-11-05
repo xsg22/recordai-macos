@@ -2,7 +2,7 @@ import Foundation
 
 @main struct ContinuousRecordingSmoke {
     @MainActor static func main() async throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("continuous-segment-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("continuous-segment-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         var closed: [ContinuousSegmentInfo] = []
         let policy = ContinuousSegmentPolicy(maximumSeconds: 10, minimumSeconds: 1, trailingSilenceSeconds: 1, silenceThreshold: 0.01)

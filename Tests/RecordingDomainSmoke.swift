@@ -5,7 +5,7 @@ import Foundation
         precondition(condition, file: file, line: line)
     }
     @MainActor static func main() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("recording-domain-"+UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("recording-domain-"+UUID().uuidString)
         defer { try? FileManager.default.removeItem(at:root) }
         let library = try MeetingLibrary(root:root),adapter = MacLibrarySyncAdapter(library:library),account = UUID()
         try adapter.activate(userId:account)

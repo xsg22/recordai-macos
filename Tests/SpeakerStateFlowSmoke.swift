@@ -3,7 +3,7 @@ import Foundation
 @main struct SpeakerStateFlowSmoke {
     @MainActor static func main() async throws {
         let source = URL(fileURLWithPath: CommandLine.arguments[1])
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-state-flow-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("cohear-state-flow-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let state = AppState(storageURL: root, connectionNamespace: "state-flow-" + UUID().uuidString)
         precondition(state.model != nil, "本测试必须运行在带模型资源的测试bundle中")

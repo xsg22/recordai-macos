@@ -12,7 +12,7 @@ import AVFoundation
         precondition(rows.map { $0.separator + $0.text }.joined() == base.text, "分人不能删字或改字")
         let speakers = Set(rows.flatMap(\.speakerIDs))
         precondition(speakers.count == 2, "双声音测试应区分两位发言人")
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-speaker-smoke-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("cohear-speaker-smoke-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)
         var record = MeetingRecord(title: "双人合成会议", notes: "保留手写决定", status: .recorded)

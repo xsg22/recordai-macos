@@ -1,7 +1,7 @@
 import Foundation
 @main struct MeetingWorkspacePersistenceSmoke {
     static func main() throws {
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("workspace-test-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("workspace-test-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let library = try MeetingLibrary(root: root)
         var record = MeetingRecord(title: "合成会议", text: "最终正文", notes: "原始手稿", previewText: "实时暂定结果")

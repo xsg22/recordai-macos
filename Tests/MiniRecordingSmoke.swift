@@ -17,7 +17,7 @@ import Foundation
         precondition(drag.hitTest(controlPoint) === drag, "布局变化后旧控件位置重新可拖动")
         drag.setFrameSize(NSSize(width: 525, height: 168))
         precondition(drag.hitTest(drag.convert(NSPoint(x: 250, y: 100), to: dragContainer)) == nil, "错误提示中的文字与按钮事件透传")
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("cohear-mini-" + UUID().uuidString)
+        let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true).appendingPathComponent("cohear-mini-" + UUID().uuidString)
         let namespace = "mini-test-" + UUID().uuidString
         let defaults = UserDefaults(suiteName: namespace)!
         defer {
