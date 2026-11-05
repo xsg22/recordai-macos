@@ -451,7 +451,7 @@ final class AppState: ObservableObject {
             Task { @MainActor in self?.elapsed += 1 }
         }
         let engine = TranscriptionEngine(); self.engine = engine
-        let selectedLanguage = language
+        let selectedLanguage = record.language
         task = Task { [self] in
             let start = Date()
             var textCommitted = false
@@ -590,8 +590,9 @@ final class AppState: ObservableObject {
         guard !recording, !syncing, let library else { return }
         speechModels.refresh()
         guard speechModels.ready else { showModelDownload = true; return }
+        let recordingLanguage = continuing ? (current?.language ?? language) : language
         guard model != nil, ASRResources.executable("qwen-asr") != nil,
-              !recordingProfile.usesLiveASR || (ASRResources.paraformer != nil && ASRResources.executable("paraformer-live") != nil) else {
+              !recordingProfile.usesLiveASR || recordingLanguage == "yue" || (ASRResources.paraformer != nil && ASRResources.executable("paraformer-live") != nil) else {
             error = "语音引擎缺失，请重新安装 App。"; return
         }
         if continuing && current == nil { return }
@@ -964,7 +965,10 @@ final class AppState: ObservableObject {
         liveGeneration = UUID()
         recorder.onAudio = nil
         guard liveEnabled else { return }
-        guard let model = ASRResources.paraformer, let executable = ASRResources.executable("paraformer-live") else {
+        let sessionLanguage = history.first(where: { $0.id == id })?.language ?? language
+        let selectedModel = sessionLanguage == "yue" ? model : ASRResources.paraformer
+        let selectedExecutable = ASRResources.executable(sessionLanguage == "yue" ? "qwen-asr" : "paraformer-live")
+        guard let model = selectedModel, let executable = selectedExecutable else {
             liveStatus = "实时引擎缺失，仍会保存完整录音"; return
         }
         let generation = liveGeneration
@@ -976,7 +980,7 @@ final class AppState: ObservableObject {
             }
         }
         do {
-            try session.start(model: model, executable: executable, language: language)
+            try session.start(model: model, executable: executable, language: sessionLanguage)
             liveSession = session
             recorder.onAudio = { [weak session] samples in session?.append(samples) }
             liveStatus = "正在加载本地模型，稍后显示实时文字…"
@@ -1006,8 +1010,9 @@ final class AppState: ObservableObject {
                     record.liveUtterances.append(LiveUtterance(text: value, start: liveSegmentOffset + event.start, end: liveSegmentOffset + event.end))
                 }
                 record.previewText = preview
-                record.previewEngine = livePrefix.isEmpty || record.previewEngine == "paraformer-int8-silero-vad"
-                    ? "paraformer-int8-silero-vad" : "mixed-history-and-paraformer"
+                let engineName = record.language == "yue" ? "qwen3-asr-cantonese-live" : "paraformer-int8-silero-vad"
+                record.previewEngine = livePrefix.isEmpty || record.previewEngine == engineName
+                    ? engineName : (record.language == "yue" ? "mixed-history-and-qwen-live" : "mixed-history-and-paraformer")
                 do { try update(record) } catch { self.error = "保存实时预览失败：\(error.localizedDescription)" }
             }
             // 实时提交仅用于转录，不再触发自动问答。

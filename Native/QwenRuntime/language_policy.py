@@ -1,7 +1,7 @@
 """Language policy shared by offline recognition, alignment and contract tests."""
 import re
 
-LANGUAGES = {'zh': 'Chinese', 'en': 'English', 'ja': 'Japanese', 'auto': None}
+LANGUAGES = {'zh': 'Chinese', 'yue': 'Cantonese', 'en': 'English', 'ja': 'Japanese', 'auto': None}
 
 
 def recognition_language(code):
@@ -11,6 +11,9 @@ def recognition_language(code):
 
 
 def alignment_language(code, text):
+    # The aligner uses its Chinese character tokenizer for written Cantonese.
+    if code == 'yue':
+        return 'Chinese'
     explicit = recognition_language(code)
     if explicit:
         return explicit

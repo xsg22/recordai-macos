@@ -16,6 +16,8 @@ class LanguagePolicyTests(unittest.TestCase):
     def test_explicit_language_is_respected(self):
         self.assertEqual(policy.alignment_language('en', 'RecordAI 中文品牌'), 'English')
         self.assertEqual(policy.alignment_language('zh', 'RecordAI'), 'Chinese')
+        self.assertEqual(policy.recognition_language('yue'), 'Cantonese')
+        self.assertEqual(policy.alignment_language('yue', '我哋開會'), 'Chinese')
         self.assertIsNone(policy.recognition_language('auto'))
     def test_unknown_language_does_not_silently_fall_back(self):
         with self.assertRaises(ValueError): policy.recognition_language('unsupported')

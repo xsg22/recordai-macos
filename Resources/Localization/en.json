@@ -972,5 +972,11 @@
   "创建后，右键录音选择“移动到分组”。移除分组不会删除录音。": "After creating a group, right-click a recording and choose “Move to group”. Removing a group keeps its recordings.",
   "{0} 条录音": "{0} recordings",
   "当前无法导出录音。": "This recording cannot be exported right now.",
-  "没有可导出的音频。": "There is no audio to export."
+  "没有可导出的音频。": "There is no audio to export.",
+  "普通话": "Mandarin",
+  "粤语": "Cantonese",
+  "默认转录语言": "Default transcription language",
+  "转录语言": "Transcription language",
+  "普通话和英语实时字幕使用中英双语模型，最终转录遵循所选语言。": "Mandarin and English live captions use the bilingual model. The final transcript follows your selected language.",
+  "粤语实时字幕分段更新，可能有数秒延迟；录音结束后生成完整转录。": "Cantonese captions update in segments and may lag by a few seconds. A complete transcript is generated after recording."
 }

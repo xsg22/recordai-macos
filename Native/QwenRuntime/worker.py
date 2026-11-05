@@ -4,7 +4,7 @@ import os
 os.environ['HF_HUB_OFFLINE']='1'
 os.environ['TRANSFORMERS_OFFLINE']='1'
 os.environ['TOKENIZERS_PARALLELISM']='false'
-import json,math,pathlib,sys,wave
+import json,math,pathlib,struct,sys,wave
 from language_policy import recognition_language, alignment_language
 
 def diarize(model_path,audio_path,output):
@@ -32,6 +32,40 @@ def diarize(model_path,audio_path,output):
             else:merged.append(turn.copy())
     pathlib.Path(output).write_text(json.dumps(dict(turns=sorted(merged,key=lambda x:x['start']),duration=offset)))
 
+def live_cantonese(model_path):
+    """Consume length-prefixed mono float32 and emit bounded, timestamped previews."""
+    import numpy as np
+    import mlx.core as mx
+    from mlx_audio.stt import load
+    model=load(pathlib.Path(model_path).resolve(strict=True))
+    def emit(kind,text,start,end):
+        print(json.dumps(dict(type=kind,text=text,start=start,end=end),ensure_ascii=False),flush=True)
+    emit('ready','',0,0)
+    stream=sys.stdin.buffer
+    pending=bytearray();position=0;window=16000*4
+    def transcribe(data,start):
+        samples=np.frombuffer(data,dtype='<f4')
+        if len(samples)<4800 or np.sqrt(np.mean(samples*samples))<0.003:return
+        generated=model.generate(audio=samples,language='Cantonese',max_tokens=256,temperature=0,chunk_duration=30,min_chunk_duration=0.1,repetition_penalty=1.05,verbose=False)
+        if generated.generation_tokens>=256:raise ValueError('Live transcription token limit reached')
+        text=generated.text.strip()
+        if text:emit('commit',text,start/16000,(start+len(samples))/16000)
+        mx.clear_cache()
+    while True:
+        header=stream.read(4)
+        if not header:break
+        if len(header)!=4:raise ValueError('Incomplete live audio header')
+        frames=struct.unpack('<I',header)[0]
+        if not 0<frames<=64000:raise ValueError('Invalid live audio packet')
+        data=stream.read(frames*4)
+        if len(data)!=frames*4:raise ValueError('Incomplete live audio packet')
+        pending.extend(data)
+        while len(pending)>=window*4:
+            block=bytes(pending[:window*4]);del pending[:window*4]
+            transcribe(block,position);position+=window
+    if pending:transcribe(bytes(pending),position)
+    emit('done','',0,(position+len(pending)//4)/16000)
+
 def align_speakers(model_path,manifest_path,turns_path,output):
     import numpy as np
     import mlx.core as mx
@@ -57,6 +91,8 @@ def align_speakers(model_path,manifest_path,turns_path,output):
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
 
 def main():
+    if len(sys.argv)==3 and sys.argv[1]=='--live-cantonese':
+        live_cantonese(sys.argv[2]);return
     if len(sys.argv)==5 and sys.argv[1]=='--diarize':
         diarize(*sys.argv[2:]);return
     if len(sys.argv)==6 and sys.argv[1]=='--align-speakers':

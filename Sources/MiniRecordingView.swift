@@ -224,7 +224,7 @@ struct MiniRecordingView: View {
                 ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) }
             }
             Picker(L10n.text("转写语言"), selection: $state.language) {
-                Text(L10n.text("中文")).tag("zh"); Text(L10n.text("中英自动")).tag("auto"); Text(L10n.text("英语")).tag("en")
+                ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) }
             }
             if hasSession { Button(L10n.text("开始新录音")) { state.toggleRecording() } }
         }

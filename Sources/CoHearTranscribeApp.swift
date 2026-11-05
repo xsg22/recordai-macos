@@ -434,6 +434,8 @@ struct MainView: View {
                             (Text(record.created, format: .dateTime.hour().minute().locale(L10n.locale)) + Text("—") + Text(record.created.addingTimeInterval(record.duration), format: .dateTime.hour().minute().locale(L10n.locale)))
                             Text("· " + recordingDurationText(record.duration))
                         }
+                        Text("· " + L10n.text("转录语言") + "：" + (TranscriptionLanguage(rawValue: record.language)?.title ?? (record.language == "yue" ? L10n.text("粤语") : record.language)))
+                            .accessibilityIdentifier("detail-transcription-language")
                     }.font(AppTypography.secondary).foregroundStyle(RecordAITheme.muted)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
@@ -477,7 +479,7 @@ struct MainView: View {
                 Button(L10n.text("执行追踪")) { showingExecution = true }
                 Menu(L10n.text("录音设置")) {
                     Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
-                    Picker(L10n.text("语言"), selection: $state.language) { Text(L10n.text("中文")).tag("zh"); Text(L10n.text("中英自动")).tag("auto"); Text(L10n.text("英语")).tag("en") }
+                    Picker(L10n.text("语言"), selection: $state.language) { ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) } }
                     Picker(L10n.text("录音模式"), selection: $state.recordingProfile) { ForEach(RecordingProfile.allCases) { Text($0.title).tag($0) } }
                 }.disabled(state.locked)
                 Divider()
@@ -569,11 +571,11 @@ struct MainView: View {
     @ViewBuilder private var recordingSettingsMenu: some View {
         Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
         Picker(L10n.text("会话类型"), selection: $state.recordingSessionMode) { ForEach(RecordingSessionMode.allCases) { Text($0.title).tag($0) } }
-        Picker(L10n.text("语言"), selection: $state.language) { Text(L10n.text("中文")).tag("zh"); Text(L10n.text("中英自动")).tag("auto"); Text(L10n.text("英语")).tag("en") }
+        Picker(L10n.text("语言"), selection: $state.language) { ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) } }
         Picker(L10n.text("录音模式"), selection: $state.recordingProfile) { ForEach(RecordingProfile.allCases) { Text($0.title).tag($0) } }
     }
     private var recordingConfigurationSummary: String {
-        let language = state.language == "zh" ? "中文" : state.language == "en" ? "英语" : "中英自动"
+        let language = TranscriptionLanguage(rawValue: state.language)?.title ?? state.language
         let profile = state.recordingProfile == .realtime ? "实时转录" : state.recordingProfile == .backgroundRealtime ? "后台实时" : "仅录音 · 录完转录"
         return [state.recordingMode.title, language, profile].joined(separator: " · ")
     }

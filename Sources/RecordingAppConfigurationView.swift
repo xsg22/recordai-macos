@@ -66,8 +66,8 @@ struct RecordingAppConfigurationView: View {
                     RecordAIChoicePicker(title: "录音会话", items: RecordingSessionMode.allCases.map { ($0.title, $0) }, selection: $state.recordingSessionMode)
                 }
                 Divider()
-                RecordAISettingRow(title: L10n.text("转写语言")) {
-                    RecordAIChoicePicker(title: L10n.text("转写语言"), items: TranscriptionLanguage.allCases.map { ($0.title, $0.rawValue) }, selection: $state.language)
+                RecordAISettingRow(title: L10n.text("默认转录语言")) {
+                    RecordAIChoicePicker(title: L10n.text("默认转录语言"), items: TranscriptionLanguage.allCases.map { ($0.title, $0.rawValue) }, selection: $state.language)
                 }
                 Divider()
                 RecordAISettingRow(title: L10n.text("录音模式")) {
@@ -79,7 +79,8 @@ struct RecordingAppConfigurationView: View {
                 Text(L10n.text(state.recordingProfile.detail)).font(AppTypography.secondary).foregroundStyle(.secondary).lineSpacing(7)
             }
             RecordAIInfo(text: L10n.text("录音过程中设置会锁定，修改只影响下一次录音。隐藏窗口或切换 mini 不会停止采集。"))
-            RecordAIInfo(text: L10n.text("实时使用中英双语模型，最终转录遵循所选语言。"))
+            RecordAIInfo(text: L10n.text("普通话和英语实时字幕使用中英双语模型，最终转录遵循所选语言。"))
+            RecordAIInfo(text: L10n.text("粤语实时字幕分段更新，可能有数秒延迟；录音结束后生成完整转录。"))
         }
     }
 

@@ -18,6 +18,8 @@ final class LiveTranscriptionSession: @unchecked Sendable {
     private var input: FileHandle?
     private var output: FileHandle?
     private var queuedSamples = 0
+    private var maxQueuedSamples = 16_000 * 5
+    private var finishTimeout: TimeInterval = 15
     private var closing = false
     private var stopped = false
     private var emittedFailure = false
@@ -40,7 +42,8 @@ final class LiveTranscriptionSession: @unchecked Sendable {
         log = try FileHandle(forWritingTo: logURL)
         let incoming = Pipe(), outgoing = Pipe()
         let child = Process()
-        child.executableURL = executable; child.arguments = [model.path, language]
+        if language == "yue" { maxQueuedSamples = 16_000 * 20; finishTimeout = 40 }
+        child.executableURL = executable; child.arguments = language == "yue" ? ["--live-cantonese", model.path] : [model.path, language]
         child.standardInput = incoming; child.standardOutput = outgoing; child.standardError = log
         input = incoming.fileHandleForWriting; output = outgoing.fileHandleForReading; process = child
         child.terminationHandler = { [weak self] child in
@@ -73,7 +76,7 @@ final class LiveTranscriptionSession: @unchecked Sendable {
         guard !samples.isEmpty else { return }
         lock.lock()
         guard !closing, !stopped else { lock.unlock(); return }
-        guard samples.count <= 64_000, queuedSamples + samples.count <= 16_000 * 5 else {
+        guard samples.count <= 64_000, queuedSamples + samples.count <= maxQueuedSamples else {
             lock.unlock(); fail("实时识别速度落后于录音，预览已停止；完整音频仍在录制"); return
         }
         queuedSamples += samples.count
@@ -103,7 +106,7 @@ final class LiveTranscriptionSession: @unchecked Sendable {
                 guard let self else { return }
                 try? self.input?.close() // EOF触发尾段识别。
             }
-            DispatchQueue.global().asyncAfter(deadline: .now() + 15) { [weak self] in
+            DispatchQueue.global().asyncAfter(deadline: .now() + finishTimeout) { [weak self] in
                 self?.fail("实时识别尾段处理超时；完整录音仍可转录")
             }
         }
