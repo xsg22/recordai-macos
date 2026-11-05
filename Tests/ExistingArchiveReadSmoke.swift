@@ -13,6 +13,9 @@ import AVFoundation
             guard let id = UUID(uuidString:directory.lastPathComponent) else { continue }
             let record = try library.load(id), before = try Data(contentsOf:directory.appendingPathComponent("meeting.json"))
             let urls = try library.audioURLs(for:record)
+            let agent = try AgentDataPublisher.snapshot(record,libraryRoot:root)
+            precondition(agent.audioFiles.map(\.path) == urls.map(\.path))
+            precondition(agent.audioFiles.allSatisfy(\.available))
             for url in urls where url.lastPathComponent == "final.manifest.json" {
                 let reader = try CanonicalAudioReader(manifestURL:url)
                 guard let manifest = reader.manifest else { fatalError("Missing manifest") }

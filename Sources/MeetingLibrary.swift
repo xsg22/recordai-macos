@@ -553,23 +553,29 @@ final class MeetingLibrary {
     }
 
     private func audioURL(_ filename: String, meeting id: UUID) throws -> URL {
+        try Self.managedAudioURL(filename,in:directory(for:id),manager:manager)
+    }
+
+    /// Shared pure path resolution for the player, library and Agent snapshots.
+    /// Does not initialize a library, recover audio or publish other records.
+    static func managedAudioURL(_ filename:String,in meetingDirectory:URL,manager:FileManager = .default) throws -> URL {
         guard !filename.isEmpty, filename != ".", filename != "..",
               !filename.contains("/"), !filename.contains("\\") else { throw MeetingLibraryError.unsafeAudioPath }
         if filename.hasPrefix("capture_"), filename.hasSuffix(".aacarchive") {
             let raw = String(filename.dropFirst(8).dropLast(11))
             guard let session = UUID(uuidString: raw), raw == session.uuidString else { throw MeetingLibraryError.unsafeAudioPath }
-            let meeting = directory(for: id).resolvingSymlinksInPath().standardizedFileURL
+            let meeting = meetingDirectory.resolvingSymlinksInPath().standardizedFileURL
             let capture = meeting.appendingPathComponent("Capture"), archive = capture.appendingPathComponent(session.uuidString)
             let final = archive.appendingPathComponent("final.manifest.json")
-            for component in [directory(for: id), capture, archive, final] {
+            for component in [meetingDirectory, capture, archive, final] {
                 if (try? component.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true { throw MeetingLibraryError.unsafeAudioPath }
             }
             return final
         }
-        let audioDirectory = directory(for: id).appendingPathComponent("Audio", isDirectory: true)
+        let audioDirectory = meetingDirectory.appendingPathComponent("Audio", isDirectory: true)
         let destination = audioDirectory.appendingPathComponent(filename)
         // resolvingSymlinksInPath 对目标不存在的符号链接不一定解析，显式拒绝所有链接。
-        for component in [directory(for: id), audioDirectory, destination] {
+        for component in [meetingDirectory, audioDirectory, destination] {
             if let attributes = try? manager.attributesOfItem(atPath: component.path),
                attributes[.type] as? FileAttributeType == .typeSymbolicLink {
                 throw MeetingLibraryError.unsafeAudioPath
@@ -577,7 +583,7 @@ final class MeetingLibrary {
         }
         // 先解析已存在的会议父目录，再追加受控文件名。目标尚不存在时，
         // Foundation可能保留/private/tmp别名，不能把它误判为目录逃逸。
-        let canonicalMeeting = directory(for: id).resolvingSymlinksInPath().standardizedFileURL
+        let canonicalMeeting = meetingDirectory.resolvingSymlinksInPath().standardizedFileURL
         return canonicalMeeting.appendingPathComponent("Audio", isDirectory: true).appendingPathComponent(filename)
 
     }

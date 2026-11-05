@@ -53,6 +53,7 @@ def main():
     parser.add_argument("--node", type=Path)
     parser.add_argument("--engine-dir", type=Path)
     parser.add_argument("--model-root", type=Path)
+    parser.add_argument("--reuse-long-recording-result",type=Path,help="Prior passing run; reuse only when the long-capture test and all recording inputs are unchanged")
     args = parser.parse_args()
     source = Path(__file__).resolve().parents[1]
     run = args.output_root.resolve()
@@ -119,6 +120,17 @@ def main():
         extra = {"TALKTUCK_TEST_AGENT_OUT": str(run/"fixtures/organization-agent")} if case == "organization" else {}
         swift(case, *arguments, **extra)
     for case in canonical_cases:
+        if case == "canonical-long" and args.reuse_long_recording_result:
+            prior = args.reuse_long_recording_result.resolve()
+            readiness = json.loads((prior/"readiness.json").read_text())
+            checked = next(x for x in json.loads((prior/"results.json").read_text()) if x["case"] == case)
+            dependencies = ["ResilientRecordingJournal", "BalancedWatchSync", "CanonicalAudioReader", "MacSegmentedTrackWriter", "MacSegmentedManifest"]
+            paths = ["Sources/"+x+".swift" for x in dependencies]+["Tests/MacCanonicalLongCaptureSmoke.swift"]
+            assert checked["status"] == "PASS" and all(inputs[p] == readiness["inputs"][p] for p in paths), "Long-capture evidence does not match current recording code"
+            results.append(dict(checked,reusedFrom=str(prior),inputHashesVerified=paths))
+            (run/"results.json").write_text(json.dumps(results,indent=2))
+            print(case+": PASS (unchanged recording inputs; prior run)",flush=True)
+            continue
         directory = run/"fixtures"/case; directory.mkdir()
         arguments = [directory]
         if case == "canonical-transcription": arguments += [source/"Tests/CanonicalASRWorkerFake.py"]

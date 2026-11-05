@@ -44,13 +44,11 @@ final class AgentDataPublisher {
     }
     static func snapshot(_ record: MeetingRecord, libraryRoot: URL, revision: Int = 0) throws -> AgentRecording {
         let fm = FileManager.default
-        let base = libraryRoot.appendingPathComponent("Meetings/\(record.id.uuidString)/Audio").resolvingSymlinksInPath().standardizedFileURL
+        let meeting = libraryRoot.appendingPathComponent("Meetings/\(record.id.uuidString)")
         let audio = try record.audioFiles.enumerated().map { index, file -> AgentAudio in
-            guard !file.isEmpty, file != ".", file != "..", !file.contains("/"), !file.contains("\\") else { throw AgentReadError.unsafePath }
-            let url = base.appendingPathComponent(file).resolvingSymlinksInPath().standardizedFileURL
-            guard url.path.hasPrefix(base.path + "/") else { throw AgentReadError.unsafePath }
-            let mime = ["m4a": "audio/mp4", "wav": "audio/wav", "mp3": "audio/mpeg", "aiff": "audio/aiff", "caf": "audio/x-caf"][url.pathExtension.lowercased()] ?? "application/octet-stream"
-            return AgentAudio(part: index + 1, path: url.path, mime: mime, duration: record.audioDurations[file], available: fm.fileExists(atPath: url.path))
+            let url = try MeetingLibrary.managedAudioURL(file,in:meeting)
+            let mime = ["m4a":"audio/mp4","wav":"audio/wav","mp3":"audio/mpeg","aiff":"audio/aiff","caf":"audio/x-caf","json":"application/json"][url.pathExtension.lowercased()] ?? "application/octet-stream"
+            return AgentAudio(part:index+1,path:url.path,mime:mime,duration:record.audioDurations[file],available:fm.fileExists(atPath:url.path))
         }
         let paragraphs = record.hasCurrentParagraphs ? record.transcriptParagraphs.map { row in
             AgentParagraph(id: row.id, text: row.text, separator: row.separator, start: row.start, end: row.end,
