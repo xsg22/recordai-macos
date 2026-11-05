@@ -153,9 +153,102 @@ final class TranscriptionEngine: @unchecked Sendable {
         try output.write(contentsOf: data); try writeAudio(reader, start: first, end: last, to: output)
     }
 
-    func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "") throws -> TranscriptionOutput {
+    // Offline recognition keeps quiet speech: only near-digital silence is skipped.
+    private func fixedWindowTranscribe(audio: URL, model: URL, executable: URL, language: String,
+                                       hotwords: [String], context: String, directory: URL) throws -> TranscriptionOutput {
+        let canonical = try canonicalReader(for: audio)
+        var wave: AVAudioFile?
+        if canonical == nil {
+            let normalized = directory.appendingPathComponent("audio.wav")
+            try run(URL(fileURLWithPath: "/usr/bin/afconvert"), ["-f", "WAVE", "-d", "LEI16@16000", "-c", "1", audio.path, normalized.path], directory: directory, stage: "音频格式转换")
+            wave = try AVAudioFile(forReading: normalized)
+            guard wave?.processingFormat.sampleRate == 16_000, wave?.processingFormat.channelCount == 1 else { throw TranscriptionError.message("音频格式无效。") }
+        }
+        let frames = canonical?.durationFrames ?? wave!.length
+        func read(_ start: Int64, _ count: Int) throws -> AVAudioPCMBuffer {
+            try checkCancelled()
+            if let canonical { return try canonical.read(startFrame: start, count: count) }
+            guard let wave, let buffer = AVAudioPCMBuffer(pcmFormat: wave.processingFormat, frameCapacity: AVAudioFrameCount(count)) else { throw TranscriptionError.message("无法读取音频。") }
+            wave.framePosition = start; try wave.read(into: buffer, frameCount: AVAudioFrameCount(count)); return buffer
+        }
+        var windows: [(Int64, Int64)] = []; var start: Int64 = 0
+        while start < frames {
+            let end = min(frames, start + 24 * 16_000)
+            var cursor = start; var peak: Float = 0
+            while cursor < end {
+                let b = try read(cursor, Int(min(4096, end - cursor)))
+                guard b.frameLength > 0, let values = b.floatChannelData?[0] else { throw TranscriptionError.message("无法读取音频片段。") }
+                for i in 0..<Int(b.frameLength) { peak = max(peak, abs(values[i])) }
+                cursor += Int64(b.frameLength)
+            }
+            if peak > 2.0 / 32768.0 { windows.append((start, end)) }
+            if end == frames { break }; start += 21 * 16_000
+        }
+        if windows.isEmpty { return TranscriptionOutput(text: "", subtitles: "") }
+        let output = directory.appendingPathComponent("transcript.json"), hints = directory.appendingPathComponent("hotwords.json")
+        try JSONEncoder().encode(HotwordHints(words: hotwords, context: String(context.unicodeScalars.suffix(2000)))).write(to: hints, options: .atomic)
+        try runStreaming(executable, ["--transcribe-stream", model.path, language, output.path, hints.path], directory: directory, stage: "Qwen语音定稿") { pipe in
+            for (start, end) in windows {
+                let header: [String: Any] = ["start": Double(start) / 16_000, "end": Double(end) / 16_000, "frames": Int(end-start)]
+                let data = try JSONSerialization.data(withJSONObject: header); var length = UInt32(data.count).littleEndian
+                try withUnsafeBytes(of: &length) { try pipe.write(contentsOf: Data($0)) }; try pipe.write(contentsOf: data)
+                var cursor = start
+                while cursor < end {
+                    let b = try read(cursor, Int(min(4096, end-cursor)))
+                    guard b.frameLength > 0, let values = b.floatChannelData?[0] else { throw TranscriptionError.message("无法读取音频片段。") }
+                    try pipe.write(contentsOf: Data(bytes: values, count: Int(b.frameLength) * MemoryLayout<Float>.size)); cursor += Int64(b.frameLength)
+                }
+            }
+        }
+        let segments = try JSONDecoder().decode(QwenOutput.self, from: Data(contentsOf: output)).segments
+        guard segments.count == windows.count else { throw TranscriptionError.message("定稿未覆盖全部音频片段，原录音已保留。") }
+        var paragraphs: [TranscriptParagraph] = []; var subtitles: [String] = []; var previous = ""; var previousEnd: Double = -1
+        for (i, s) in segments.enumerated() {
+            let expected = windows[i]; let lo = Double(expected.0)/16_000, hi = Double(expected.1)/16_000
+            guard s.start.isFinite, s.end.isFinite, abs(s.start-lo)<0.001, abs(s.end-hi)<0.001 else { throw TranscriptionError.message("转录时间不一致，原录音已保留。") }
+            let original = s.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let text = lo < previousEnd ? Self.removeExactOverlap(previous, original) : original
+            let segmentStart = text == original ? lo : max(lo, min(previousEnd, hi))
+            previous = original; previousEnd = hi
+            if !text.isEmpty {
+                subtitles.append("\(subtitles.count + 1)\n\(Self.timestamp(segmentStart)) --> \(Self.timestamp(hi))\n\(text)")
+                paragraphs.append(TranscriptParagraph(text: text, separator: paragraphs.isEmpty ? "" : "\n", start: segmentStart, end: hi))
+            }
+        }
+        return TranscriptionOutput(text: paragraphs.map(\.text).joined(separator: "\n"), subtitles: subtitles.isEmpty ? "" : subtitles.joined(separator: "\n\n") + "\n\n", paragraphs: paragraphs)
+    }
+    // Only remove strongly matching overlap; short or uncertain repetitions remain.
+    static func removeExactOverlap(_ previous: String, _ current: String) -> String {
+        let aa = Array(previous.filter { $0.isLetter || $0.isNumber }.lowercased())
+        let indexed = current.indices.filter { current[$0].isLetter || current[$0].isNumber }
+        let bb = Array(String(indexed.map { current[$0] }).lowercased())
+        let limit = min(65, aa.count, bb.count)
+        guard limit >= 6 else { return current }
+        var bestScore: Double = 0; var bestCount = 0
+        for n in 6...limit {
+            for m in max(6, n-5)...min(bb.count, n+5) {
+                let left = Array(aa.suffix(n)), right = Array(bb.prefix(m))
+                var previousRow = Array(repeating: 0, count: m+1)
+                for x in left {
+                    var row = Array(repeating: 0, count: m+1)
+                    for j in 1...m { row[j] = x == right[j-1] ? previousRow[j-1]+1 : max(previousRow[j], row[j-1]) }
+                    previousRow = row
+                }
+                let ratio = 2.0 * Double(previousRow[m]) / Double(n+m)
+                let score = ratio * Double(min(n,m))
+                if ratio >= 0.9 && score > bestScore { bestScore = score; bestCount = m }
+            }
+        }
+        guard bestCount > 0 && bestCount <= indexed.count else { return current }
+        var end = current.index(after: indexed[bestCount-1])
+        while end < current.endIndex && !current[end].isLetter && !current[end].isNumber { end = current.index(after: end) }
+        return String(current[end...])
+    }
+
+    func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "", offlineWindows: Bool = false) throws -> TranscriptionOutput {
         let directory = try temporaryDirectory(prefix: "CoHear-")
         defer { try? FileManager.default.removeItem(at: directory) }
+        if offlineWindows { return try fixedWindowTranscribe(audio: audio, model: model, executable: executable, language: language, hotwords: hotwords, context: context, directory: directory) }
         let segmenter = executable.deletingLastPathComponent().appendingPathComponent("paraformer-live")
         let paraformer = model.deletingLastPathComponent().appendingPathComponent("Paraformer")
         let segments = directory.appendingPathComponent("segments", isDirectory: true)
@@ -241,19 +334,26 @@ final class TranscriptionEngine: @unchecked Sendable {
         } else {
             let wav = directory.appendingPathComponent("audio.wav")
             try run(URL(fileURLWithPath: "/usr/bin/afconvert"), ["-f", "WAVE", "-d", "LEI16@16000", "-c", "1", audio.path, wav.path], directory: directory, stage: "录音读取")
-            let segments = directory.appendingPathComponent("segments")
-            try run(executable.deletingLastPathComponent().appendingPathComponent("paraformer-live"),
-                    ["segment", root.appendingPathComponent("Paraformer").path, wav.path, segments.path], directory: directory, stage: "语音片段检测")
+            let segments = directory.appendingPathComponent("segments", isDirectory: true)
+            try FileManager.default.createDirectory(at: segments, withIntermediateDirectories: true)
             let manifest = segments.appendingPathComponent("segments.json")
-            guard let detected = try JSONSerialization.jsonObject(with: Data(contentsOf: manifest)) as? [[String: Any]] else { throw TranscriptionError.message("语音片段数据无效。") }
+            let reader = try AVAudioFile(forReading: wav)
+            guard reader.processingFormat.sampleRate == 16_000, reader.processingFormat.channelCount == 1 else { throw TranscriptionError.message("音频格式无效。") }
             var clips: [[String: Any]] = []
-            for paragraph in transcript.paragraphs {
-                guard let start = paragraph.start, let end = paragraph.end,
-                      var clip = detected.first(where: { item in
-                          guard let s = item["start"] as? Double, let e = item["end"] as? Double else { return false }
-                          return abs(s - start) < 0.001 && abs(e - end) < 0.001
-                      }) else { throw TranscriptionError.message("文字与录音片段不一致，未强行添加发言人。") }
-                clip["text"] = paragraph.text; clip["language"] = language; clips.append(clip)
+            for (index, paragraph) in transcript.paragraphs.enumerated() {
+                try checkCancelled()
+                guard let start = paragraph.start, let end = paragraph.end, start.isFinite, end.isFinite,
+                      start >= 0, end > start, end-start <= 30, end <= Double(reader.length)/16_000 + 0.0001 else {
+                    throw TranscriptionError.message("文字与录音片段不一致，未强行添加发言人。")
+                }
+                let first = Int64((start*16_000).rounded()), last = min(reader.length, Int64((end*16_000).rounded()))
+                guard last > first, let buffer = AVAudioPCMBuffer(pcmFormat: reader.processingFormat, frameCapacity: AVAudioFrameCount(last-first)) else { throw TranscriptionError.message("无法读取音频片段。") }
+                reader.framePosition = first; try reader.read(into: buffer, frameCount: AVAudioFrameCount(last-first))
+                guard Int64(buffer.frameLength) == last-first else { throw TranscriptionError.message("音频片段读取不完整。") }
+                let path = segments.appendingPathComponent("\(index).wav")
+                let writer = try AVAudioFile(forWriting: path, settings: reader.fileFormat.settings, commonFormat: reader.processingFormat.commonFormat, interleaved: reader.processingFormat.isInterleaved)
+                try writer.write(from: buffer)
+                clips.append(["audio": path.path, "start": start, "end": end, "text": paragraph.text, "language": language])
             }
             try JSONSerialization.data(withJSONObject: clips).write(to: manifest, options: .atomic)
             onPhase(.diarizing)

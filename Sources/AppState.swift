@@ -571,7 +571,7 @@ final class AppState: ObservableObject {
                     guard duration.isFinite, duration >= 0 else { throw TranscriptionError.message("录音时长无效。") }
                     let output = try await withTaskCancellationHandler {
                         try await Task.detached(priority: .userInitiated) {
-                            try engine.transcribe(audio: url, model: model, executable: executable, language: selectedLanguage, hotwords: selectedHotwords, context: initialHotwordContext)
+                            try engine.transcribe(audio: url, model: model, executable: executable, language: selectedLanguage, hotwords: selectedHotwords, context: initialHotwordContext, offlineWindows: true)
                         }.value
                     } onCancel: { engine.cancel() }
                     outputs.append(output); durations.append(duration)
