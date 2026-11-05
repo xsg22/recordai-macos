@@ -14,15 +14,32 @@ import Foundation
         let records = try library.list()
         guard library.warnings.isEmpty else { throw LibrarySyncError.invalidData }
         for record in records where record.userId == userId {
-            if record.canSelectFinalForSync { values.append(.recording(project(record))) }
+            if record.status == .completed && record.pendingAudioFiles.isEmpty { values.append(.recording(project(record))) }
             else {
                 // While capture/ASR is active, keep the enrolled final snapshot; never read live fields.
                 guard var final = record.syncContent else { throw LibrarySyncError.unavailable }
                 final.title = record.title;final.groupId = record.groupID;final.isStarred = record.isStarred
+                final.durationMs = LibrarySyncCodec.milliseconds(record.duration); final.language = record.language
                 values.append(.recording(final))
             }
         }
         return values
+    }
+    func enrollAll(userId: UUID) throws {
+        try beforeRead?()
+        guard library.activeSyncUserId == userId else { throw LibrarySyncError.invalidData }
+        let records = try library.list()
+        guard library.warnings.isEmpty else { throw LibrarySyncError.invalidData }
+        var organization = try library.organization()
+        var groupsChanged = false
+        for index in organization.groups.indices where organization.groups[index].userId == nil {
+            organization.groups[index].userId = userId; groupsChanged = true
+        }
+        if groupsChanged { try library.saveOrganization(organization) }
+        for var record in records where record.userId == nil && record.status != .recording {
+            record.userId = userId; record.syncContent = project(record)
+            _ = try library.save(record)
+        }
     }
     private func project(_ record: MeetingRecord) -> LibrarySyncRecording {
         var paragraphs: [LibrarySyncParagraph] = []
@@ -32,7 +49,11 @@ import Foundation
             let id = UUID(uuidString:key) ?? LibrarySyncCodec.stableID(record.id.uuidString + ":speaker:" + key)
             names[id] = record.speakerNames[key] ?? ""; return id
         }
-        if record.hasCurrentParagraphs {
+        let hasFinal = record.status == .completed && record.pendingAudioFiles.isEmpty
+        if !hasFinal {
+            paragraphs = record.syncContent?.paragraphs ?? []
+            for speaker in record.syncContent?.speakers ?? [] { names[speaker.id] = speaker.name }
+        } else if record.hasCurrentParagraphs {
             paragraphs = record.transcriptParagraphs.map { row in
                 let start = LibrarySyncCodec.milliseconds(row.start), end = LibrarySyncCodec.milliseconds(row.end)
                 return LibrarySyncParagraph(id:row.id,text:row.text,separator:row.separator,startMs:start != nil && end != nil ? start : nil,endMs:start != nil && end != nil ? end : nil,speakerIds:row.speakerIDs.map(speaker))
@@ -42,7 +63,7 @@ import Foundation
         }
         let content = LibrarySyncRecording(id:record.id,title:record.title,createdAt:record.syncContent?.createdAt ?? LibrarySyncCodec.date(record.created),durationMs:record.duration == 0 && record.syncContent?.durationMs == nil ? nil : LibrarySyncCodec.milliseconds(record.duration),source:record.syncContent?.source ?? record.source.rawValue,language:record.language,isStarred:record.isStarred,groupId:record.groupID,speakers:names.map { LibrarySyncSpeaker(id:$0.key,name:$0.value) }.sorted { $0.id.uuidString < $1.id.uuidString },paragraphs:paragraphs)
         var final = content
-        final.transcriptOrigin = record.transcriptOrigin == .local ? .local : (record.syncContent?.transcriptOrigin == .remote ? .remote : nil)
+        final.transcriptOrigin = paragraphs.isEmpty ? nil : (record.transcriptOrigin == .local ? .local : (record.syncContent?.transcriptOrigin ?? .local))
         return final
     }
     func enroll(recordingIds: Set<UUID>, userId: UUID) throws {
@@ -92,11 +113,16 @@ import Foundation
         record.isStarred = content.isStarred; record.groupID = content.groupId
         record.source = RecordingOrigin(rawValue:content.source) ?? .unknown
         record.transcriptOrigin = content.formalOrigin
-        record.text = content.text; record.userId = userId; record.syncContent = content; record.status = .completed
+        let keepUnfinished = content.paragraphs.isEmpty && existing.map { $0.status != .completed && $0.syncContent?.paragraphs.isEmpty != false } == true
+        if !keepUnfinished { record.text = content.text }
+        record.userId = userId; record.syncContent = content
+        if !content.paragraphs.isEmpty || existing == nil { record.status = .completed }
+        if !keepUnfinished {
         record.speakerNames = Dictionary(uniqueKeysWithValues: content.speakers.map { ($0.id.uuidString,$0.name) })
         record.customSpeakerNameIDs = Set(record.speakerNames.keys); record.speakerAliases = [:]
         record.transcriptParagraphs = content.paragraphs.map { row in
             TranscriptParagraph(id:row.id,text:row.text,separator:row.separator,start:row.startMs.map { Double($0)/1000 },end:row.endMs.map { Double($0)/1000 },audioFile:previous[row.id]?.audioFile,speakerIDs:row.speakerIds.map(\.uuidString),localStart:previous[row.id]?.localStart)
+        }
         }
         _ = try library.save(record)
     }

@@ -227,7 +227,7 @@ struct ASRModelDownloadPanel: View {
             } else if let error {
                 TalkTuckInfo(text: L10n.text(error + " 已完成文件会保留，可重试继续下载。"), warning: true)
             } else {
-                TalkTuckInfo(text: L10n.text(ready ? status : "根据地区自动选择下载源，逐文件校验后才启用模型。录音和文字不会上传。"))
+                TalkTuckInfo(text: L10n.text(ready ? status : "根据地区自动选择下载源，逐文件校验后才启用模型。下载模型不会上传录音或文字。"))
             }
             if error == nil { Spacer(minLength: 0) }
             HStack(alignment: .center, spacing: 16) {

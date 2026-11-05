@@ -11,11 +11,11 @@ struct TalkTuckAccountPanel: View {
             Label("TalkTuck", systemImage: "person.crop.circle").font(AppTypography.heading)
             if store.isSignedIn {
                 Text(L10n.text("已登录") + (store.displayName.isEmpty ? "" : " · " + store.displayName))
-                Text(L10n.text(store.librarySyncAvailable ? "登录成功后，可单独开启文字与分组同步。" : "跨设备同步正在准备中，录音继续保存在本机。"))
+                Text(L10n.text(store.librarySyncAvailable ? "登录后默认同步全部录音、转录和分组，可在同步设置中暂停。" : "跨设备同步正在准备中，录音继续保存在本机。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary)
                 Button(L10n.text("退出登录")) { store.signOut(); phone = ""; code = "" }
             } else {
-                Text(L10n.text("使用与 iPhone 相同的手机号登录。登录不会自动上传录音。"))
+                Text(L10n.text("使用与 iPhone 相同的手机号登录。登录后默认同步本机全部录音、转录定稿、分组和原音。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary)
                 TextField(L10n.text("手机号"), text: $phone).textContentType(.telephoneNumber)
                 HStack {

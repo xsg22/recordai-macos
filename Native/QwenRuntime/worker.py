@@ -83,6 +83,9 @@ def align_speakers(model_path,manifest_path,turns_path,output):
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
 
 def main():
+    if len(sys.argv) in (4,5) and sys.argv[1]=='--live':
+        from live_transcription import run_live
+        run_live(*sys.argv[2:]);return
     if len(sys.argv)==5 and sys.argv[1]=='--extract-hotwords':
         extract_hotwords(*sys.argv[2:]);return
     if len(sys.argv)==5 and sys.argv[1]=='--diarize':

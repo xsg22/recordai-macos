@@ -1,7 +1,7 @@
 """Language policy shared by offline recognition, alignment and contract tests."""
 import re
 
-LANGUAGES = {'zh': 'Chinese', 'en': 'English', 'ja': 'Japanese', 'auto': None}
+LANGUAGES = {'zh': 'Chinese', 'yue': 'Cantonese', 'en': 'English', 'ja': 'Japanese', 'auto': None}
 
 
 def recognition_language(code):
@@ -11,6 +11,10 @@ def recognition_language(code):
 
 
 def alignment_language(code, text):
+    # MLX's aligner only has a dedicated CJK character tokenizer for Chinese.
+    # Cantonese recognition is explicit, while its written characters use this tokenizer.
+    if code == 'yue':
+        return 'Chinese'
     explicit = recognition_language(code)
     if explicit:
         return explicit

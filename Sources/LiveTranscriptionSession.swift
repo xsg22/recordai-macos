@@ -25,22 +25,42 @@ final class LiveTranscriptionSession: @unchecked Sendable {
     private var directory: URL?
     private var log: FileHandle?
 
-    func start(model: URL, executable: URL, language: String) throws {
+    static func supportedHotwords(_ words: [String]) -> [String] {
+        let allowed = CharacterSet.letters.union(.decimalDigits).union(.whitespaces)
+        return Array(words.reversed().filter { !$0.isEmpty && $0.unicodeScalars.allSatisfy { allowed.contains($0) } }.prefix(32).reversed())
+    }
+
+    func start(model: URL, executable: URL, language: String, hotwordModel: URL? = nil, hotwords: [String] = []) throws {
         lock.lock()
         let alreadyStarted = process != nil || stopped
         lock.unlock()
         guard !alreadyStarted else { throw NSError(domain: "CoHear.LiveSession", code: 1, userInfo: [NSLocalizedDescriptionKey: "实时识别会话已启动或结束，请创建新会话。"]) }
         // 子进程退出时Foundation管道写应成为可处理的EPIPE，而不是终止录音应用。
         signal(SIGPIPE, SIG_IGN)
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("CoHear-live-" + UUID().uuidString)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let safeWords = Self.supportedHotwords(hotwords)
+        // 热词会话的临时文件放在模型所在卷，不写入系统临时目录。
+        let temporaryRoot = hotwordModel != nil && !safeWords.isEmpty
+            ? hotwordModel! : FileManager.default.temporaryDirectory
+        let directory = temporaryRoot.appendingPathComponent(".TalkTuck-live-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         self.directory = directory
         let logURL = directory.appendingPathComponent("engine.log")
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
         log = try FileHandle(forWritingTo: logURL)
         let incoming = Pipe(), outgoing = Pipe()
         let child = Process()
-        child.executableURL = executable; child.arguments = [model.path, language]
+        child.executableURL = executable
+        if language == "yue" {
+            let wordsFile = directory.appendingPathComponent("hotwords.json")
+            let hints = ["words": safeWords]
+            try JSONEncoder().encode(hints).write(to:wordsFile,options:.atomic)
+            child.arguments = ["--live",model.path,language,wordsFile.path]
+        } else if let hotwordModel, !safeWords.isEmpty {
+            let wordsFile = directory.appendingPathComponent("hotwords.txt")
+            try Data((safeWords.joined(separator: "\n") + "\n").utf8).write(to: wordsFile, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: wordsFile.path)
+            child.arguments = ["xasr", hotwordModel.path, language, model.appendingPathComponent("silero_vad.onnx").path, wordsFile.path]
+        } else { child.arguments = [model.path, language] }
         child.standardInput = incoming; child.standardOutput = outgoing; child.standardError = log
         input = incoming.fileHandleForWriting; output = outgoing.fileHandleForReading; process = child
         child.terminationHandler = { [weak self] child in

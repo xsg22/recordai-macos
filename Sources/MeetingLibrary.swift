@@ -250,14 +250,35 @@ final class MeetingLibrary {
     private(set) var warnings: [String] = []
     private(set) var publicationError: String?
     private lazy var publisher = AgentDataPublisher(libraryRoot: root)
+    private var agentPublicationEnabled: Bool
     private var meetingsDirectory: URL { root.appendingPathComponent("Meetings", isDirectory: true) }
 
-    init(root: URL, manager: FileManager = .default) throws {
+    init(root: URL, manager: FileManager = .default, publishAgentDataOnInit: Bool = true) throws {
         self.root = root
         self.manager = manager
+        agentPublicationEnabled = publishAgentDataOnInit
         try manager.createDirectory(at: meetingsDirectory, withIntermediateDirectories: true)
         try migrateLegacyHistory()
         _ = try recoverInterrupted()
+        republishAgentData()
+    }
+
+    /// An unresolved startup identity is not a sign-out. Publish only the final
+    /// account scope, not the sync engine's intermediate disconnect/reconnect.
+    func updatingAccount(_ userId: UUID?, _ update: () -> Void) {
+        agentPublicationEnabled = false
+        defer {
+            activeSyncUserId = userId
+            agentPublicationEnabled = true
+            republishAgentData()
+        }
+        update()
+    }
+
+    func finishAgentStartup(userId: UUID?) {
+        guard !agentPublicationEnabled else { return }
+        activeSyncUserId = userId
+        agentPublicationEnabled = true
         republishAgentData()
     }
 
@@ -360,8 +381,10 @@ final class MeetingLibrary {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(saved).write(to: directory.appendingPathComponent("meeting.json"), options: .atomic)
-        do { try publisher.publish(saved, libraryRoot: root); publicationError = nil }
-        catch { publicationError = "本机Agent快照更新失败，录音原件已保存：\(error.localizedDescription)" }
+        if agentPublicationEnabled {
+            do { try publisher.publish(saved, libraryRoot: root); publicationError = nil }
+            catch { publicationError = "本机Agent快照更新失败，录音原件已保存：\(error.localizedDescription)" }
+        }
         didChange?(); return saved
     }
 
@@ -581,8 +604,10 @@ final class MeetingLibrary {
         try validateTrashDirectory()
         try manager.createDirectory(at: trashDirectory, withIntermediateDirectories: true)
         try manager.moveItem(at: directory(for: id), to: trashDirectory.appendingPathComponent(id.uuidString, isDirectory: true))
-        do { try publisher.remove(id); publicationError = nil }
-        catch { publicationError = "录音已移入回收站，本机Agent快照清理失败，请重新发布。" }
+        if agentPublicationEnabled {
+            do { try publisher.remove(id); publicationError = nil }
+            catch { publicationError = "录音已移入回收站，本机Agent快照清理失败，请重新发布。" }
+        }
         didChange?()
     }
 
@@ -594,13 +619,16 @@ final class MeetingLibrary {
         // moveItem 拒绝覆盖；与活跃库同名时保留两份原件并报告错误。
         try manager.moveItem(at: source, to: directory(for: id))
         let restored = try load(id)
-        do { try publisher.publish(restored, libraryRoot: root); publicationError = nil }
-        catch { publicationError = "录音已恢复，本机Agent快照暂未更新，请重新发布。" }
+        if agentPublicationEnabled {
+            do { try publisher.publish(restored, libraryRoot: root); publicationError = nil }
+            catch { publicationError = "录音已恢复，本机Agent快照暂未更新，请重新发布。" }
+        }
         didChange?(); return restored
     }
 
     /// 用于初次发布和显式修复；不改变会议状态。
     func republishAgentData() {
+        guard agentPublicationEnabled else { return }
         do {
             try publisher.prepare()
             _ = try organization() // 分类索引损坏不能被误判为全部资料已删除。

@@ -39,12 +39,12 @@ import Foundation
         let engine = LibrarySyncEngine(root:root.appendingPathComponent("Sync"),adapter:adapter)
         try engine.connect(userId:identity.userId,server:server,transport:client,polling:false)
         if mode == "seed" {
-            let unselected = try library.save(MeetingRecord(title:"未选择的本地定稿",text:"未选择的正文不得上传"))
+            let unselected = try library.save(MeetingRecord(title:"登录后自动同步的本地定稿",text:"本地定稿自动上传"))
             var live = MeetingRecord(title:"录音中字幕",text:"临时正文不得上传",status:.recording,previewText:"临时字幕不得上传")
             live = try library.save(live)
             engine.enable(recordingIds:[live.id]);let rejected = try library.load(live.id);precondition(rejected.userId == nil)
             engine.enable(recordingIds:[]);await engine.synchronize()
-            let initial = try await client.changes(cursor:nil);precondition(initial.events.isEmpty)
+            let initial = try await client.changes(cursor:nil);precondition(initial.events.contains { $0.id == unselected.id && $0.value?.recording?.text == unselected.text })
             var catalog = try library.organization();let localGroup = RecordingCollection(name:"项目资料")
             catalog.groups.append(localGroup);try library.saveOrganization(catalog)
             var local = MeetingRecord(id:recordingID,title:"Mac 初始标题",text:"Mac 初始正式文字",duration:1.2)
@@ -55,7 +55,7 @@ import Foundation
             let page = try await client.changes(cursor:nil),formal = page.events.last { $0.id == recordingID }!.value!.recording!
             precondition(formal.formalOrigin == .local && formal.text == local.text)
             let encodedPage = try JSONEncoder().encode(page);precondition(!String(decoding:encodedPage,as:UTF8.self).contains("临时"))
-            let untouched = try library.load(unselected.id);precondition(untouched.userId == nil)
+            let untouched = try library.load(unselected.id);precondition(untouched.userId == identity.userId)
             var active = record;active.status = .recording;active.text = "续录中的临时正文不得上传";_ = try library.save(active)
             engine.localDidChange();await engine.synchronize()
             let during = try await client.changes(cursor:nil);precondition(during.events.last { $0.id == recordingID }?.value?.recording?.text == formal.text)
@@ -68,7 +68,7 @@ import Foundation
             var offline = try library.load(record.id);offline.title = "Mac 离线改稿";offline.text = "Mac 离线保留的正式文字"
             _ = try library.save(offline);engine.localDidChange()
             precondition(engine.pendingCount == 1)
-            print("PASS MAC-SEED: selected local final uploaded, unselected final/live captions excluded, active capture uses final snapshot, offline outbox saved; no audio uploaded")
+            print("PASS MAC-SEED: all local finals uploaded automatically, live captions excluded, active capture uses final snapshot, offline outbox saved; no audio uploaded")
         } else {
             precondition(engine.pendingCount == 1,"offline queue must survive process restart")
             await engine.synchronize()

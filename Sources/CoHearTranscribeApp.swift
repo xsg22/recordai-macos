@@ -2,6 +2,12 @@ import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
 
+/// A hidden login-item launch may never install a SwiftUI window's StateObject.
+/// Keep application services alive independently of that presentation lifecycle.
+@MainActor private enum ApplicationServices {
+    static let state = AppState()
+}
+
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
     var state: AppState?
     private var miniController: MiniRecordingController?
@@ -9,8 +15,12 @@ import UniformTypeIdentifiers
         self.state = state
         if miniController == nil { miniController = MiniRecordingController(state: state) }
     }
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        attach(ApplicationServices.state)
+    }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         guard let state else { return true }
+        guard state.mainWindow != nil || state.openRecordingWindow != nil else { return true }
         state.showRecordingWindow()
         return false
     }
@@ -33,14 +43,16 @@ struct CoHearTranscribeApp: App {
     @StateObject private var state: AppState
     init() {
         _appLanguage = ObservedObject(wrappedValue: AppLanguage.shared)
-        _state = StateObject(wrappedValue: AppState())
+        // Construct eagerly: StateObject's autoclosure may otherwise wait for
+        // the first window, leaving a background launch without account services.
+        let appState = ApplicationServices.state
+        _state = StateObject(wrappedValue: appState)
     }
     var body: some Scene {
         WindowGroup(id: "recordings") {
             MainView(state: state)
                 .environment(\.locale, appLanguage.locale)
                 .background(RecordingWindowObserver(state: state).frame(width: 0, height: 0))
-                .onAppear { delegate.attach(state); NSApp.activate(ignoringOtherApps: true); Task { await state.cloudAccount.restore() } }
                 .frame(minWidth: 1040, minHeight: 760)
                 .font(AppTypography.body)
                 .controlSize(.extraLarge)
@@ -232,7 +244,8 @@ struct MainView: View {
                     Spacer(minLength: 12)
                     captureCard.frame(maxWidth: 438).frame(maxWidth: .infinity)
                 }
-                if !state.syncStatus.isEmpty { compactSyncFeedback }
+                if state.current != nil { recordingLanguagePicker }
+            if !state.syncStatus.isEmpty { compactSyncFeedback }
                 if !state.speechModels.ready && state.current != nil && !missingMicrophone { modelDownloadBanner }
                 if missingMicrophone {
                     Spacer(minLength: 0)
@@ -482,7 +495,7 @@ struct MainView: View {
                 Button(L10n.text("执行追踪")) { showingExecution = true }
                 Menu(L10n.text("录音设置")) {
                     Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
-                    Picker(L10n.text("语言"), selection: $state.language) { Text(L10n.text("中文")).tag("zh"); Text(L10n.text("中英自动")).tag("auto"); Text(L10n.text("英语")).tag("en") }
+                    Picker(L10n.text("转录语言"), selection: $state.language) { ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) } }
                     Picker(L10n.text("录音模式"), selection: $state.recordingProfile) { ForEach(RecordingProfile.allCases) { Text($0.title).tag($0) } }
                 }.disabled(state.locked)
                 Divider()
@@ -541,6 +554,7 @@ struct MainView: View {
             Text(L10n.text(state.history.isEmpty ? "开始你的第一段录音" : "开始一段新录音")).font(.system(size: 27, weight: .semibold))
             Text(L10n.text("会议、访谈、课程、灵感…\nTalkTuck 帮你录音、转写和整理，\n让重要的内容不再遗漏。"))
                 .font(.system(size: 14)).lineSpacing(9).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 8).padding(.bottom, 14)
+            recordingLanguagePicker
             ZStack {
                 Button { state.toggleRecording() } label: { Label(L10n.text("开始录音"), systemImage: "mic").padding(.trailing, 24).frame(maxWidth: .infinity) }
                     .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
@@ -571,14 +585,27 @@ struct MainView: View {
         }.frame(maxWidth: .infinity, minHeight: 110).padding(.vertical, 22).padding(.horizontal, 10)
             .background(TalkTuckTheme.quiet, in: RoundedRectangle(cornerRadius: 12))
     }
+    private var recordingLanguagePicker: some View {
+        HStack(spacing:10) {
+            Label(L10n.text("转录语言"),systemImage:"globe").foregroundStyle(.secondary)
+            Picker(L10n.text("转录语言"),selection:Binding(get:{
+                state.recording ? (state.history.first { $0.id == state.activeRecordingID }?.language ?? state.language) : state.language
+            },set:{state.language = $0})) {
+                ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) }
+            }.labelsHidden().pickerStyle(.menu).frame(width:130)
+                .disabled(state.locked).accessibilityIdentifier("recording-language-picker")
+            Spacer(minLength:0)
+
+        }.font(.system(size:12)).padding(.vertical,5)
+    }
     @ViewBuilder private var recordingSettingsMenu: some View {
         Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
         Picker(L10n.text("会话类型"), selection: $state.recordingSessionMode) { ForEach(RecordingSessionMode.allCases) { Text($0.title).tag($0) } }
-        Picker(L10n.text("语言"), selection: $state.language) { Text(L10n.text("中文")).tag("zh"); Text(L10n.text("中英自动")).tag("auto"); Text(L10n.text("英语")).tag("en") }
+        Picker(L10n.text("转录语言"), selection: $state.language) { ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) } }
         Picker(L10n.text("录音模式"), selection: $state.recordingProfile) { ForEach(RecordingProfile.allCases) { Text($0.title).tag($0) } }
     }
     private var recordingConfigurationSummary: String {
-        let language = state.language == "zh" ? "中文" : state.language == "en" ? "英语" : "中英自动"
+        let language = TranscriptionLanguage(rawValue:state.language)?.title ?? L10n.text("普通话")
         let profile = state.recordingProfile == .realtime ? "实时转录" : state.recordingProfile == .backgroundRealtime ? "后台实时" : "仅录音 · 录完转录"
         return [state.recordingMode.title, language, profile].joined(separator: " · ")
     }

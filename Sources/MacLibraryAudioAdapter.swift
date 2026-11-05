@@ -4,6 +4,14 @@ import AVFoundation
 @MainActor final class MacLibraryAudioAdapter: LibraryAudioAdapter {
     private let library: MeetingLibrary
     init(library: MeetingLibrary) { self.library = library }
+    func automaticCandidates(userId: UUID) throws -> [LibraryAudioCandidate] {
+        guard library.activeSyncUserId == userId else { throw LibraryAudioError.invalid }
+        let records = try library.list()
+        guard library.warnings.isEmpty else { throw LibraryAudioError.invalid }
+        return try records.filter { $0.userId == userId && $0.syncContent != nil && $0.status != .recording && $0.status != .transcribing }.map {
+            LibraryAudioCandidate(recordingId:$0.id,revision:try LibraryAudioCandidate.revision(library.audioURLs(for:$0)))
+        }
+    }
     private func record(_ id: UUID, _ userId: UUID) throws -> MeetingRecord {
         guard library.activeSyncUserId == userId else { throw LibraryAudioError.invalid }
         let r = try library.load(id)

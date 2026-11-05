@@ -14,9 +14,27 @@ struct LibraryAudioSource { var url: URL; var durationMs: Int; var timelineStart
 struct LibraryAudioUpload: Codable { var uploadId: UUID; var chunkSize: Int; var received: [Int]; var complete: Bool }
 enum LibraryAudioError: Error { case invalid, changed, conflict, cancelled, integrity, response(Int) }
 
+struct LibraryAudioCandidate {
+    var recordingId: UUID; var revision: String?
+    static func revision(_ urls: [URL]) throws -> String? {
+        guard !urls.isEmpty else { return nil }
+        var rows: [String] = []
+        for url in urls {
+            guard FileManager.default.fileExists(atPath:url.path) else { return nil }
+            let a = try url.resourceValues(forKeys:[.fileSizeKey,.contentModificationDateKey,.isRegularFileKey,.isSymbolicLinkKey])
+            guard a.isRegularFile == true, a.isSymbolicLink != true, let size = a.fileSize, size > 0, let date = a.contentModificationDate else { throw LibraryAudioError.invalid }
+            rows.append(url.lastPathComponent + ":" + String(size) + ":" + String(date.timeIntervalSince1970))
+        }
+        return LibraryAudioFiles.hash(Data(rows.joined(separator:"\n").utf8))
+    }
+}
 @MainActor protocol LibraryAudioAdapter: AnyObject {
+    func automaticCandidates(userId: UUID) throws -> [LibraryAudioCandidate]
     func sources(_ id: UUID, userId: UUID) async throws -> [LibraryAudioSource]
     func install(_ manifest: LibraryAudioManifest, files: [URL], userId: UUID) async throws
+}
+extension LibraryAudioAdapter {
+    func automaticCandidates(userId: UUID) throws -> [LibraryAudioCandidate] { [] }
 }
 protocol LibraryAudioTransport {
     func available(userId: UUID) async throws -> Bool
@@ -123,15 +141,17 @@ enum LibraryAudioFiles {
 
 @MainActor final class LibraryAudioSyncEngine: ObservableObject {
     enum Direction: String, Codable { case upload, download }
-    struct Job: Codable, Identifiable { var id = UUID();var recordingId: UUID;var direction: Direction;var parts: [LibraryAudioPart]?;var manifest: LibraryAudioManifest?;var base: Int?;var needsChoice: Bool? }
-    private struct State: Codable { var schemaVersion = 1;var userId: UUID;var server: String;var jobs: [Job] = [] }
+    struct Job: Codable, Identifiable { var id = UUID();var recordingId: UUID;var direction: Direction;var parts: [LibraryAudioPart]?;var manifest: LibraryAudioManifest?;var base: Int?;var needsChoice: Bool?; var automaticRevision: String? = nil }
+    private struct State: Codable { var schemaVersion = 1;var userId: UUID;var server: String;var jobs: [Job] = []; var completedRevisions: [String:String]? = nil; var remoteVersions: [String:Int]? = nil }
     @Published private(set) var jobs: [Job] = []
     @Published private(set) var busy = false
-    @Published private(set) var message = "原音仅在手动选择后传输。"
+    @Published private(set) var message = "原音会随录音资料自动同步。"
+    @Published private(set) var automaticEnabled = false
     @Published private(set) var conflict: UUID?
     var onInstalled: (() -> Void)?
     private(set) var lastFailure: Error?
     private let root: URL;private let adapter: LibraryAudioAdapter
+    private var automaticReadyIds = Set<UUID>()
     private var account: UUID?;private var client: LibraryAudioTransport?;private var state: State?;private var folder: URL?;private var epoch = UUID()
     init(root: URL, adapter: LibraryAudioAdapter) { self.root = root;self.adapter = adapter }
     func connect(userId: UUID, server: URL, transport: LibraryAudioTransport) throws {
@@ -142,9 +162,42 @@ enum LibraryAudioFiles {
         let s = FileManager.default.fileExists(atPath:file.path) ? try JSONDecoder().decode(State.self,from:Data(contentsOf:file)) : State(userId:userId,server:server.absoluteString)
         guard s.schemaVersion == 1,s.userId == userId,s.server == server.absoluteString else { throw LibraryAudioError.invalid }
         account = userId;client = transport;folder = dir;state = s;jobs = s.jobs
-        message = jobs.isEmpty ? "原音仅在手动选择后传输。" : "原音传输尚未完成，可重试。"
+        message = jobs.isEmpty ? "原音会随录音资料自动同步。" : "原音传输尚未完成，将自动重试。"
     }
-    func disconnect() { epoch = UUID();account = nil;client = nil;state = nil;folder = nil;jobs = [];busy = false;conflict = nil }
+    func disconnect() { epoch = UUID();account = nil;client = nil;state = nil;folder = nil;jobs = [];busy = false;conflict = nil;automaticEnabled = false;automaticReadyIds = [] }
+    func setAutomaticEnabled(_ value: Bool) {
+        guard automaticEnabled != value else { return }
+        automaticEnabled = value
+        if !value { epoch = UUID(); busy = false; message = "同步已暂停，本机修改会在恢复后上传。" }
+    }
+    func synchronizeAutomatically(recordingIds: Set<UUID>) async {
+        guard automaticEnabled, !busy, let account, let client else { return }
+        let generation = epoch
+        automaticReadyIds = recordingIds
+        busy = true
+        do {
+            let candidates = try adapter.automaticCandidates(userId:account).filter { recordingIds.contains($0.recordingId) }
+            for candidate in candidates where !jobs.contains(where: { $0.recordingId == candidate.recordingId }) {
+                let key = candidate.recordingId.uuidString.lowercased()
+                if let revision = candidate.revision {
+                    if state?.completedRevisions?[key] == revision {
+                        let remote = try await client.manifest(candidate.recordingId); try current(generation)
+                        if let remote, let previous = state?.remoteVersions?[key], remote.version != previous {
+                            jobs.append(Job(recordingId:candidate.recordingId,direction:.download,manifest:remote))
+                        }
+                    } else { jobs.append(Job(recordingId:candidate.recordingId,direction:.upload,automaticRevision:revision)) }
+                } else if let remote = try await client.manifest(candidate.recordingId) {
+                    try current(generation); jobs.append(Job(recordingId:candidate.recordingId,direction:.download,manifest:remote))
+                }
+                try save()
+            }
+            try current(generation); busy = false
+            if !jobs.isEmpty { await retry() }
+        } catch {
+            guard generation == epoch else { return }
+            busy = false; lastFailure = error; message = "原音传输未完成，进度已保留，可稍后重试。"
+        }
+    }
     private func save() throws { guard var s = state,let folder else { throw LibraryAudioError.cancelled };s.jobs = jobs;try JSONEncoder().encode(s).write(to:folder.appendingPathComponent("queue.json"),options:.atomic);state = s }
     func enqueue(_ id: UUID, direction: Direction) async {
         guard !busy,account != nil else { return }
@@ -159,6 +212,13 @@ enum LibraryAudioFiles {
         do { let remote = try await client.manifest(jobs[i].recordingId);try current(generation);jobs[i].base = remote?.version ?? 0;jobs[i].needsChoice = false;try save();self.conflict = nil;await retry() }
         catch { if generation == epoch { message = "暂时无法读取云端原音，请稍后重试。" } }
     }
+    func useCloud() async {
+        guard !busy, automaticEnabled, let conflict, let index = jobs.firstIndex(where: { $0.id == conflict }) else { return }
+        let recordingId = jobs[index].recordingId
+        jobs[index] = Job(recordingId:recordingId,direction:.download)
+        do { try save(); self.conflict = nil; await retry() }
+        catch { message = "无法保存传输状态。" }
+    }
     private func current(_ generation: UUID) throws { guard generation == epoch,!Task.isCancelled else { throw LibraryAudioError.cancelled } }
     func retry() async {
         guard !busy,let account,let client,let folder else { return }
@@ -166,12 +226,41 @@ enum LibraryAudioFiles {
         defer { if generation == epoch { busy = false } }
         do {
             guard try await client.available(userId:account) else { try current(generation);message = "服务暂未开启原音同步。";return };try current(generation)
-            while let first = jobs.first {
+            let ready = automaticEnabled ? try Set(adapter.automaticCandidates(userId:account).map(\.recordingId)).intersection(automaticReadyIds) : nil
+            let snapshot = jobs.filter { ready == nil || ready!.contains($0.recordingId) }
+            for first in snapshot {
+                if first.needsChoice == true { continue }
+                do {
                 if first.direction == .upload { try await send(first,userId:account,client:client,generation:generation) }
                 else { try await receive(first,userId:account,client:client,folder:folder,generation:generation) }
-                try current(generation);jobs.removeAll { $0.id == first.id };try save();conflict = nil
+                try current(generation)
+                let key = first.recordingId.uuidString.lowercased()
+                if let revision = try adapter.automaticCandidates(userId:account).first(where: { $0.recordingId == first.recordingId })?.revision {
+                    if first.direction == .upload, let scheduled = first.automaticRevision, scheduled != revision { throw LibraryAudioError.changed }
+                    if state!.completedRevisions == nil { state!.completedRevisions = [:] }
+                    state!.completedRevisions![key] = revision
+                }
+                if let manifest = jobs.first(where: { $0.id == first.id })?.manifest {
+                    if state!.remoteVersions == nil { state!.remoteVersions = [:] }
+                    state!.remoteVersions![key] = manifest.version
+                }
+                jobs.removeAll { $0.id == first.id };try save()
+                } catch {
+                    try current(generation); lastFailure = error
+                    if case LibraryAudioError.conflict = error, let index = jobs.firstIndex(where: { $0.id == first.id }) {
+                        jobs[index].needsChoice = true; try save()
+                    }
+                }
             }
-            message = "原音传输完成，文件校验通过。"
+            conflict = jobs.first(where: { $0.needsChoice == true })?.id
+
+            if conflict != nil { message = "云端已有不同原音，请选择保留哪一版。双方原件都会保留。" }
+            else if let lastFailure {
+                if case LibraryAudioError.integrity = lastFailure { message = "音频校验失败，现有原件未被替换。可以重试。" }
+                else if case LibraryAudioError.changed = lastFailure { message = "本机音频已变化，请移除此任务后重新选择。" }
+                else { message = "原音传输未完成，进度已保留，可稍后重试。" }
+            }
+            else { message = jobs.isEmpty ? "原音传输完成，文件校验通过。" : "部分原音等待录音或转录结束后同步。" }
         } catch {
             guard generation == epoch else { return }
             lastFailure = error
@@ -193,7 +282,7 @@ enum LibraryAudioFiles {
         if jobs[i].base == nil { jobs[i].base = remote?.version ?? 0;try save();if let remote,remote.parts != parts { throw LibraryAudioError.conflict } }
         let base = jobs[i].base!;try save()
         // A failed response after publication is success when the manifest already matches exactly.
-        if remote?.parts == parts { return }
+        if remote?.parts == parts { jobs[i].manifest = remote; try save(); return }
         if (remote?.version ?? 0) != base { throw LibraryAudioError.conflict }
         for (source,part) in zip(sources,parts) {
             let response = try await client.start(part);try current(generation)
@@ -212,6 +301,7 @@ enum LibraryAudioFiles {
         }
         let published = try await client.publish(initial.recordingId,base:base,parts:parts);try current(generation)
         guard published.parts == parts else { throw LibraryAudioError.integrity }
+        if let index = jobs.firstIndex(where: { $0.id == initial.id }) { jobs[index].manifest = published; try save() }
     }
     private func receive(_ initial: Job, userId: UUID, client: LibraryAudioTransport, folder: URL, generation: UUID) async throws {
         var manifest = initial.manifest

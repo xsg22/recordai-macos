@@ -4,9 +4,7 @@ import SwiftUI
 struct LibrarySyncChoice: Identifiable { var id: UUID; var title: String; var isLocalFinal = false }
 struct LibrarySyncPanel: View {
     @ObservedObject var engine: LibrarySyncEngine
-    var choices: [LibrarySyncChoice]
     var groupNames: [UUID:String] = [:]
-    @State private var selected = Set<UUID>()
     private func label(_ value: LibrarySyncValue?) -> String {
         if let record = value?.recording {
             let group = record.groupId.flatMap { groupNames[$0] } ?? L10nSync.text("未分组")
@@ -16,22 +14,12 @@ struct LibrarySyncPanel: View {
     }
     var body: some View {
         VStack(alignment:.leading,spacing:14) {
-            Text(L10nSync.text("文字与分组同步")).font(.headline)
-            Text(L10nSync.text("主动选择本地或云端定稿，同步正文、标题、发言人与分组。临时字幕不会上传，原音需单独选择。"))
+            Text(L10nSync.text("全部内容同步")).font(.headline)
+            Text(L10nSync.text("登录后默认同步本机全部录音、转录定稿和分组，原音自动上传和下载。录音结束后自动加入同步，临时字幕不会上传。"))
                 .font(.caption).foregroundStyle(.secondary)
-            if !choices.isEmpty {
-                DisclosureGroup(L10nSync.text("选择需要同步的定稿")) {
-                    ForEach(choices) { row in
-                        Toggle(row.title + (row.isLocalFinal ? " · " + L10nSync.text("本地定稿") : ""),isOn:Binding(get:{selected.contains(row.id)},set:{if $0 {selected.insert(row.id)} else {selected.remove(row.id)}}))
-                    }
-                }
-            }
-            HStack {
-                Button(L10nSync.text(engine.enabled ? "同步选中录音" : "开启文字与分组同步")) { engine.enable(recordingIds:selected);selected.removeAll() }.disabled(engine.busy)
-                if engine.enabled {
-                    Button(L10nSync.text("立即同步")) { Task { await engine.synchronize() } }.disabled(engine.busy)
-                    Button(L10nSync.text("暂停同步")) { engine.pause() }
-                }
+            Toggle(L10nSync.text("自动同步全部内容"),isOn:Binding(get:{engine.enabled},set:{if $0 {engine.enable()} else {engine.pause()}}))
+            if engine.enabled {
+                Button(L10nSync.text("立即同步")) { Task { await engine.synchronize() } }.disabled(engine.busy)
             }
             if engine.busy { ProgressView().controlSize(.small) }
             Text(L10nSync.text(engine.message)).font(.caption).foregroundStyle(.secondary)

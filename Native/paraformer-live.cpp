@@ -99,20 +99,25 @@ static int segment(const std::string &models,const char *file,const char *output
 int main(int argc,char **argv) {
     try {
         if(argc==5 && std::string(argv[1])=="segment")return segment(argv[2],argv[3],argv[4]);
-        if(argc!=3)throw std::runtime_error("usage: paraformer-live modelDirectory language OR segment modelDirectory wav outputDirectory");
-        const std::string requestedLanguage=argv[2];
+        const bool xasr=argc==6 && std::string(argv[1])=="xasr";
+        if(argc!=3 && !xasr)throw std::runtime_error("usage: paraformer-live modelDirectory language OR xasr modelDirectory language vadPath hotwordsPath OR segment modelDirectory wav outputDirectory");
+        const std::string requestedLanguage=argv[xasr?3:2];
         if(requestedLanguage!="zh"&&requestedLanguage!="en"&&requestedLanguage!="auto")
             throw std::runtime_error("Live preview supports Chinese and English only (zh, en, auto).");
-        const std::string models=argv[1];
+        const std::string models=argv[xasr?2:1];
         SherpaOnnxOnlineRecognizerConfig config{};
-        std::string encoder=models+"/encoder.int8.onnx",decoder=models+"/decoder.int8.onnx",tokens=models+"/tokens.txt";
+        std::string encoder=models+(xasr?"/encoder.onnx":"/encoder.int8.onnx"),decoder=models+(xasr?"/decoder.onnx":"/decoder.int8.onnx"),tokens=models+"/tokens.txt",joiner=models+"/joiner.onnx",vocab=models+"/bpe.vocab";
         config.feat_config.sample_rate=16000;config.feat_config.feature_dim=80;
-        config.model_config.paraformer.encoder=encoder.c_str();config.model_config.paraformer.decoder=decoder.c_str();
+        if(xasr) {
+            config.model_config.transducer.encoder=encoder.c_str();config.model_config.transducer.decoder=decoder.c_str();config.model_config.transducer.joiner=joiner.c_str();
+            config.model_config.modeling_unit="bpe";config.model_config.bpe_vocab=vocab.c_str();
+            config.hotwords_file=argv[5];config.hotwords_score=3.0f;config.max_active_paths=4;
+        } else {config.model_config.paraformer.encoder=encoder.c_str();config.model_config.paraformer.decoder=decoder.c_str();}
         config.model_config.tokens=tokens.c_str();config.model_config.num_threads=2;
-        config.model_config.provider="cpu";config.model_config.model_type="paraformer";
-        config.decoding_method="greedy_search";config.enable_endpoint=0;
+        config.model_config.provider="cpu";config.model_config.model_type=xasr?"zipformer2":"paraformer";
+        config.decoding_method=xasr?"modified_beam_search":"greedy_search";config.enable_endpoint=0;
         auto *recognizer=SherpaOnnxCreateOnlineRecognizer(&config);
-        auto *vad=makeVAD(models+"/silero_vad.onnx");
+        auto *vad=makeVAD(xasr?argv[4]:models+"/silero_vad.onnx");
         if(!recognizer||!vad)throw std::runtime_error("Paraformer或Silero模型加载失败");
         // This fixed bilingual model does not force a single language. The final Qwen pass does.
         std::cout<<"{\"type\":\"ready\",\"text\":\"\",\"start\":0,\"end\":0,\"requestedLanguage\":"
@@ -147,7 +152,7 @@ int main(int argc,char **argv) {
             }
             if(!stream){prefix.insert(prefix.end(),p,p+n);if(prefix.size()>8000)prefix.erase(prefix.begin(),prefix.end()-8000);}
         };
-        event("ready","Paraformer流式识别与Silero VAD已就绪",0,0);
+        event("ready",xasr?"实时热词识别已就绪":"Paraformer流式识别与Silero VAD已就绪",0,0);
         while(true) {
             uint32_t count=0;size_t read=fread(&count,1,4,stdin);if(read==0)break;
             if(read!=4||count>64000||count==0)throw std::runtime_error("音频帧头无效");

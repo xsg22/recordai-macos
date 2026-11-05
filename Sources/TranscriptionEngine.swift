@@ -18,6 +18,8 @@ final class TranscriptionEngine: @unchecked Sendable {
     private let lock = NSLock()
     private var process: Process?
     private var cancelled = false
+    private let temporaryRoot: URL?
+    init(temporaryRoot: URL? = nil) { self.temporaryRoot = temporaryRoot }
 
     func cancel() {
         lock.lock()
@@ -34,6 +36,11 @@ final class TranscriptionEngine: @unchecked Sendable {
         let child = Process()
         child.executableURL = executable
         child.arguments = arguments
+        if let temporaryRoot {
+            var environment = ProcessInfo.processInfo.environment
+            environment["TMPDIR"] = temporaryRoot.path
+            child.environment = environment
+        }
         child.standardOutput = log
         child.standardError = log
         lock.lock()
@@ -54,8 +61,8 @@ final class TranscriptionEngine: @unchecked Sendable {
     }
 
     func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "") throws -> TranscriptionOutput {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("CoHear-" + UUID().uuidString)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let directory = (temporaryRoot ?? FileManager.default.temporaryDirectory).appendingPathComponent("CoHear-" + UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: temporaryRoot == nil)
         defer { try? FileManager.default.removeItem(at: directory) }
         let wav = directory.appendingPathComponent("audio.wav")
         try run(URL(fileURLWithPath: "/usr/bin/afconvert"),

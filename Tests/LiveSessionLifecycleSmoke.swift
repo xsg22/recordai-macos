@@ -3,6 +3,9 @@ import Foundation
 @main
 struct LiveSessionLifecycleSmoke {
     static func main() async throws {
+        let selected = LiveTranscriptionSession.supportedHotwords((0..<40).map { "词\($0)" } + ["TalkTuck", "x:y", "a\nb", "张三"])
+        precondition(selected.count == 32 && selected.last == "张三" && selected.contains("TalkTuck"))
+        precondition(!selected.contains("x:y") && !selected.contains("a\nb"))
         let start = Date()
         let session = LiveTranscriptionSession()
         try session.start(model: URL(fileURLWithPath: "/unused-test-model"), executable: URL(fileURLWithPath: "/usr/bin/true"), language: "zh")

@@ -13,7 +13,7 @@ if not marker.exists() or marker.read_text()!=requirements_hash:
     marker.write_text(requirements_hash)
 source=ROOT/'Native/QwenRuntime/worker.py'
 stamp=ROOT/'.build/qwen-runtime/.source-sha256'
-version=hashlib.sha256(source.read_bytes()+(ROOT/'Native/QwenRuntime/speaker_attribution.py').read_bytes()+(ROOT/'Native/QwenRuntime/language_policy.py').read_bytes()+lock.read_bytes()+(ROOT/'Scripts/qwen-runtime.spec').read_bytes()).hexdigest()
+version=hashlib.sha256(source.read_bytes()+(ROOT/'Native/QwenRuntime/speaker_attribution.py').read_bytes()+(ROOT/'Native/QwenRuntime/language_policy.py').read_bytes()+(ROOT/'Native/QwenRuntime/live_transcription.py').read_bytes()+lock.read_bytes()+(ROOT/'Scripts/qwen-runtime.spec').read_bytes()).hexdigest()
 if stamp.exists() and stamp.read_text()==version and (ROOT/'.build/qwen-runtime/qwen-asr/qwen-asr').exists():
     print('复用已构建的Qwen3-ASR隔离运行时');sys.exit(0)
 subprocess.run([str(python),'-m','PyInstaller','--noconfirm','--clean','--distpath',str(ROOT/'.build/qwen-runtime'),

@@ -1,0 +1,49 @@
+{
+  "version": "0.17.3",
+  "build": "55",
+  "platform": "macOS 14+ Apple Silicon",
+  "packageAssets": {
+    "TalkTuck-0.17.3-arm64.dmg": {
+      "sha256": "0b5ab642d4e2c7726d8548bd8ad46b1c07ec39532ebb475ba1978a5971e41235",
+      "bytes": 175141446
+    },
+    "TalkTuck-0.17.3-arm64.pkg": {
+      "sha256": "79064e0bcd225f4e422c08a8ed8d55a83356afbd57f40fb0ac768f69bb8f5fde",
+      "bytes": 158349619
+    }
+  },
+  "installedApp": {
+    "mainSHA256": "53b8980b8cf7f981a752eaa983a70e39ea6ff261497ab65280331ffd0bc450eb",
+    "engineSHA256": "e2f56d712baa44e3844898bd0649b3b60ed7ea83e22a932a66d6fe29b63ada6b",
+    "deepStrictSignature": "PASS",
+    "signatureKind": "ad-hoc; not Apple notarized"
+  },
+  "evidence": {
+    "build55HiddenColdLaunch": "PASS: new application process, zero visible main windows, CLI and MCP list/detail/final transcript available",
+    "dataPreservation": "PASS: recordings, original audio hashes, paragraph IDs and groups preserved",
+    "syntheticColdStartRegression": "PASS: offline, locked Keychain retry, sync cache corruption, idempotence, logout and account isolation; rerun for publication",
+    "languagePolicyRegression": "PASS: 6 tests rerun for publication",
+    "cantoneseNativeRecording": "PASS on build53 with identical engine: six public human FLEURS clips, live captions, pause/resume, final, playback and persistence",
+    "automaticSync": "PASS: native Mac adapters and isolated HTTP/SQLite backend, groups, audio roundtrip, pause/resume, offline state and account isolation"
+  },
+  "screenshots": {
+    "library-0173.jpg": {
+      "sha256": "37741af32a6c336f7cca7d162e9f3717676a9db30517f8e5892ad646fa1d1870",
+      "source": "installed build55; public FLEURS transcription or recording settings; original capture, no text editing"
+    },
+    "settings-0173.jpg": {
+      "sha256": "5a1e2d3298fd80f37dbe5e0204ba4c97e182cdad0123245a14085376b48f1973",
+      "source": "installed build55; public FLEURS transcription or recording settings; original capture, no text editing"
+    },
+    "languages-0173.jpg": {
+      "sha256": "12d755baab8ca5a503584dcce781fbd421715d1850701d0c26dc8d6e2ef812a4",
+      "source": "installed build55; public FLEURS transcription or recording settings; original capture, no text editing"
+    }
+  },
+  "limits": [
+    "No additional full macOS reboot in build55 acceptance",
+    "Build55 reused the verified Cantonese engine; full native audio corpus was not re-recorded in build55",
+    "Isolated sync tests are not production full-library upload or latest iPhone physical-device acceptance",
+    "No Windows package or full-page visual acceptance claimed"
+  ]
+}

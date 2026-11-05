@@ -106,7 +106,7 @@ struct RecordingAppConfigurationView: View {
 
     private var hotwordSettings: some View {
         Group {
-            TalkTuckPageHeader(title: L10n.text("个人热词"), subtitle: L10n.text("确认的人名、项目名和术语会用于后续本地最终转录。")) { EmptyView() }
+            TalkTuckPageHeader(title: L10n.text("个人热词"), subtitle: L10n.text("确认的词会用于后续本地转录。")) { EmptyView() }
             TalkTuckCard {
                 HStack {
                     Text(L10n.text("本地候选词模型")).font(AppTypography.heading)
@@ -121,18 +121,36 @@ struct RecordingAppConfigurationView: View {
                 if hotwordModel.busy { ProgressView(); Button(L10n.text("取消下载")) { hotwordModel.cancel() } }
                 if !hotwordModel.status.isEmpty { Text(L10n.text(hotwordModel.status)).font(AppTypography.secondary).foregroundStyle(.secondary) }
             }.task { hotwordModel.refresh() }
-            TalkTuckCard {
+            TalkTuckCard(spacing: 10) {
                 Text(L10n.format("已确认 · {0}", String(state.hotwords.words.count))).font(AppTypography.heading)
-                HStack {
-                    TextField(L10n.text("输入专有名词"), text: $newHotword).textFieldStyle(.roundedBorder)
-                    Button(L10n.text("添加")) { if state.hotwords.add(newHotword) { newHotword = "" } }
-                }
-                ForEach(state.hotwords.words, id: \.self) { word in
-                    HStack { Text(word); Spacer(); Button(L10n.text("删除")) { state.hotwords.remove(word) } }
-                }
-                if state.hotwords.words.isEmpty { Text(L10n.text("还没有已确认的热词。")).foregroundStyle(.secondary) }
-                Text(L10n.text("优先选择标题或前文中出现的词，不足时补充最近确认的词，每段最多 12 个。"))
+                Text(L10n.text("每行一个词，也可以用逗号或分号分隔。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary)
+                TextEditor(text: $newHotword)
+                    .font(.body).frame(height: 60)
+                    .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.35)))
+                    .accessibilityLabel(L10n.text("批量输入热词"))
+                Button(L10n.text("添加热词")) { if state.hotwords.addBatch(newHotword) { newHotword = "" } }
+                    .disabled(newHotword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                if !state.hotwords.status.isEmpty && state.hotwords.status != "已保存在本机" {
+                    Text(L10n.text(state.hotwords.status)).font(AppTypography.secondary).foregroundStyle(.secondary)
+                }
+                HotwordFlowLayout {
+                    ForEach(state.hotwords.words, id: \.self) { word in
+                        HStack(spacing: 6) {
+                            Text(word).fixedSize(horizontal: false, vertical: true)
+                            Button { state.hotwords.remove(word) } label: {
+                                Image(systemName: "xmark").font(.system(size: 10, weight: .semibold))
+                                    .frame(width: 20, height: 20).contentShape(Rectangle())
+                            }.buttonStyle(.plain).foregroundStyle(.secondary)
+                                .accessibilityLabel(L10n.format("删除热词 {0}", word))
+                                .help(L10n.format("删除热词 {0}", word))
+                        }
+                        .font(AppTypography.secondary)
+                        .padding(.leading, 10).padding(.trailing, 5).padding(.vertical, 4)
+                        .background(TalkTuckTheme.quiet, in: RoundedRectangle(cornerRadius: 7))
+                    }
+                }
+                if state.hotwords.words.isEmpty { Text(L10n.text("暂无热词")).foregroundStyle(.secondary) }
             }
             TalkTuckCard {
                 HStack {
@@ -148,7 +166,6 @@ struct RecordingAppConfigurationView: View {
                         Text(candidate.context).font(AppTypography.secondary).foregroundStyle(.secondary).textSelection(.enabled)
                     }
                 }
-                if !state.hotwords.status.isEmpty { Text(L10n.text(state.hotwords.status)).font(AppTypography.secondary).foregroundStyle(.secondary) }
             }
             TalkTuckCard {
                 HStack {
@@ -168,7 +185,7 @@ struct RecordingAppConfigurationView: View {
             TalkTuckPageHeader(title: L10n.text("TalkTuck 账号"), subtitle: L10n.text("登录后，按需同步 iPhone 与 Mac 上的文字、分组和原音。")) { EmptyView() }
             TalkTuckAccountPanel(store: state.cloudAccount).disabled(state.locked)
             if state.cloudAccount.isSignedIn, state.cloudAccount.librarySyncAvailable, let engine = state.librarySync {
-                TalkTuckCard { LibrarySyncPanel(engine:engine,choices:state.history.filter { $0.userId == nil && $0.canSelectFinalForSync }.map { LibrarySyncChoice(id:$0.id,title:$0.title,isLocalFinal:$0.transcriptOrigin == .local) },groupNames:Dictionary(uniqueKeysWithValues:state.organization.groups.map { ($0.id,$0.name) })) }.disabled(state.locked)
+                TalkTuckCard { LibrarySyncPanel(engine:engine,groupNames:Dictionary(uniqueKeysWithValues:state.organization.groups.map { ($0.id,$0.name) })) }.disabled(state.locked)
             }
             if state.cloudAccount.isSignedIn, let audio = state.libraryAudioSync {
                 TalkTuckCard { LibraryAudioSyncPanel(engine:audio,choices:state.history.filter { $0.userId == state.cloudAccount.userId }.map { LibrarySyncChoice(id:$0.id,title:$0.title) }) }.disabled(state.locked)
@@ -217,5 +234,39 @@ struct RecordingAppConfigurationView: View {
     @ViewBuilder private var agentActions: some View {
         Button(L10n.text("打开数据目录")) { state.revealAgentData() }
         Button(L10n.text("重新发布快照")) { state.republishAgentData() }.disabled(state.locked)
+    }
+}
+
+/// Lay out confirmed hotwords in rows without imposing a fixed column width.
+private struct HotwordFlowLayout: Layout {
+    private let spacing: CGFloat = 8
+
+    private func arrange(_ subviews: Subviews, width: CGFloat) -> (positions: [CGPoint], sizes: [CGSize], size: CGSize) {
+        var positions: [CGPoint] = [], sizes: [CGSize] = []
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, usedWidth: CGFloat = 0
+        for view in subviews {
+            var size = view.sizeThatFits(.unspecified)
+            if size.width > width { size = view.sizeThatFits(ProposedViewSize(width: width, height: nil)) }
+            if x > 0 && x + size.width > width {
+                x = 0; y += rowHeight + spacing; rowHeight = 0
+            }
+            positions.append(CGPoint(x: x, y: y)); sizes.append(size)
+            usedWidth = max(usedWidth, x + size.width)
+            rowHeight = max(rowHeight, size.height); x += size.width + spacing
+        }
+        return (positions, sizes, CGSize(width: usedWidth, height: y + rowHeight))
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrange(subviews, width: proposal.width ?? .greatestFiniteMagnitude).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrange(subviews, width: bounds.width)
+        for index in subviews.indices {
+            let position = result.positions[index], size = result.sizes[index]
+            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
+                                  anchor: .topLeading, proposal: ProposedViewSize(size))
+        }
     }
 }

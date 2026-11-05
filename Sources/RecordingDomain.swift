@@ -53,3 +53,13 @@ struct RecordingStateModel: Codable, Equatable {
     static func allowsRemoteTranscript(_ origin: TranscriptionOrigin) -> Bool { origin == .remote }
     static func allowsFinalTranscriptSync(_ origin: TranscriptionOrigin, isFinal: Bool) -> Bool { isFinal && origin != .notGenerated }
 }
+
+// Recognition language is independent of interface language and is captured with each recording.
+enum RecordingSpeechLanguage: String, Codable, CaseIterable, Identifiable {
+    case chinese = "zh", cantonese = "yue", english = "en"
+    var id: String { rawValue }
+    var title: String { switch self { case .chinese: return "普通话"; case .cantonese: return "粤语"; case .english: return "英语" } }
+    var appleLocale: Locale { Locale(identifier: self == .cantonese ? "yue-Hant-HK" : (self == .english ? "en-US" : "zh-CN")) }
+    var allowsBilingualFallback: Bool { self != .cantonese }
+    static let preferenceKey = "TalkTuck.transcriptionLanguage"
+}

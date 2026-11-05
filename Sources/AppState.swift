@@ -54,7 +54,7 @@ final class AppState: ObservableObject {
     @Published private(set) var recoveryWarnings: [String] = []
     @Published private(set) var recoveryStatus = ""
     private var recoveryTask: Task<Void, Never>?
-    @Published var status = "准备就绪 · 音频仅在这台 Mac 上处理"
+    @Published var status = "准备就绪 · 本地转录"
     @Published var error: String? { didSet { errorRetry = nil } }
     @Published private(set) var errorRetry: (() -> Void)?
     private var errorMeetingID: UUID?
@@ -142,7 +142,11 @@ final class AppState: ObservableObject {
     private var talkTuckControlTimer: Timer?
     private var liveSession: LiveTranscriptionSession?
     private var liveGeneration: UUID?
-    private var liveCommitted: [String] = []
+    private var liveCommitted: [LiveUtterance] = []
+    private var livePendingRefinement: [LiveUtterance] = []
+    private var liveCurrentPartial = ""
+    private var liveHasRefinement = false
+    private var liveRefiner: LivePreviewRefiner?
     private var livePrefix = ""
     private let storage: URL
     var model: URL? { speechModels.ready ? ASRResources.qwen : nil }
@@ -215,7 +219,7 @@ final class AppState: ObservableObject {
         if feishu.configuration.name == "个人工作区" { feishu.configuration.name = "个人飞书" }
         if notion.configuration.name == "个人工作区" { notion.configuration.name = "个人 Notion" }
         do {
-            library = try MeetingLibrary(root: storage)
+            library = try MeetingLibrary(root: storage, publishAgentDataOnInit: storageURL != nil && cloudAccount == nil)
             organization = try library?.organization() ?? LibraryOrganization()
             history = try library?.list() ?? []
             agentOnboardingRecordingID = history.first(where: { agentOnboarding.eligible($0) })?.id
@@ -233,12 +237,40 @@ final class AppState: ObservableObject {
             self?.paused = true; self?.recordingIssue = error.localizedDescription
             self?.status = "录音已暂停。请处理提示后重试，或停止并保存。"
         }
-        talkTuckControlTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        let controlTimer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.processTalkTuckCommands(); self?.publishRecordingStatus() }
         }
+        talkTuckControlTimer = controlTimer
+        RunLoop.main.add(controlTimer, forMode: .common)
         configureLibrarySync()
         publishRecordingStatus()
+        // Isolated previews/tests must opt in by injecting their own account store;
+        // never attach the user's real credentials to an arbitrary fixture library.
+        if storageURL == nil || cloudAccount != nil { startAccountRestoration() }
     }
+
+    private var accountRestorationTask: Task<Void, Never>?
+
+    /// Application services must run even when SwiftUI has not presented a window.
+    func startAccountRestoration() {
+        guard accountRestorationTask == nil else { return }
+        accountRestorationTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let retry = await self?.restoreStartupAccount(), retry else { return }
+                do { try await Task.sleep(nanoseconds: 3_000_000_000) }
+                catch { return }
+            }
+        }
+    }
+
+    private func restoreStartupAccount() async -> Bool {
+        await cloudAccount.restore()
+        let retry = cloudAccount.needsRestoreRetry || cloudAccount.busy
+        if !retry { library?.finishAgentStartup(userId: cloudAccount.userId) }
+        return retry
+    }
+
+    deinit { accountRestorationTask?.cancel() }
 
     private func configureLibrarySync() {
         guard let library else { return }
@@ -248,6 +280,8 @@ final class AppState: ObservableObject {
         librarySync = sync
         let audio = LibraryAudioSyncEngine(root:storage.appendingPathComponent("Sync"),adapter:MacLibraryAudioAdapter(library:library))
         libraryAudioSync = audio
+        sync.onEnabledChange = { [weak audio] enabled in audio?.setAutomaticEnabled(enabled) }
+        sync.onSynchronized = { [weak audio] ids in Task { await audio?.synchronizeAutomatically(recordingIds:ids) } }
         audio.onInstalled = { [weak self] in self?.reloadSyncProjection();if let self { self.selectPlaybackSegment(max(0,(self.current?.audioFiles.count ?? 1)-1)) } }
         library.didChange = { [weak sync] in Task { @MainActor in sync?.localDidChange() } }
         sync.onProjection = { [weak self] in self?.reloadSyncProjection() }
@@ -255,17 +289,20 @@ final class AppState: ObservableObject {
             guard let self else { return }
             self.hotwordSync.connect(self.cloudAccount.syncAccess)
             guard let sync else { return }
-            _ = self.saveEdits(); audio.disconnect(); sync.disconnect()
-            if let access = self.cloudAccount.syncAccess {
-                do {
-                    if let previous = self.cloudAccount.previousServer {
-                        try ServiceNamespaceMigration.run(root:self.storage.appendingPathComponent("Sync"),userId:access.userId,from:previous,to:access.server)
+            library.updatingAccount(self.cloudAccount.userId) {
+                _ = self.saveEdits(); audio.disconnect(); sync.disconnect()
+                if let access = self.cloudAccount.syncAccess {
+                    do {
+                        if let previous = self.cloudAccount.previousServer {
+                            try ServiceNamespaceMigration.run(root:self.storage.appendingPathComponent("Sync"),userId:access.userId,from:previous,to:access.server)
+                        }
+                        try sync.connect(userId:access.userId,server:access.server,transport:LibrarySyncHTTP(server:access.server,token:access.token))
+                        try audio.connect(userId:access.userId,server:access.server,transport:LibraryAudioHTTP(server:access.server,token:access.token))
+                        audio.setAutomaticEnabled(sync.enabled)
+                        try self.cloudAccount.completeServerMigration()
                     }
-                    try sync.connect(userId:access.userId,server:access.server,transport:LibrarySyncHTTP(server:access.server,token:access.token))
-                    try audio.connect(userId:access.userId,server:access.server,transport:LibraryAudioHTTP(server:access.server,token:access.token))
-                    try self.cloudAccount.completeServerMigration()
+                    catch { audio.disconnect(); sync.disconnect(); self.error = "本机同步状态无法读取，已暂停同步。" }
                 }
-                catch { audio.disconnect(); sync.disconnect(); self.error = "本机同步状态无法读取，已暂停同步。" }
             }
             self.reloadSyncProjection()
         }
@@ -316,7 +353,7 @@ final class AppState: ObservableObject {
             case "resume_recording":
                 if recording && paused { pauseRecording(); result = "录音继续请求已接受" } else { result = "当前不需要继续录音" }
             case "retry_transcription":
-                if let current, !recording, current.audioFiles.isEmpty == false { transcribe(); result = "转录重试请求已接受" } else { result = "当前没有可重试音频" }
+                if let current, !recording, current.audioFiles.isEmpty == false { transcribe(recordingID:current.id); result = "转录重试请求已接受" } else { result = "当前没有可重试音频" }
             default: result = "未识别控制动作"; accepted = false
             }
             TalkTuckControlQueue.finish(url, root: storage.appendingPathComponent("AgentData"), result: result, accepted: accepted)
@@ -429,7 +466,7 @@ final class AppState: ObservableObject {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.audio, .mpeg4Audio, .mp3, .wav, .aiff]
         panel.allowsMultipleSelection = false
-        panel.message = L10n.text("导入音频后会在本机保存副本，文件不会上传。")
+        panel.message = L10n.text("导入音频后会在本机保存副本；登录并开启同步时，原音会自动上传。")
         if panel.runModal() == .OK, let url = panel.url { useAudio(url) }
     }
 
@@ -501,12 +538,12 @@ final class AppState: ObservableObject {
         transcriptionRecordingID = id
         busy = true; elapsed = 0; transcriptPhase = .recognizing
         let generation = UUID(); transcriptionGeneration = generation
-        status = "正在本地识别，音频不会上传…"
+        status = "正在本地识别…"
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.elapsed += 1 }
         }
         let engine = TranscriptionEngine(); self.engine = engine
-        let selectedLanguage = language
+        let selectedLanguage = targetID == nil ? language : record.language
         let selectedHotwords = hotwords.words
         let initialHotwordContext = record.title + "\n" + (appending ? String(record.text.suffix(1800)) : "")
         task = Task { [self] in
@@ -638,7 +675,7 @@ final class AppState: ObservableObject {
         guard !locked else { return }
         activeRecordingProfile = recordingProfile
         activeRecordingSessionMode = recordingSessionMode
-        liveEnabled = activeRecordingProfile.usesLiveASR
+        liveEnabled = activeRecordingProfile.usesLiveASR && (TranscriptionLanguage(rawValue:language)?.supportsLivePreview == true)
         expandedRealtime = false; pendingLivePresentation = nil
         lastLivePresentation = .distantPast; lastLiveSave = .distantPast
     }
@@ -664,6 +701,7 @@ final class AppState: ObservableObject {
             catch { self.error = error.localizedDescription; return }
         }
         prepareRecordingProfile()
+        liveEnabled = activeRecordingProfile.usesLiveASR && (TranscriptionLanguage(rawValue:continuing ? (current?.language ?? language) : language)?.supportsLivePreview == true)
         error = nil
         if activeRecordingProfile != .realtime || activeRecordingSessionMode == .continuous { showMiniRecorder() }
         continuousSegments = []
@@ -699,7 +737,7 @@ final class AppState: ObservableObject {
                 recording = true; paused = false; elapsed = 0
                 status = liveEnabled ? "正在录音并实时转录 · 停止后自动生成定稿" : "正在录制\(recordingMode.title) · 停止后自动转录"
             } catch {
-                liveSession?.cancel(); liveSession = nil; liveGeneration = nil; recorder.onAudio = nil
+                liveSession?.cancel(); liveRefiner?.cancel(); liveRefiner = nil; liveSession = nil; liveGeneration = nil; recorder.onAudio = nil
                 record = original
                 if !continuing { record.status = .failed; record.recoveryMessage = "录音未能正常开始。" }
                 do { try update(record) } catch { }
@@ -848,7 +886,7 @@ final class AppState: ObservableObject {
             flushLivePresentation()
             recording = false; preparing = false; paused = false; level = 0; recordingID = nil
             if selection != stoppedID { liveText = current?.previewText ?? ""; livePartial = "" }
-            recorder.onAudio = nil; liveSession = nil; liveGeneration = nil
+            recorder.onAudio = nil; liveRefiner?.cancel(); liveRefiner = nil; liveSession = nil; liveGeneration = nil
             if !finalize {
                 continuousWorker?.cancel()
                 continuousWorkerEngine?.cancel()
@@ -1020,11 +1058,15 @@ final class AppState: ObservableObject {
            record.legacyLiveText.isEmpty, !record.previewText.isEmpty {
             record.legacyLiveText = record.previewText; try? update(record)
         }
-        liveCommitted = []; liveText = livePrefix; livePartial = ""; liveStatus = ""
+        liveRefiner?.cancel(); liveRefiner = nil
+        liveCommitted = []; livePendingRefinement = []; liveCurrentPartial = ""; liveHasRefinement = false; liveText = livePrefix; livePartial = ""; liveStatus = ""
         liveGeneration = UUID()
         recorder.onAudio = nil
+        let sessionLanguage = history.first(where: { $0.id == id })?.language ?? language
         guard liveEnabled else { return }
-        guard let model = ASRResources.paraformer, let executable = ASRResources.executable("paraformer-live") else {
+        let isCantonese = sessionLanguage == "yue"
+        guard let model = isCantonese ? ASRResources.qwen : ASRResources.paraformer,
+              let executable = ASRResources.executable(isCantonese ? "qwen-asr" : "paraformer-live") else {
             liveStatus = "实时引擎缺失，仍会保存完整录音"; return
         }
         let generation = liveGeneration
@@ -1036,9 +1078,24 @@ final class AppState: ObservableObject {
             }
         }
         do {
-            try session.start(model: model, executable: executable, language: language)
+            try session.start(model: model, executable: executable, language: sessionLanguage, hotwords:hotwords.words)
             liveSession = session
-            recorder.onAudio = { [weak session] samples in session?.append(samples) }
+            if !isCantonese, let qwenModel = self.model, let qwenExecutable = ASRResources.executable("qwen-asr") {
+                let scratchPath = UserDefaults.standard.string(forKey: "LivePreviewScratchDirectory")
+                let scratch = scratchPath.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? FileManager.default.temporaryDirectory
+                let hints = hotwords.words
+                let title = history.first(where: { $0.id == id })?.title ?? ""
+                let refiner = LivePreviewRefiner(model: qwenModel, executable: qwenExecutable, language: sessionLanguage,
+                    hotwords: hints, context: title, scratchRoot: scratch) { [weak self] original, refined in
+                    Task { @MainActor in
+                        guard let self, self.liveGeneration == generation, self.recordingID == id else { return }
+                        self.applyLiveRefinement(original: original, refined: refined, hotwords: hints, meetingID: id)
+                    }
+                }
+                liveRefiner = refiner
+            }
+            let refiner = liveRefiner
+            recorder.onAudio = { [weak session, weak refiner] samples in refiner?.append(samples); session?.append(samples) }
             liveStatus = "正在加载本地模型，稍后显示实时文字…"
         } catch { liveStatus = "实时预览启动失败：\(error.localizedDescription)。仍会保存完整录音" }
     }
@@ -1051,8 +1108,19 @@ final class AppState: ObservableObject {
         case "partial", "commit":
             let value = event.text.trimmingCharacters(in: .whitespacesAndNewlines)
             let partial = event.type == "partial" ? value : ""
-            if event.type == "commit", !value.isEmpty { liveCommitted.append(value) }
-            let pieces = liveCommitted + (!partial.isEmpty ? [partial] : [])
+            liveCurrentPartial = partial
+            if event.type == "commit", !value.isEmpty {
+                let row = LiveUtterance(text: value, start: liveSegmentOffset + event.start, end: liveSegmentOffset + event.end)
+                liveCommitted.append(row)
+                if let refiner = liveRefiner {
+                    livePendingRefinement.append(row)
+                    if let first = livePendingRefinement.first, row.end - first.start >= 8 {
+                        let submitted = refiner.submit(rows: livePendingRefinement, sessionOffset: liveSegmentOffset)
+                        if submitted != .retry { livePendingRefinement = [] }
+                    }
+                }
+            }
+            let pieces = liveCommitted.map(\.text) + (!partial.isEmpty ? [partial] : [])
             let preview = ([livePrefix] + pieces).filter { !$0.isEmpty }.joined(separator: "\n")
             pendingLivePresentation = (preview, partial)
             // 隐藏或精简窗口只抑制呈现，不暂停音频输入、识别或已确认句保存。
@@ -1063,11 +1131,12 @@ final class AppState: ObservableObject {
             lastLiveSave = Date()
             if var record = history.first(where: { $0.id == meetingID }) {
                 if event.type == "commit", !value.isEmpty {
-                    record.liveUtterances.append(LiveUtterance(text: value, start: liveSegmentOffset + event.start, end: liveSegmentOffset + event.end))
+                    if let row = liveCommitted.last { record.liveUtterances.append(row) }
                 }
                 record.previewText = preview
-                record.previewEngine = livePrefix.isEmpty || record.previewEngine == "paraformer-int8-silero-vad"
-                    ? "paraformer-int8-silero-vad" : "mixed-history-and-paraformer"
+                let currentEngine = record.language == "yue" ? "qwen3-asr-live-bounded" :
+                    (liveHasRefinement ? "paraformer-qwen-hotwords-silero-vad" : "paraformer-int8-silero-vad")
+                record.previewEngine = livePrefix.isEmpty || record.previewEngine == currentEngine ? currentEngine : "mixed-history-and-live-asr"
                 do { try update(record) } catch { self.error = "保存实时预览失败：\(error.localizedDescription)" }
             }
             // 实时提交仅用于转录，不再触发自动问答。
@@ -1075,6 +1144,24 @@ final class AppState: ObservableObject {
         case "done": flushLivePresentation(); livePartial = ""; liveStatus = "实时预览已结束"
         default: break
         }
+    }
+
+    private func applyLiveRefinement(original: [LiveUtterance], refined: [TranscriptParagraph], hotwords: [String], meetingID: UUID) {
+        guard let replacement = LivePreviewRefiner.replacing(rows: liveCommitted, original: original, refined: refined, hotwords: hotwords) else { NSLog("TalkTuck live refinement: result rejected"); return }
+        guard var record = history.first(where: { $0.id == meetingID }),
+              let stored = LivePreviewRefiner.replacing(rows: record.liveUtterances, original: original, refined: refined, hotwords: hotwords) else { return }
+        record.liveUtterances = stored
+        let pieces = replacement.map(\.text) + (liveCurrentPartial.isEmpty ? [] : [liveCurrentPartial])
+        let preview = ([livePrefix] + pieces).filter { !$0.isEmpty }.joined(separator: "\n")
+        record.previewText = preview
+        record.previewEngine = "paraformer-qwen-hotwords-silero-vad"
+        do {
+            try update(record)
+            NSLog("TalkTuck live refinement: preview updated")
+            liveCommitted = replacement; liveHasRefinement = true
+            pendingLivePresentation = (preview, liveCurrentPartial)
+            flushLivePresentation()
+        } catch { self.error = "保存实时预览失败：\(error.localizedDescription)" }
     }
 
     private func flushLivePresentation() {
@@ -1486,7 +1573,7 @@ extension AppState {
         guard !locked, let library, saveEdits() else { return false }
         do {
             var next = organization
-            let owner: UUID? = id != nil ? next.group(id)?.userId : (librarySync?.enabled == true ? cloudAccount.userId : nil)
+            let owner: UUID? = id != nil ? next.group(id)?.userId : cloudAccount.userId
             _ = try next.setName(name, id: id, owner: owner)
             try library.saveOrganization(next)
             organization = next; history = try library.list()

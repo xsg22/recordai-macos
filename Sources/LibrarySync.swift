@@ -19,7 +19,7 @@ struct LibrarySyncRecording: Codable, Equatable {
     var source: String; var language: String; var isStarred: Bool; var groupId: UUID?
     var speakers: [LibrarySyncSpeaker]; var paragraphs: [LibrarySyncParagraph]
     var transcriptOrigin: TranscriptionOrigin? = nil
-    var formalOrigin: TranscriptionOrigin { transcriptOrigin ?? .remote }
+    var formalOrigin: TranscriptionOrigin { paragraphs.isEmpty ? .notGenerated : (transcriptOrigin ?? .remote) }
     enum CodingKeys: String, CodingKey { case id,title,createdAt,durationMs,source,language,isStarred,groupId,speakers,paragraphs,transcriptOrigin }
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
@@ -114,6 +114,7 @@ final class LibrarySyncHTTP: LibrarySyncTransport {
     func activate(userId: UUID?) throws
     func values(userId: UUID) throws -> [LibrarySyncValue]
     func enroll(recordingIds: Set<UUID>, userId: UUID) throws
+    func enrollAll(userId: UUID) throws
     func apply(_ entity: LibrarySyncEntity, userId: UUID) throws
     func deletions(userId: UUID) throws -> Set<String>
     func remember(_ entity: LibrarySyncEntity, userId: UUID) throws
@@ -135,11 +136,14 @@ enum LibrarySyncCodec {
     @Published private(set) var busy = false
     @Published private(set) var pendingCount = 0
     @Published private(set) var conflicts: [LibrarySyncConflict] = []
-    @Published private(set) var message = "登录后可开启文字与分组同步。"
+    @Published private(set) var message = "登录后默认同步全部录音、转录和分组。"
     var onProjection: (() -> Void)?
+    var onEnabledChange: ((Bool) -> Void)?
+    var onSynchronized: ((Set<UUID>) -> Void)?
     private struct Projection: Codable { var entity: LibrarySyncEntity; var expected: LibrarySyncValue?; var cacheOnly: Bool? = nil }
     private struct State: Codable {
-        var schemaVersion = 1; var userId: UUID; var server: String; var deviceId = UUID(); var enabled = false
+        var schemaVersion = 1; var userId: UUID; var server: String; var deviceId = UUID(); var enabled = true
+        var automaticEnrollmentVersion: Int? = nil
         var uncertain = Set<String>()
         var cursor: String?; var base: [String:LibrarySyncEntity] = [:]; var pending: [String:LibrarySyncMutation] = [:]
         var conflicts: [String:LibrarySyncConflict] = [:]; var history: [LibrarySyncConflict] = []; var projections: [Projection] = []
@@ -155,34 +159,37 @@ enum LibrarySyncCodec {
         disconnect(); automatic = polling
         let scope = SHA256.hash(data: Data(server.absoluteString.utf8)).map { String(format:"%02x",$0) }.joined()
         let url = root.appendingPathComponent(scope).appendingPathComponent(userId.uuidString.lowercased()).appendingPathComponent("state.json")
-        let loaded: State
+        var loaded: State
         if FileManager.default.fileExists(atPath: url.path) {
             loaded = try JSONDecoder().decode(State.self, from: Data(contentsOf: url))
             guard loaded.schemaVersion == 1, loaded.userId == userId, loaded.server == server.absoluteString else { throw LibrarySyncError.invalidData }
         } else { loaded = State(userId: userId, server: server.absoluteString) }
+        // Upgrade the former opt-in policy once. Later explicit pauses remain account-scoped.
+        if loaded.automaticEnrollmentVersion == nil { loaded.enabled = true; loaded.automaticEnrollmentVersion = 1 }
         self.state = loaded; self.stateURL = url; self.transport = transport; self.userId = userId
         try adapter.activate(userId: userId)
-        try replay(); try capture(); publish(); message = enabled ? "部分修改等待同步。" : "选择录音后开启文字与分组同步。"
+        try save(); try replay(); try capture(); onProjection?(); publish(); message = enabled ? "正在自动同步全部录音资料。" : "同步已暂停，本机修改会在恢复后上传。"
         if polling { poll = Task { [weak self] in
             while !Task.isCancelled { await self?.synchronize(); do { try await Task.sleep(nanoseconds: 15_000_000_000) } catch { break } }
         } }
     }
     func disconnect() {
         try? capture(); epoch = UUID(); poll?.cancel(); debounce?.cancel(); poll = nil; debounce = nil
-        state = nil; stateURL = nil; transport = nil; userId = nil; busy = false; enabled = false; conflicts = []; pendingCount = 0
+        state = nil; stateURL = nil; transport = nil; userId = nil; busy = false; enabled = false; conflicts = []; pendingCount = 0; onEnabledChange?(false)
         do { try adapter.activate(userId: nil) } catch { message = "本机资料暂时无法读取，同步已暂停。" }
     }
-    func enable(recordingIds: Set<UUID>) {
+    func enable(recordingIds: Set<UUID> = []) {
         guard let userId, state != nil else { return }
         do {
-            try adapter.enroll(recordingIds: recordingIds, userId: userId)
-            state!.enabled = true; try save(); try capture(); publish(); schedule()
+            state!.enabled = true;
+            try adapter.enrollAll(userId: userId)
+            state!.enabled = true; try save(); try capture(); onProjection?(); publish(); schedule()
         } catch { message = "本机同步状态保存失败，内容已保留。" }
     }
     func pause() { epoch = UUID(); busy = false; debounce?.cancel(); state?.enabled = false; do { try save(); publish() } catch { message = "本机同步状态保存失败，内容已保留。" } }
     func localDidChange() {
         guard !applying else { return }
-        do { try capture(); publish(); schedule() } catch { message = "本机同步状态保存失败，内容已保留。" }
+        do { try capture(); onProjection?(); publish(); schedule() } catch { message = "本机同步状态保存失败，内容已保留。" }
     }
     private func schedule() {
         guard enabled, automatic else { return }; debounce?.cancel()
@@ -195,7 +202,12 @@ enum LibrarySyncCodec {
         return Dictionary(uniqueKeysWithValues: rows.map { ($0.key,$0) })
     }
     private func capture() throws {
-        guard let userId, var s = state, s.userId == userId, s.enabled else { return }
+        guard let userId, var s = state, s.userId == userId else { return }
+        applying = true; defer { applying = false }
+        // Pausing stops network work, not account ownership. Otherwise recordings created
+        // while paused could be claimed by the next account on this device.
+        try adapter.enrollAll(userId:userId)
+        guard s.enabled else { return }
         let local = try localValues(), deletions = try adapter.deletions(userId:userId)
         for key in Set(local.keys).union(s.base.keys).union(s.pending.keys) {
             let value = local[key], base = s.base[key]
@@ -220,7 +232,10 @@ enum LibrarySyncCodec {
         try encoder.encode(state).write(to: url, options: .atomic)
     }
     private func publish() {
-        enabled = state?.enabled ?? false; pendingCount = state?.pending.count ?? 0
+        let wasEnabled = enabled
+        enabled = state?.enabled ?? false
+        if wasEnabled != enabled { onEnabledChange?(enabled) }
+        pendingCount = state?.pending.count ?? 0
         conflicts = (state?.conflicts.values.map { $0 } ?? []).sorted { $0.id < $1.id }
     }
     private func replay() throws {
@@ -304,6 +319,10 @@ enum LibrarySyncCodec {
             try await pull(transport, userId:userId,generation:generation)
             guard generation == epoch else { return }
             message = state!.conflicts.isEmpty ? (state!.pending.isEmpty ? "文字与分组已同步。" : "部分修改等待同步。") : "存在冲突，双方版本已保留。"
+            let acknowledged = Set(state!.base.values.filter {
+                entity in entity.kind == .recording && entity.value != nil && state!.pending[entity.key] == nil && state!.conflicts[entity.key] == nil && !state!.projections.contains(where: { $0.entity.key == entity.key && $0.cacheOnly != true })
+            }.map(\.id))
+            onSynchronized?(acknowledged)
         } catch {
             guard generation == epoch else { return }
             message = "暂时无法同步，离线修改已保留。"

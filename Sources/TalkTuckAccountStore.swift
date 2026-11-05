@@ -25,6 +25,9 @@ struct TalkTuckSession: Codable {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query.merging([kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]) { _, new in new } as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
+        if status == errSecInteractionNotAllowed || status == errSecNotAvailable {
+            throw TalkTuckAccountError.keychainTemporarilyUnavailable
+        }
         guard status == errSecSuccess, let data = result as? Data else { throw TalkTuckAccountError.keychain }
         return try JSONDecoder().decode(TalkTuckSession.self, from: data)
     }
@@ -49,11 +52,11 @@ private final class TalkTuckNoRedirect: NSObject, URLSessionTaskDelegate {
 }
 
 enum TalkTuckAccountError: Error, Equatable {
-    case unauthorized, unavailable, invalidReply, keychain, invalidCode, rateLimited
+    case unauthorized, unavailable, invalidReply, keychain, keychainTemporarilyUnavailable, invalidCode, rateLimited
     var message: String {
         switch self {
         case .unauthorized: return "登录信息无效或已过期，请重新登录。"
-        case .keychain: return "无法访问系统钥匙串，请重试。"
+        case .keychain, .keychainTemporarilyUnavailable: return "无法访问系统钥匙串，请重试。"
         case .invalidReply: return "账号服务尚未就绪，请稍后重试。"
         case .unavailable: return "无法连接账号服务，请检查网络后重试。"
         case .invalidCode: return "验证码无效或已过期，请重新获取。"
@@ -77,6 +80,7 @@ enum TalkTuckAccountError: Error, Equatable {
     private let credentials: TalkTuckSessionStorage
     private var generation = UUID()
     private var didRestore = false
+    private(set) var needsRestoreRetry = false
     private var active: TalkTuckSession?
     private(set) var previousServer: URL?
     private var serverMigrationVerified = false
@@ -102,6 +106,7 @@ enum TalkTuckAccountError: Error, Equatable {
 
     func restore() async {
         guard !didRestore, !busy else { return }; didRestore = true
+        needsRestoreRetry = false
         let epoch = generation
         busy = true; defer { if generation == epoch { busy = false } }
         do {
@@ -128,7 +133,16 @@ enum TalkTuckAccountError: Error, Equatable {
             active = saved; userId = saved.userId; displayName = saved.displayName; message = nil; librarySyncAvailable = identity.librarySync; onSessionChange?()
         } catch {
             guard generation == epoch else { return }
-            if active != nil && ((error is URLError) || (error as? TalkTuckAccountError) == .unavailable) {
+            // Login items can start before the login Keychain becomes readable.
+            // Keep this retryable without treating a locked Keychain as sign-out.
+            if (error as? TalkTuckAccountError) == .keychainTemporarilyUnavailable {
+                didRestore = false; needsRestoreRetry = true
+                message = Self.safeMessage(error)
+                return
+            }
+            let nativeError = error as NSError
+            let networkDenied = nativeError.domain == NSPOSIXErrorDomain && [Int(EPERM),Int(EACCES),Int(ENETDOWN),Int(ENETUNREACH),Int(EHOSTUNREACH)].contains(nativeError.code)
+            if active != nil && ((error is URLError) || networkDenied || (error as? TalkTuckAccountError) == .unavailable) {
                 message = "离线账号已打开，联网后会验证并同步。"
             } else {
                 active = nil; userId = nil; displayName = ""; librarySyncAvailable = false; onSessionChange?()
@@ -174,6 +188,7 @@ enum TalkTuckAccountError: Error, Equatable {
 
     private func signIn(_ path: String, body: [String: String]) async -> Bool {
         guard !busy else { return false }
+        needsRestoreRetry = false
         generation = UUID(); let epoch = generation; busy = true; message = nil
         defer { if generation == epoch { busy = false } }
         do {
@@ -195,6 +210,7 @@ enum TalkTuckAccountError: Error, Equatable {
         generation = UUID(); busy = false
         do {
             try credentials.write(nil)
+            didRestore = true; needsRestoreRetry = false
             previousServer = nil; serverMigrationVerified = false
             active = nil; userId = nil; displayName = ""; message = nil; librarySyncAvailable = false; onSessionChange?()
         } catch { message = Self.safeMessage(error) }

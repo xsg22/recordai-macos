@@ -17,6 +17,10 @@ class LanguagePolicyTests(unittest.TestCase):
         self.assertEqual(policy.alignment_language('en', 'TalkTuck 中文品牌'), 'English')
         self.assertEqual(policy.alignment_language('zh', 'TalkTuck'), 'Chinese')
         self.assertIsNone(policy.recognition_language('auto'))
+    def test_cantonese_recognition_uses_cantonese_not_mandarin(self):
+        self.assertEqual(policy.recognition_language('yue'), 'Cantonese')
+    def test_cantonese_alignment_uses_character_tokenization(self):
+        self.assertEqual(policy.alignment_language('yue', '我哋今日開會，用 TalkTuck 記低。'), 'Chinese')
     def test_unknown_language_does_not_silently_fall_back(self):
         with self.assertRaises(ValueError): policy.recognition_language('unsupported')
 

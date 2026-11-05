@@ -13,6 +13,12 @@ private final class OfflineAccountProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
+private final class NetworkDeniedAccountProtocol: URLProtocol {
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func startLoading() { client?.urlProtocol(self,didFailWithError:NSError(domain:NSPOSIXErrorDomain,code:Int(EPERM))) }
+    override func stopLoading() {}
+}
 private final class DelayedLogin: URLProtocol {
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -44,6 +50,9 @@ private final class DelayedLogin: URLProtocol {
         let offlineConfig = URLSessionConfiguration.ephemeral;offlineConfig.protocolClasses = [OfflineAccountProtocol.self]
         let offline = TalkTuckAccountStore(baseURL:url,session:URLSession(configuration:offlineConfig),credentials:secrets,deviceId:UUID())
         await offline.restore();precondition(offline.userId == userId && offline.isSignedIn && offline.librarySyncAvailable,"verified account cache must open when offline")
+        let deniedConfig = URLSessionConfiguration.ephemeral;deniedConfig.protocolClasses = [NetworkDeniedAccountProtocol.self]
+        let denied = TalkTuckAccountStore(baseURL:url,session:URLSession(configuration:deniedConfig),credentials:secrets,deviceId:UUID())
+        await denied.restore();precondition(denied.userId == userId && denied.isSignedIn,"native EPERM must retain the verified account")
         store.signOut(); precondition(!store.isSignedIn && secrets.saved == nil)
         let again = await store.signInPassword(username: "qa_mac_integrity", password: "synthetic-password")
         precondition(again && store.userId != userId)

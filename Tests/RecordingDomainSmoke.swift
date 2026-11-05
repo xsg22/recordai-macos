@@ -9,7 +9,7 @@ import Foundation
         try adapter.activate(userId:account)
         var local = MeetingRecord(title:"selectable local final",text:"confirmed local ASR")
         _ = try library.save(local)
-        check(try adapter.values(userId:account).isEmpty) // A login alone never enrolls local finals.
+        check(try adapter.values(userId:account).isEmpty) // Adapter activation alone does not capture; the connected engine enrolls all records.
         check(local.canSelectFinalForSync)
         check(local.stateModel.localTranscription == .ready && local.stateModel.remoteTranscription == .notRequested)
         var provisional = MeetingRecord(title:"live",text:"private provisional",status:.recording,previewText:"private live")
@@ -43,6 +43,6 @@ import Foundation
         let state = RecordingStateModel(origin:.watch,capture:.finished,localTranscription:.ready,remoteTranscription:.notRequested,transfer:.sending,audio:.unverified)
         check(state.presentation == .syncing)
         check(try JSONDecoder().decode(RecordingStateModel.self,from:JSONEncoder().encode(state)) == state)
-        print("PASS: selected local final sync, no automatic enrollment/live caption upload, preserved provenance, chosen remote projection, account scope and state round-trip")
+        print("PASS: selected local final sync, live caption exclusion, preserved provenance, chosen remote projection, account scope and state round-trip")
     }
 }
