@@ -31,14 +31,18 @@ class PolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):generate_complete(model,bytearray(120*16000),language='Chinese')
     def test_failure_preserves_existing_result(self):
         import worker
-        import numpy as np
         class Fake:
             def generate(self,**kwargs):return types.SimpleNamespace(generation_tokens=kwargs['max_tokens'],segments=[dict(start=0,end=60)],text='TRUNCATED')
         with tempfile.TemporaryDirectory() as directory:
             root=pathlib.Path(directory);output=root/'result.json';output.write_text('ORIGINAL')
             hints=root/'hints.json';hints.write_text('{"words":[],"context":""}')
-            header=json.dumps(dict(frames=60*16000,start=0,end=60)).encode();data=struct.pack('<I',len(header))+header+np.zeros(60*16000,dtype='<f4').tobytes()
-            with patch.object(sys,'stdin',types.SimpleNamespace(buffer=io.BytesIO(data))),patch.dict(sys.modules,{'mlx.core':types.SimpleNamespace(clear_cache=lambda:None,device_info=lambda:{'memory_size':16*1024**3,'max_recommended_working_set_size':12*1024**3},set_memory_limit=lambda _:None,set_cache_limit=lambda _:None),'mlx_audio.stt':types.SimpleNamespace(load=lambda _:Fake())}):
+            header=json.dumps(dict(frames=60*16000,start=0,end=60)).encode();data=struct.pack('<I',len(header))+header+bytes(60*16000*4)
+            core=types.SimpleNamespace(clear_cache=lambda:None,device_info=lambda:{'memory_size':16*1024**3,'max_recommended_working_set_size':12*1024**3},set_memory_limit=lambda _:None,set_cache_limit=lambda _:None)
+            stt=types.SimpleNamespace(load=lambda _:Fake())
+            mlx=types.ModuleType('mlx');mlx.core=core
+            audio=types.ModuleType('mlx_audio');audio.stt=stt
+            modules={'numpy':types.SimpleNamespace(frombuffer=lambda data,dtype:memoryview(data).cast('f')),'mlx':mlx,'mlx.core':core,'mlx_audio':audio,'mlx_audio.stt':stt}
+            with patch.object(sys,'stdin',types.SimpleNamespace(buffer=io.BytesIO(data))),patch.dict(sys.modules,modules):
                 with self.assertRaises(ValueError):worker.transcribe_stream(str(root),'zh',str(output),str(hints))
             self.assertEqual(output.read_text(),'ORIGINAL');self.assertFalse(output.with_suffix('.partial').exists())
 if __name__=='__main__':unittest.main()

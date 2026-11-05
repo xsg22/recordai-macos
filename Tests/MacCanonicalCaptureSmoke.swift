@@ -147,6 +147,7 @@ import AVFoundation
                 try await recorder.start(sources: .muted, directory: request.directory, sessionMode: request.sessionMode,
                     meetingOffset: request.meetingOffset, segmenter: request.segmenter)
             })
+        recoveryState.recordingMode = .systemAudio // the injected starter uses muted PCM, with no physical microphone
         recoveryState.select(continuous.id); recoveryState.findRecoverableAudio()
         for _ in 0..<500 where recoveryState.recoveryBusy { try await Task.sleep(for: .milliseconds(20)) }
         let continuousCandidate = recoveryState.recoveryCandidates.first { $0.id == interruptedID }!
@@ -168,7 +169,7 @@ import AVFoundation
         precondition(repeatedQueue.map(\.id) == savedQueue)
         recoveryState.recoverCapture(continuousCandidate, continueAfterSaving: true)
         for _ in 0..<500 where !recoveryState.recording { try await Task.sleep(for: .milliseconds(20)) }
-        precondition(recoveryState.recording && recoveryState.current?.id == continuous.id && recoveryState.activeRecordingSessionMode == .continuous)
+        precondition(recoveryState.recording && recoveryState.current?.id == continuous.id && recoveryState.activeRecordingSessionMode == .continuous, "recording=\(recoveryState.recording) mode=\(String(describing:recoveryState.activeRecordingSessionMode)) status=\(recoveryState.status) error=\(String(describing:recoveryState.error)) recovery=\(recoveryState.recoveryStatus)")
         try await Task.sleep(for: .milliseconds(400))
         recoveryState.toggleRecording()
         for _ in 0..<500 where recoveryState.preparing { try await Task.sleep(for: .milliseconds(20)) }
@@ -189,6 +190,7 @@ import AVFoundation
                 try await recorder.start(sources: .muted, directory: request.directory, sessionMode: request.sessionMode,
                     meetingOffset: request.meetingOffset, segmenter: request.segmenter)
             })
+        conferenceState.recordingMode = .systemAudio
         conferenceState.select(conference.id); conferenceState.findRecoverableAudio()
         for _ in 0..<500 where conferenceState.recoveryBusy { try await Task.sleep(for: .milliseconds(20)) }
         let conferenceCandidate = conferenceState.recoveryCandidates.first { $0.id == conferenceID }!

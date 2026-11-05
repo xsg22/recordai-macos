@@ -11,7 +11,12 @@ import AVFoundation
         var recordings = 0, archives = 0, totalFrames:Int64 = 0
         for directory in directories {
             guard let id = UUID(uuidString:directory.lastPathComponent) else { continue }
-            let record = try library.load(id), before = try Data(contentsOf:directory.appendingPathComponent("meeting.json"))
+            let before = try Data(contentsOf:directory.appendingPathComponent("meeting.json"))
+            // The copied fixture now belongs to the restored account. Recreate
+            // that fixture namespace; never change ownership or the source data.
+            let metadata = try JSONSerialization.jsonObject(with:before) as! [String:Any]
+            library.activeSyncUserId = (metadata["userId"] as? String).flatMap(UUID.init(uuidString:))
+            let record = try library.load(id)
             let urls = try library.audioURLs(for:record)
             let agent = try AgentDataPublisher.snapshot(record,libraryRoot:root)
             precondition(agent.audioFiles.map(\.path) == urls.map(\.path))

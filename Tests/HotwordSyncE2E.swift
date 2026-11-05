@@ -19,7 +19,7 @@ import Foundation
         let okB = await authB.signInPassword(username:"hotwords_e2e_a",password:"synthetic-password")
         precondition(okA && okB)
         await syncA.synchronize(); await syncB.synchronize()
-        precondition(a.words == ["本机项目"] && b.words == ["本机项目"])
+        precondition(a.words == ["本机项目"] && b.words == ["本机项目"], "a=\(a.words) b=\(b.words) A=\(syncA.status) B=\(syncB.status)")
         a.remove("本机项目"); precondition(a.add("苹果项目")); precondition(b.add("香蕉项目"))
         await syncB.synchronize(); await syncA.synchronize(); await syncB.synchronize()
         precondition(Set(a.words) == Set(["苹果项目","香蕉项目"]) && Set(a.words) == Set(b.words))
