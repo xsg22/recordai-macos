@@ -8,9 +8,6 @@ cp Docs/design-v2/manifest.json .build/TalkTuckAgentPreview.app/Contents/Resourc
 ditto Resources/AgentSkill .build/TalkTuckAgentPreview.app/Contents/Resources/AgentSkill
 ditto Resources/Localization .build/TalkTuckAgentPreview.app/Contents/Resources/Localization
 xcrun swiftc -swift-version 5 -target arm64-apple-macosx14.0 Sources/AgentSchema.swift Sources/TalkTuckControl.swift Sources/AgentSetup.swift Native/AgentCLI/main.swift -o .build/TalkTuckAgentPreview.app/Contents/MacOS/talktuck
-mkdir -p .build/ui-preview-icon.iconset
-xcrun swift Scripts/icon.swift .build/ui-preview-icon.iconset
-iconutil -c icns .build/ui-preview-icon.iconset -o .build/TalkTuckAgentPreview.app/Contents/Resources/AppIcon.icns
 python3 - <<'PY'
 from pathlib import Path
 source = Path('Sources/CoHearTranscribeApp.swift').read_text().replace('@main\n', '')
@@ -30,6 +27,7 @@ cat > .build/TalkTuckAgentPreview.app/Contents/Info.plist <<'PLIST'
 <key>CFBundleIconFile</key><string>AppIcon</string>
 </dict></plist>
 PLIST
+/bin/zsh Scripts/export-icon.zsh .build/TalkTuckAgentPreview.app .build/ui-preview-icon
 if [[ "${1:-}" == "--build-only" ]]; then
     print '界面预览已编译：.build/TalkTuckAgentPreview.app'
 else
