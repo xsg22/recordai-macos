@@ -62,7 +62,7 @@ def diarize(model_path,audio_path,output,streaming=False):
         timeline.append(scores,offset,duration,revised)
         offset+=duration;mx.clear_cache()
         print('Sortformer: %.1fs'%offset,file=sys.stderr,flush=True)
-    pathlib.Path(output).write_text(json.dumps(dict(turns=timeline.turns(),duration=offset,retrospectiveFIFO=True,frameCount=len(timeline.times))))
+    pathlib.Path(output).write_text(json.dumps(dict(turns=timeline.turns(),frames=timeline.frames(),duration=offset,retrospectiveFIFO=True,frameCount=len(timeline.times))))
 
 def stream_clips(max_seconds=MAX_ASR_SECONDS):
     stream=sys.stdin.buffer
@@ -116,29 +116,34 @@ def align_stream(model_path,turns_path,output):
     import numpy as np
     import mlx.core as mx
     from mlx_audio.stt import load
-    from speaker_attribution import attribute
-    turns=json.loads(pathlib.Path(turns_path).read_text())['turns']
+    from speaker_attribution import aligned_words
+    from sentence_speakers import attribute_sentences
+    voice=json.loads(pathlib.Path(turns_path).read_text())
     model=load(pathlib.Path(model_path).resolve(strict=True));paragraphs=[]
+    hotwords=[]
     for index,(clip,data) in enumerate(stream_clips(MAX_ALIGNMENT_SECONDS)):
         text=clip.get('text');language=clip.get('language','auto')
         if not isinstance(text,str) or not text or len(text)>100000:raise ValueError('Invalid alignment text')
         aligned=model.generate(audio=np.frombuffer(data,dtype='<f4'),text=text,language=alignment_language(language,text))
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
-        rows=attribute(text,items,turns,clip['start'],clip['end']-clip['start'],protected_words=clip.get('hotwords',[]))
+        rows=aligned_words(text,items,clip['start'],clip['end']-clip['start'])
+        hotwords.extend(clip.get('hotwords',[]))
         if rows:rows[0]['separator']=clip.get('separator','' if index==0 else '\n')
         paragraphs.extend(rows);mx.clear_cache()
-    from paragraphs import group_words
-    paragraphs=group_words(paragraphs)
-    pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
+    words=paragraphs
+    paragraphs=attribute_sentences(words,voice['turns'],frames=voice.get('frames'),protected_words=hotwords)
+    pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs,alignedWords=words,attributionPolicy='sentence-v1'),ensure_ascii=False))
 
 def align_speakers(model_path,manifest_path,turns_path,output):
     import numpy as np
     import mlx.core as mx
     from mlx_audio.stt import load
-    from speaker_attribution import attribute
+    from speaker_attribution import aligned_words
+    from sentence_speakers import attribute_sentences
     manifest=pathlib.Path(manifest_path).resolve(strict=True);clips=json.loads(manifest.read_text())
-    turns=json.loads(pathlib.Path(turns_path).read_text())['turns']
+    voice=json.loads(pathlib.Path(turns_path).read_text())
     model=load(pathlib.Path(model_path).resolve(strict=True));paragraphs=[]
+    hotwords=[]
     for index,clip in enumerate(clips):
         path=pathlib.Path(clip['audio']).resolve(strict=True)
         if path.parent!=manifest.parent:raise ValueError('Invalid alignment audio path')
@@ -149,13 +154,14 @@ def align_speakers(model_path,manifest_path,turns_path,output):
         language=alignment_language(clip.get('language','auto'),clip['text'])
         aligned=model.generate(audio=audio,text=clip['text'],language=language)
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
-        rows=attribute(clip['text'],items,turns,clip['start'],clip['end']-clip['start'],protected_words=clip.get('hotwords',[]))
+        rows=aligned_words(clip['text'],items,clip['start'],clip['end']-clip['start'])
+        hotwords.extend(clip.get('hotwords',[]))
         if rows:rows[0]['separator']=clip.get('separator','' if index==0 else '\n')
         paragraphs.extend(rows);mx.clear_cache()
         print('ForcedAligner: %d/%d'%(index+1,len(clips)),file=sys.stderr,flush=True)
-    from paragraphs import group_words
-    paragraphs=group_words(paragraphs)
-    pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
+    words=paragraphs
+    paragraphs=attribute_sentences(words,voice['turns'],frames=voice.get('frames'),protected_words=hotwords)
+    pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs,alignedWords=words,attributionPolicy='sentence-v1'),ensure_ascii=False))
 
 def main():
     if len(sys.argv)==6 and sys.argv[1]=='--transcribe-stream':

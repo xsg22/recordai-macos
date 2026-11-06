@@ -22,6 +22,9 @@ class SpeakerTimeline:
         for i,row in enumerate(revised):
             if len(row)!=width or any(not math.isfinite(p)or not 0<=p<=1 for p in row):raise ValueError('Invalid revised probabilities')
             self.scores[begin+i]=list(row)
+    def frames(self):
+        """Keep soft, globally identified evidence for sentence attribution."""
+        return [[start,end,*scores] for (start,end),scores in zip(self.times,self.scores) if end>start]
     def turns(self,threshold=.5,min_duration=.12,merge_gap=.16):
         result=[]
         if not self.scores:return result

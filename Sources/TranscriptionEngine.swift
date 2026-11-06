@@ -405,7 +405,7 @@ final class TranscriptionEngine: @unchecked Sendable {
         }
         try captureEvidence(aligned, name: "alignment.json")
         struct Response: Decodable {
-            struct Row: Decodable { let text: String; let separator: String; let start: Double; let end: Double; let speakerIDs: [String] }
+            struct Row: Decodable { let text: String; let separator: String; let start: Double; let end: Double; let speakerIDs: [String]; let timingUncertain: Bool? }
             let paragraphs: [Row]
         }
         let response = try JSONDecoder().decode(Response.self, from: Data(contentsOf: aligned))
@@ -417,7 +417,8 @@ final class TranscriptionEngine: @unchecked Sendable {
                   row.speakerIDs.count <= 4, row.speakerIDs.allSatisfy({ ["0", "1", "2", "3"].contains($0) }) else {
                 throw TranscriptionError.message("发言人时间或编号无效。")
             }
-            return TranscriptParagraph(text: row.text, separator: row.separator, start: row.end > row.start ? row.start : nil, end: row.end > row.start ? row.end : nil, speakerIDs: row.speakerIDs)
+            let timed = row.end > row.start && row.timingUncertain != true
+            return TranscriptParagraph(text: row.text, separator: row.separator, start: timed ? row.start : nil, end: timed ? row.end : nil, speakerIDs: row.speakerIDs)
         }
         for pair in zip(response.paragraphs, response.paragraphs.dropFirst()) where pair.1.start < pair.0.start - 0.15 {
             throw TranscriptionError.message("时间戳分段顺序不一致，已保留正文。")

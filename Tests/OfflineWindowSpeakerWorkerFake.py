@@ -9,7 +9,9 @@ elif sys.argv[1]=='--align-speakers':
   with wave.open(c['audio']) as w:
    assert (w.getnchannels(),w.getframerate(),w.getsampwidth()) == (1,16000,2)
    assert w.getnframes()>0
-  if os.environ.get('TALKTUCK_TEST_ZERO_TIME'):
+  if os.environ.get('TALKTUCK_TEST_UNCERTAIN_SENTENCE'):
+   rows.append(dict(text=c['text'],separator='',start=c['start'],end=c['end'],speakerIDs=['0'],timingUncertain=True))
+  elif os.environ.get('TALKTUCK_TEST_ZERO_TIME'):
    rows.extend([dict(text=c['text'][:2],separator='',start=c['start'],end=c['start']+.5,speakerIDs=['0']),dict(text=c['text'][2:],separator='',start=c['start']+.5,end=c['start']+.5,speakerIDs=['0'])])
   else:rows.append(dict(text=c['text'],separator='' if i==0 else '\n',start=c['start'],end=c['end'],speakerIDs=['0']))
  pathlib.Path(sys.argv[5]).write_text(json.dumps({'paragraphs':rows},ensure_ascii=False))

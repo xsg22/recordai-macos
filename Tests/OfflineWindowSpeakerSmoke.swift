@@ -19,6 +19,9 @@ import AVFoundation
   setenv("TALKTUCK_TEST_ZERO_TIME","1",1);defer {unsetenv("TALKTUCK_TEST_ZERO_TIME")}
   let pending=try TranscriptionEngine(temporaryRoot:base).analyzeSpeakers(audio:audio,model:models.appendingPathComponent("Qwen3ASR"),executable:executable,transcript:transcript)
   precondition(pending.count==2 && pending[0].start==0 && pending[1].start==nil && pending[1].end==nil && pending.map(\.text).joined()==text,"Zero-duration model output must retain text without a fabricated playable time")
+  setenv("TALKTUCK_TEST_UNCERTAIN_SENTENCE","1",1);defer {unsetenv("TALKTUCK_TEST_UNCERTAIN_SENTENCE")}
+  let sentence=try TranscriptionEngine(temporaryRoot:base).analyzeSpeakers(audio:audio,model:models.appendingPathComponent("Qwen3ASR"),executable:executable,transcript:transcript)
+  precondition(sentence.count==1 && sentence[0].start==nil && sentence[0].end==nil && sentence[0].speakerIDs==["0"] && sentence[0].text==text,"Grouping must preserve word-time uncertainty independently of confirmed speaker identity")
   print("PASS: standard audio speaker attribution uses transcript windows")
  }
 }

@@ -12,6 +12,7 @@ t=s.turns(min_duration=.01)
 assert t[0]['speaker']=='0'and t[1]['speaker']=='1'and abs(t[1]['start']-.30)<1e-8
 s=SpeakerTimeline(.08);s.append([[.9,.9],[.9,.9]],0,.16,[[.9,.9],[.9,.9]])
 assert len(s.turns())==2, 'Overlapping speakers must remain independent'
+assert s.frames()==[[0,.08,.9,.9],[.08,.16,.9,.9]],'Sentence attribution must receive unthresholded, globally identified model evidence'
 try:s.append([[1.1,.2]],.16,.08,[]);raise AssertionError('Invalid probability accepted')
 except ValueError:pass
 s.append([], .16, .001, [])

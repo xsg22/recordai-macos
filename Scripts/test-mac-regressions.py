@@ -105,7 +105,7 @@ def main():
     (app/"Contents/Info.plist").write_bytes(plistlib.dumps(dict(CFBundleIdentifier="com.xsg.talktuck.regressions", CFBundleExecutable="regressions", CFBundlePackageType="APPL")))
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip()
     canonical_cases = ["canonical-capture","canonical-long","segmented-manifest","segmented-track","canonical-player","canonical-transcription","offline-windows","canonical-windows","window-speakers", "long-windows", "profile-long-windows", "live-long-utterance", "live-cache"]
-    plan = ["compile"]+canonical_cases+[x[0] for x in CORE]+["cli-compile", "cli-fixture", "cli-mcp", "group-cli", "localization-catalog", "agent-setup", "speaker-fragments", "speaker-timeline", "language-policy", "inference-policy", "alignment-windows", "reporting"]
+    plan = ["compile"]+canonical_cases+[x[0] for x in CORE]+["cli-compile", "cli-fixture", "cli-mcp", "group-cli", "localization-catalog", "agent-setup", "speaker-fragments", "sentence-speakers", "speaker-timeline", "language-policy", "inference-policy", "alignment-windows", "reporting"]
     if args.server_repo and args.node: plan += ["server-typecheck", "server-contracts", "account", "automatic-sync", "text-offline-seed", "remote-edit", "text-conflict-resolve", "audio-retry", "hotword-sync", "canonical-sync"]
     if args.engine_dir and args.model_root: plan += ["synthesize", "convert", "offline-asr", "format-asr", "append-asr", "synthesize-cantonese", "convert-cantonese", "live-cantonese", "synthesize-english", "english-final-speakers", "canonical-real-asr", "quiet-real-asr"]
     (run/"readiness.json").write_text(json.dumps(dict(commit=commit, inputs=inputs, cases=plan, compiledEntrypoints=[x[0] for x in specs],
@@ -160,6 +160,7 @@ def main():
     if (run/"fixtures/organization-agent").exists(): call("group-cli", [sys.executable, source/"Tests/OrganizationCLIIntegration.py", cli, run/"fixtures/organization-agent"])
     for case, script in [("localization-catalog", "Scripts/check-localization.py"), ("agent-setup", "Scripts/test-agent-setup.py"), ("speaker-fragments", "Tests/SpeakerAttributionSmoke.py"), ("speaker-timeline", "Tests/SpeakerTimelineSmoke.py"), ("language-policy", "Tests/LanguagePolicySmoke.py"), ("inference-policy", "Tests/InferencePolicySmoke.py"), ("alignment-windows", "Tests/AlignmentWindowsSmoke.py")]:
         call(case, [sys.executable, source/script])
+    call("sentence-speakers", [sys.executable, source/"Tests/SentenceSpeakerSmoke.py"])
     call("reporting", [sys.executable, "-m", "unittest", "discover", "-s", "Tests/reporting", "-v"])
     @contextlib.contextmanager
     def fixture(script, label, audio=False):

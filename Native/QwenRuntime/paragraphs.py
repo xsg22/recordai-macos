@@ -48,5 +48,6 @@ def group_words(rows,protected_words=()):
             block=dict(run[pos])
             for row in run[pos+1:stop]:
                 block['text']+=row.get('separator','')+row['text'];block['end']=max(block['end'],row['end'])
+                if row.get('timingUncertain'):block['timingUncertain']=True
             result.append(block);pos=stop
     return result

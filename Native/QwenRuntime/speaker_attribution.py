@@ -1,10 +1,10 @@
-"""将逐词时间与声音活动合并；正文字符必须完整保留，重叠和未知不强行归人。"""
+"""Align exact text, then attribute sentences using global voice evidence."""
 import unicodedata,math
 
 def normalized(text):
     return ''.join(c.casefold() for c in text if unicodedata.category(c)[0] in 'LN' or c=="'")
 
-def attribute(text,items,turns,offset,duration,protected_words=()):
+def aligned_words(text,items,offset,duration):
     positions=[];clean=''
     for i,c in enumerate(text):
         if unicodedata.category(c)[0] in 'LN' or c=="'":
@@ -18,21 +18,16 @@ def attribute(text,items,turns,offset,duration,protected_words=()):
         previous=start;start=min(duration,start)+offset;end=min(duration,end)+offset
         tokenlen=len(normalized(w['text']));charstart=0 if index==0 else positions[cursor]
         cursor+=tokenlen;charend=positions[cursor] if cursor<len(positions) else len(text)
-        lo,hi=(start,end) if end-start>0.04 else (start-0.04,start+0.04)
-        scores={}
-        for turn in turns:
-            overlap=max(0,min(hi,turn['end'])-max(lo,turn['start']))
-            if overlap:scores[str(turn['speaker'])]=scores.get(str(turn['speaker']),0)+overlap
-        ranked=sorted(scores,key=scores.get,reverse=True);span=hi-lo
-        speakers=[s for s in ranked if scores[s]>=span*0.5][:4]
-        if not speakers or (len(ranked)>1 and not (scores[ranked[0]]-scores[ranked[1]]>=span*.15) and len(speakers)==1):speakers=[]
-        speakers=sorted(speakers)
         part=text[charstart:charend]
-        result.append(dict(text=part,start=start,end=end,speakerIDs=speakers,separator=''))
+        result.append(dict(text=part,start=start,end=end,separator=''))
+        if end<=start:result[-1]['timingUncertain']=True
     if not words and text:result=[dict(text=text,start=offset,end=offset+duration,speakerIDs=[],separator='')]
     if ''.join(p['text'] for p in result)!=text:raise ValueError('分段未完整覆盖原文')
-    from paragraphs import group_words
-    return group_words(result,protected_words=protected_words)
+    return result
+
+def attribute(text,items,turns,offset,duration,protected_words=(),frames=None):
+    from sentence_speakers import attribute_sentences
+    return attribute_sentences(aligned_words(text,items,offset,duration),turns,frames=frames,protected_words=protected_words)
 
 
 def coalesce_fragments(rows):
