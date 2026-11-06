@@ -1,4 +1,8 @@
 {
+  "字幕修正暂不可用，原始字幕继续显示": "Caption correction is unavailable. Original captions continue.",
+  "等待完整发言 · 已载入 {0} 个热词": "Waiting for a complete utterance · {0} vocabulary terms loaded",
+  "正在修正字幕 · 已载入 {0} 个热词": "Correcting captions · {0} vocabulary terms loaded",
+  "字幕已修正 · 已载入 {0} 个热词": "Captions corrected · {0} vocabulary terms loaded",
   "时间戳分段与定稿正文不一致，未保存部分结果。": "Timestamp segments do not match the final transcript. Partial results were not saved.",
   "时间戳分段顺序无效。": "Timestamp segments are out of order.",
   "定稿重叠分段不完整。": "Overlapping transcript segments are incomplete.",

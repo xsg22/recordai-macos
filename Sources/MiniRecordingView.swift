@@ -215,11 +215,17 @@ struct MiniRecordingView: View {
     }
     private var captions: some View {
         let preview = state.miniTranscriptPreview
-        return VStack(alignment: .leading, spacing: 3) {
+        return HStack(spacing: 4) {
+            if state.liveRefinementIssue != nil {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                    .help(L10n.text(state.liveRefinementCaption)).accessibilityLabel(L10n.text(state.liveRefinementCaption))
+            }
+            VStack(alignment: .leading, spacing: 3) {
             if !preview.confirmed.isEmpty { Text(preview.confirmed).foregroundStyle(ink) }
             if !preview.partial.isEmpty { Text(preview.partial).foregroundStyle(mutedInk) }
             else if preview.confirmed.isEmpty {
                 Text(L10n.text(!state.liveEnabled ? "仅录音 · 停止后转录" : state.liveStatus.isEmpty ? "等待语音…" : state.liveStatus)).foregroundStyle(mutedInk)
+            }
             }
         }.font(.system(size: 12)).lineLimit(1).truncationMode(.head)
             .opacity(state.paused || state.recordingIsMuted ? 0.65 : 1)

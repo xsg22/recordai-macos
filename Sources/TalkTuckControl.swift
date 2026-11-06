@@ -13,6 +13,12 @@ struct TalkTuckRuntimeStatus: Codable {
     var status: String
     var issue: String?
     var available: Bool = true
+    var liveRefinementState: String?
+    var liveHotwordCount: Int?
+    var liveRefinementIssue: String?
+    var liveRefinementAppliedBatches: Int?
+    var liveRefinementCache: String?
+    var liveRefinementCacheReady: Bool?
 
     static func read(root: URL) throws -> TalkTuckRuntimeStatus {
         let url = root.appendingPathComponent("runtime.json")
