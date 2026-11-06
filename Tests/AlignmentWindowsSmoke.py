@@ -47,4 +47,13 @@ class AlignmentWindowsTests(unittest.TestCase):
  def test_no_pause_does_not_invent_a_boundary(self):
   from array import array
   with self.assertRaises(AlignmentWindowError):alignment_cut(array('f',[.08])*(12*RATE))
+ def test_full_midpoint_guide_retries_an_earlier_bounded_prefix(self):
+  from array import array
+  audio=array('f',[.01])*(315*RATE)
+  text='First complete test sentence. Second complete test sentence.'
+  with patch('alignment_windows.alignment_cut',return_value=157*RATE),patch('alignment_windows.generate_complete',side_effect=[types.SimpleNamespace(text=text),types.SimpleNamespace(text='First complete test sentence')])as generate:
+   rows=prepare(None,audio,text,language='English')
+  self.assertEqual(generate.call_count,2)
+  self.assertEqual(''.join(p['text']for p in rows),text)
+  self.assertTrue(all(p['end']-p['start']<=300 for p in rows))
 if __name__=='__main__':unittest.main()

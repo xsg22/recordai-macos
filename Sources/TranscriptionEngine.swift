@@ -13,16 +13,21 @@ struct TranscriptionOutput: Sendable {
     let text: String
     let subtitles: String
     var paragraphs: [TranscriptParagraph] = []
+    func readingFallback(hotwords: [String] = []) -> TranscriptionOutput {
+        TranscriptionOutput(text: text, subtitles: subtitles, paragraphs: TranscriptReadability.fallback(text, hotwords: hotwords))
+    }
 }
 
 /// 每次任务拥有独立进程和临时目录；取消不会影响其他任务或留下半成品。
 final class TranscriptionEngine: @unchecked Sendable {
     private let lock = NSLock()
     private let temporaryRoot: URL
+    private let evidenceRoot: URL?
     private var process: Process?
     private var cancelled = false
 
-    init(temporaryRoot: URL? = nil) {
+    init(temporaryRoot: URL? = nil, evidenceRoot: URL? = nil) {
+        self.evidenceRoot = evidenceRoot
         let configured = ProcessInfo.processInfo.environment["RECORD_AI_TRANSCRIPTION_TMP_ROOT"]
             .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
         self.temporaryRoot = temporaryRoot ?? configured ?? FileManager.default.temporaryDirectory
@@ -106,7 +111,15 @@ final class TranscriptionEngine: @unchecked Sendable {
         child.waitUntilExit()
         lock.lock(); process = nil; let wasCancelled = cancelled; lock.unlock()
         if wasCancelled { throw CancellationError() }
-        if let feedError { throw feedError }
+        if let feedError {
+            let ns = feedError as NSError
+            let underlying = ns.userInfo[NSUnderlyingErrorKey] as? NSError
+            let broken = (ns.domain == NSPOSIXErrorDomain && ns.code == Int(EPIPE)) || (underlying?.domain == NSPOSIXErrorDomain && underlying?.code == Int(EPIPE))
+            if broken, let details = try? String(contentsOf: logURL, encoding: .utf8), !details.isEmpty {
+                throw TranscriptionError.message("\(stage)失败（代码 \(child.terminationStatus)）。原始录音和已有文字已保留，可以重试。\n\n" + String(details.suffix(1800)))
+            }
+            throw feedError
+        }
         guard child.terminationStatus == 0 else {
             let details = (try? String(contentsOf: logURL, encoding: .utf8)) ?? ""
             throw TranscriptionError.message("\(stage)失败（代码 \(child.terminationStatus)）。原始录音和已有文字已保留，可以重试。\n\n" + String(details.suffix(1800)))
@@ -201,6 +214,7 @@ final class TranscriptionEngine: @unchecked Sendable {
                 }
             }
         }
+        try captureEvidence(output, name: "recognition.json")
         let segments = try JSONDecoder().decode(QwenOutput.self, from: Data(contentsOf: output)).segments
         guard segments.count == windows.count else { throw TranscriptionError.message("定稿未覆盖全部音频片段，原录音已保留。") }
         var paragraphs: [TranscriptParagraph] = []; var subtitles: [String] = []; var previous = ""; var previousEnd: Double = -1
@@ -326,15 +340,12 @@ final class TranscriptionEngine: @unchecked Sendable {
     }
 
     /// 正文已经提交后再调用；分析失败由调用方保留正式转录，不回滚为转录失败。
-    func analyzeSpeakers(audio: URL, model: URL, executable: URL, transcript: TranscriptionOutput, language: String = "zh",
+    func analyzeSpeakers(audio: URL, model: URL, executable: URL, transcript: TranscriptionOutput, language: String = "zh", hotwords: [String] = [],
                          onPhase: @escaping @Sendable (TranscriptPhase) -> Void = { _ in }) throws -> [TranscriptParagraph] {
         if transcript.paragraphs.isEmpty { return [] }
-        guard transcript.paragraphs.allSatisfy({ ($0.end ?? 0) - ($0.start ?? 0) <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
-            throw TranscriptionError.message("定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。")
-        }
         let root = model.deletingLastPathComponent()
         let sortformer = root.appendingPathComponent("Sortformer"), aligner = root.appendingPathComponent("QwenAligner")
-        guard [sortformer, aligner].allSatisfy({ FileManager.default.fileExists(atPath: $0.appendingPathComponent("model.safetensors").path) }) else {
+        guard FileManager.default.fileExists(atPath: sortformer.appendingPathComponent("model.safetensors").path) else {
             throw TranscriptionError.message("发言人模型缺失，请在设置中重新下载。正文已保存。")
         }
         let directory = try temporaryDirectory(prefix: "CoHear-speakers-")
@@ -345,11 +356,16 @@ final class TranscriptionEngine: @unchecked Sendable {
             try runStreaming(executable, ["--diarize-stream", sortformer.path, turns.path], directory: directory, stage: "发言人区分") {
                 try self.writeAudio(reader, start: 0, end: reader.durationFrames, to: $0)
             }
+            try captureEvidence(turns, name: "diarization.json")
+            guard FileManager.default.fileExists(atPath: aligner.appendingPathComponent("model.safetensors").path) else { throw TranscriptionError.message("时间对齐模型缺失，正文和发言人分析状态已保留。") }
+            guard transcript.paragraphs.allSatisfy({ ($0.end ?? 0) - ($0.start ?? 0) <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
+                throw TranscriptionError.message("定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。")
+            }
             onPhase(.aligning)
             try runStreaming(executable, ["--align-stream", aligner.path, turns.path, aligned.path], directory: directory, stage: "发言人与文字对齐") { pipe in
                 for paragraph in transcript.paragraphs {
                     guard let start = paragraph.start, let end = paragraph.end else { throw TranscriptionError.message("文字与录音片段不一致，未强行添加发言人。") }
-                    try self.writeClip(reader, start: start, end: end, metadata: ["text": paragraph.text, "language": language, "separator": paragraph.separator], to: pipe)
+                    try self.writeClip(reader, start: start, end: end, metadata: ["text": paragraph.text, "language": language, "separator": paragraph.separator, "hotwords": hotwords], to: pipe)
                 }
             }
         } else {
@@ -360,6 +376,13 @@ final class TranscriptionEngine: @unchecked Sendable {
             let manifest = segments.appendingPathComponent("segments.json")
             let reader = try AVAudioFile(forReading: wav)
             guard reader.processingFormat.sampleRate == 16_000, reader.processingFormat.channelCount == 1 else { throw TranscriptionError.message("音频格式无效。") }
+            onPhase(.diarizing)
+            try run(executable, ["--diarize", sortformer.path, wav.path, turns.path], directory: directory, stage: "发言人区分")
+            try captureEvidence(turns, name: "diarization.json")
+            guard FileManager.default.fileExists(atPath: aligner.appendingPathComponent("model.safetensors").path) else { throw TranscriptionError.message("时间对齐模型缺失，正文和发言人分析状态已保留。") }
+            guard transcript.paragraphs.allSatisfy({ ($0.end ?? 0) - ($0.start ?? 0) <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
+                throw TranscriptionError.message("定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。")
+            }
             var clips: [[String: Any]] = []
             for (index, paragraph) in transcript.paragraphs.enumerated() {
                 try checkCancelled()
@@ -374,14 +397,13 @@ final class TranscriptionEngine: @unchecked Sendable {
                 let path = segments.appendingPathComponent("\(index).wav")
                 let writer = try AVAudioFile(forWriting: path, settings: reader.fileFormat.settings, commonFormat: reader.processingFormat.commonFormat, interleaved: reader.processingFormat.isInterleaved)
                 try writer.write(from: buffer)
-                clips.append(["audio": path.path, "start": start, "end": end, "text": paragraph.text, "language": language, "separator": paragraph.separator])
+                clips.append(["audio": path.path, "start": start, "end": end, "text": paragraph.text, "language": language, "separator": paragraph.separator, "hotwords": hotwords])
             }
             try JSONSerialization.data(withJSONObject: clips).write(to: manifest, options: .atomic)
-            onPhase(.diarizing)
-            try run(executable, ["--diarize", sortformer.path, wav.path, turns.path], directory: directory, stage: "发言人区分")
             onPhase(.aligning)
             try run(executable, ["--align-speakers", aligner.path, manifest.path, turns.path, aligned.path], directory: directory, stage: "发言人与文字对齐")
         }
+        try captureEvidence(aligned, name: "alignment.json")
         struct Response: Decodable {
             struct Row: Decodable { let text: String; let separator: String; let start: Double; let end: Double; let speakerIDs: [String] }
             let paragraphs: [Row]
@@ -395,12 +417,17 @@ final class TranscriptionEngine: @unchecked Sendable {
                   row.speakerIDs.count <= 4, row.speakerIDs.allSatisfy({ ["0", "1", "2", "3"].contains($0) }) else {
                 throw TranscriptionError.message("发言人时间或编号无效。")
             }
-            return TranscriptParagraph(text: row.text, separator: row.separator, start: row.start, end: row.end, speakerIDs: row.speakerIDs)
+            return TranscriptParagraph(text: row.text, separator: row.separator, start: row.end > row.start ? row.start : nil, end: row.end > row.start ? row.end : nil, speakerIDs: row.speakerIDs)
         }
-        for pair in zip(rows, rows.dropFirst()) where (pair.1.start ?? 0) < (pair.0.start ?? 0) - 0.15 {
+        for pair in zip(response.paragraphs, response.paragraphs.dropFirst()) where pair.1.start < pair.0.start - 0.15 {
             throw TranscriptionError.message("时间戳分段顺序不一致，已保留正文。")
         }
         return TranscriptReadability.groups(rows).map(\.combined)
+    }
+
+    private func captureEvidence(_ source: URL, name: String) throws {
+        guard let evidenceRoot else { return }
+        try FileManager.default.copyItem(at: source, to: evidenceRoot.appendingPathComponent(name))
     }
 
     private struct QwenOutput: Decodable {

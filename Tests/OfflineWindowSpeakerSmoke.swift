@@ -11,6 +11,14 @@ import AVFoundation
   let text="测试语音", transcript=TranscriptionOutput(text:text,subtitles:"",paragraphs:[TranscriptParagraph(text:text,separator:"",start:0,end:1)])
   let result=try TranscriptionEngine(temporaryRoot:base).analyzeSpeakers(audio:audio,model:models.appendingPathComponent("Qwen3ASR"),executable:executable,transcript:transcript)
   precondition(result.count==1 && result[0].text==text && result[0].speakerIDs==["0"])
+  let trace=base.appendingPathComponent("diarization.trace")
+  setenv("TALKTUCK_TEST_DIARIZE_TRACE",trace.path,1);defer {unsetenv("TALKTUCK_TEST_DIARIZE_TRACE")}
+  let unresolved=TranscriptionOutput(text:text,subtitles:"",paragraphs:[TranscriptParagraph(text:text,start:0,end:315)])
+  do { _ = try TranscriptionEngine(temporaryRoot:base).analyzeSpeakers(audio:audio,model:models.appendingPathComponent("Qwen3ASR"),executable:executable,transcript:unresolved);fatalError("Unbounded alignment must fail") }
+  catch { precondition(FileManager.default.fileExists(atPath:trace.path),"Diarization must complete independently of failed alignment preparation") }
+  setenv("TALKTUCK_TEST_ZERO_TIME","1",1);defer {unsetenv("TALKTUCK_TEST_ZERO_TIME")}
+  let pending=try TranscriptionEngine(temporaryRoot:base).analyzeSpeakers(audio:audio,model:models.appendingPathComponent("Qwen3ASR"),executable:executable,transcript:transcript)
+  precondition(pending.count==2 && pending[0].start==0 && pending[1].start==nil && pending[1].end==nil && pending.map(\.text).joined()==text,"Zero-duration model output must retain text without a fabricated playable time")
   print("PASS: standard audio speaker attribution uses transcript windows")
  }
 }

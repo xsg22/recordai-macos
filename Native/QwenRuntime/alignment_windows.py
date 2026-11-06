@@ -65,22 +65,33 @@ def prefix_boundary(text,guide):
 def prepare(model,audio,text,*,language,hotwords=None):
     duration=len(audio)/RATE
     if duration<=MAX_ALIGNMENT_SECONDS:return [dict(text=text,start=0.,end=duration)]
-    # The text guide ends in a quiet pause; only 200ms of audio context is
-    # retained. Long, unmatched audio tails can pull repeated words forwards
-    # and make independent alignments cross at the split.
-    middle=alignment_cut(audio);cut=middle/RATE;context=.2
-    if max(cut+context,duration-cut+context)>MAX_ALIGNMENT_SECONDS:raise AlignmentWindowError('Long ASR window needs more alignment partitions')
-    guide=generate_complete(model,audio[:middle],language=language,hotwords=hotwords).text.strip()
-    if not units(guide) and not any(abs(float(x))>2/32768 for x in audio[:middle]):
-        return [dict(text=text,start=max(0.,cut-context),end=duration)]
-    if [u[0] for u in units(text)] == [u[0] for u in units(guide)] and not any(abs(float(x))>2/32768 for x in audio[middle:]):
-        return [dict(text=text,start=0.,end=min(duration,cut+context))]
-    split,confidence=prefix_boundary(text,guide)
-    if split==len(text):
-        # A guide covering all text is only safe if the remaining audio is
-        # digital silence; otherwise leave timing explicitly unresolved.
-        if any(abs(float(x))>2/32768 for x in audio[middle:]):raise AlignmentWindowError('Guide covers all text before non-silent audio ends')
-        return [dict(text=text,start=0.,end=min(duration,cut+context),confidence=confidence)]
-    parts=[dict(text=text[:split],start=0.,end=min(duration,cut+context),confidence=confidence),dict(text=text[split:],start=max(0.,cut-context),end=duration,confidence=confidence)]
-    if ''.join(p['text'] for p in parts)!=text or any(not p['text'] or p['end']-p['start']>MAX_ALIGNMENT_SECONDS for p in parts):raise AlignmentWindowError('Alignment partitions do not preserve the full transcript')
-    return parts
+    context=.2
+    lower=max(context,duration-MAX_ALIGNMENT_SECONDS+context)
+    upper=min(duration-context,MAX_ALIGNMENT_SECONDS-context)
+    if lower>=upper:raise AlignmentWindowError('Long ASR window needs more alignment partitions')
+    candidates=[]
+    try:candidates.append(alignment_cut(audio)/RATE)
+    except AlignmentWindowError:pass
+    # A long quiet tail can make a midpoint guide contain the entire text.
+    # Try an earlier bounded guide rather than discarding the completed text
+    # or assigning invented word timestamps to its whole ASR window.
+    candidates.extend([max(lower,min(t,upper))for t in (30.,60.,90.,120.)])
+    candidates.append(min(upper,max(lower,duration-30.)))
+    seen=set();failures=[]
+    for cut in candidates:
+        cut=max(lower,min(upper,cut));middle=round(cut*RATE);cut=middle/RATE
+        if middle in seen:continue
+        seen.add(middle)
+        try:
+            guide=generate_complete(model,audio[:middle],language=language,hotwords=hotwords).text.strip()
+            if not units(guide) and not any(abs(float(x))>2/32768 for x in audio[:middle]):
+                return [dict(text=text,start=max(0.,cut-context),end=duration)]
+            if [u[0] for u in units(text)] == [u[0] for u in units(guide)] and not any(abs(float(x))>2/32768 for x in audio[middle:]):
+                return [dict(text=text,start=0.,end=min(duration,cut+context))]
+            split,confidence=prefix_boundary(text,guide)
+            if split==len(text):raise AlignmentWindowError('Guide covers all text before non-silent audio ends')
+            parts=[dict(text=text[:split],start=0.,end=min(duration,cut+context),confidence=confidence),dict(text=text[split:],start=max(0.,cut-context),end=duration,confidence=confidence)]
+            if ''.join(p['text']for p in parts)!=text or any(not p['text']or p['end']-p['start']>MAX_ALIGNMENT_SECONDS for p in parts):raise AlignmentWindowError('Alignment partitions do not preserve the full transcript')
+            return parts
+        except (AlignmentWindowError,ValueError)as error:failures.append(str(error))
+    raise AlignmentWindowError('; '.join(failures)or 'No reliable bounded text boundary')

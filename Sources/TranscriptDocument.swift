@@ -40,12 +40,12 @@ extension MeetingRecord {
     }
     func displayParagraphSpeaker(_ paragraph: TranscriptParagraph) -> String {
         let ids = Array(Set(paragraph.speakerIDs.map { canonicalSpeaker($0) })).sorted()
-        if ids.isEmpty { return L10n.text(paragraph.start == nil ? "原有正文" : "发言人未确定") }
+        if ids.isEmpty { return L10n.text(paragraph.start == nil && paragraph.audioFile == nil ? "原有正文" : "发言人未确定") }
         return (ids.count > 1 ? L10n.text("重叠发言 · ") : "") + ids.map { displaySpeakerName($0) }.joined(separator: " / ")
     }
     func paragraphSpeaker(_ paragraph: TranscriptParagraph) -> String {
         let ids = Array(Set(paragraph.speakerIDs.map { canonicalSpeaker($0) })).sorted()
-        if ids.isEmpty { return paragraph.start == nil ? "原有正文" : "发言人未确定" }
+        if ids.isEmpty { return paragraph.start == nil && paragraph.audioFile == nil ? "原有正文" : "发言人未确定" }
         return (ids.count > 1 ? "重叠发言 · " : "") + ids.map { speakerName($0) }.joined(separator: " / ")
     }
 }
@@ -87,6 +87,42 @@ struct TranscriptReadingGroup: Identifiable {
     }
 }
 enum TranscriptReadability {
+    /// Reading structure is independent of recognition windows and alignment.
+    /// Every original character belongs to exactly one stable stored paragraph.
+    static func fallback(_ text: String, hotwords: [String] = []) -> [TranscriptParagraph] {
+        let chars = Array(text)
+        guard !chars.isEmpty else { return [] }
+        var prefix = [0]
+        for c in chars { prefix.append(prefix.last! + ((c.isLetter || c.isNumber) ? 1 : 0)) }
+        let protected = hotwords.flatMap { word -> [Range<Int>] in
+            guard !word.isEmpty else { return [] }
+            var result: [Range<Int>] = [], cursor = text.startIndex
+            while cursor < text.endIndex, let found = text.range(of: word, options: .caseInsensitive, range: cursor..<text.endIndex) {
+                result.append(text.distance(from: text.startIndex, to: found.lowerBound)..<text.distance(from: text.startIndex, to: found.upperBound)); cursor = found.upperBound
+            }
+            return result
+        }
+        var result: [TranscriptParagraph] = [], start = 0
+        while start < chars.count {
+            let weight: (Int) -> Int = { prefix[$0] - prefix[start] }
+            var stop = chars.count
+            if weight(chars.count) > 50 {
+                let endings = (start..<chars.count).filter { "。！？!?；;".contains(chars[$0]) || (chars[$0] == "." && ($0 + 1 == chars.count || chars[$0+1].isWhitespace)) }
+                if let sentence = endings.first(where: { weight($0+1) >= 50 }), weight(sentence+1) <= 75 { stop = sentence+1 }
+                else {
+                    let clauses = (start..<chars.count).filter { "，,、：:".contains(chars[$0]) && (25...75).contains(weight($0+1)) }
+                    stop = clauses.min(by: { abs(weight($0+1)-50) < abs(weight($1+1)-50) }).map { $0+1 } ?? (start..<chars.count).first(where: { weight($0+1) >= 50 }).map { $0+1 } ?? chars.count
+                }
+            }
+            while stop < chars.count && chars[stop-1].isASCII && chars[stop].isASCII && (chars[stop-1].isLetter || chars[stop-1].isNumber) && (chars[stop].isLetter || chars[stop].isNumber || chars[stop] == "'") { stop += 1 }
+            for span in protected where span.lowerBound < stop && stop < span.upperBound { stop = span.upperBound }
+            while stop < chars.count && (chars[stop].isWhitespace || "”’\"'」』）)]}".contains(chars[stop])) { stop += 1 }
+            result.append(TranscriptParagraph(text: String(chars[start..<stop])))
+            start = stop
+        }
+        return result
+    }
+
     static func groups(_ rows: [TranscriptParagraph]) -> [TranscriptReadingGroup] {
         var result: [TranscriptReadingGroup] = []
         for row in rows {
@@ -99,6 +135,7 @@ enum TranscriptReadability {
     }
     private static func canJoin(_ a: TranscriptParagraph, _ b: TranscriptParagraph, combinedLength: Int) -> Bool {
         guard a.audioFile == b.audioFile,
+              a.speakerIDs.count == 1, Set(a.speakerIDs) == Set(b.speakerIDs),
               a.previousSpeakerIDs == nil, b.previousSpeakerIDs == nil,
               let end = a.end, let start = b.start, let aStart = a.start, let bEnd = b.end,
               [start, end, aStart, bEnd].allSatisfy(\.isFinite),

@@ -51,7 +51,7 @@ import Foundation
         state.stopPlayback()
         var fragments = record
         fragments.text = "页面"
-        fragments.transcriptParagraphs = [TranscriptParagraph(text: "页", start: 0.1, end: 0.2, audioFile: record.audioFiles[0], localStart: 0.1), TranscriptParagraph(text: "面", start: 0.2, end: 0.3, audioFile: record.audioFiles[0], localStart: 0.2)]
+        fragments.transcriptParagraphs = [TranscriptParagraph(text: "页", start: 0.1, end: 0.2, audioFile: record.audioFiles[0], speakerIDs: ["0"], localStart: 0.1), TranscriptParagraph(text: "面", start: 0.2, end: 0.3, audioFile: record.audioFiles[0], speakerIDs: ["0"], localStart: 0.2)]
         state.history = [fragments]; state.select(record.id, saveCurrent: false)
         state.playReadingGroup(fragments.transcriptParagraphs[0].id)
         precondition(state.playing)

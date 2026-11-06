@@ -173,7 +173,7 @@ struct TranscriptTimelineView: View {
                     .buttonStyle(.plain).font(AppTypography.secondary.monospacedDigit()).foregroundStyle(TalkTuckTheme.muted)
                     .frame(width: 46, height: 24).contentShape(Rectangle())
                     .disabled(!state.canPlayTranscriptParagraph(paragraph)).help(L10n.text("播放这一段，结束后自动暂停"))
-            } else { Color.clear.frame(width: 46, height: 24) }
+            } else { Text(L10n.text("待对齐")).font(AppTypography.secondary).foregroundStyle(.secondary).frame(width: 46, height: 24) }
             Group {
                 if let id = paragraph.speakerIDs.first, paragraph.speakerIDs.count == 1 { speakerMenu(id, record: record) }
                 else { Text(record.displayParagraphSpeaker(paragraph)).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary).padding(.top, 4) }

@@ -46,25 +46,23 @@ def diarize(model_path,audio_path,output,streaming=False):
     import mlx.core as mx
     from mlx_audio.vad import load
     model=load(pathlib.Path(model_path).resolve(strict=True),strict=True)
-    state=model.init_streaming_state();segments=[];offset=0.0
+    from speaker_timeline import SpeakerTimeline
+    state=model.init_streaming_state();offset=0.0
     frame_duration=model.config.processor_config.hop_length*model.config.fc_encoder_config.subsampling_factor/16000
+    timeline=SpeakerTimeline(frame_duration)
     chunks=(pcm_chunks(sys.stdin.buffer) if streaming else miniaudio.stream_file(audio_path,output_format=miniaudio.SampleFormat.FLOAT32,nchannels=1,sample_rate=16000,frames_to_read=240000))
     for chunk in chunks:
         samples=(np.frombuffer(chunk,dtype='<f4') if streaming else np.asarray(chunk,dtype=np.float32));duration=len(samples)/16000
-        before=state.frames_processed*frame_duration
-        result,state=model.feed(samples,state,sample_rate=16000,threshold=0.5,min_duration=0.12,merge_gap=0.16)
-        for seg in result.segments:
-            start=offset+max(0,min(duration,seg.start-before));end=offset+max(0,min(duration,seg.end-before))
-            if end>start:segments.append(dict(start=start,end=end,speaker=str(seg.speaker)))
+        # Offline finalization can revise the preceding chunk after more voice
+        # context. Retain two transport chunks in a bounded FIFO, not a new
+        # speaker identity space per ASR window.
+        result,state=model.feed(samples,state,sample_rate=16000,threshold=0.5,min_duration=0.12,merge_gap=0.16,fifo_max=376)
+        scores=np.asarray(result.speaker_probs).tolist()
+        revised=np.asarray(state.fifo_preds)[0].tolist()
+        timeline.append(scores,offset,duration,revised)
         offset+=duration;mx.clear_cache()
         print('Sortformer: %.1fs'%offset,file=sys.stderr,flush=True)
-    # 同一个声音相邻活动片段合并；保留不同声音的重叠区。
-    merged=[]
-    for speaker in sorted(set(t['speaker'] for t in segments)):
-        for turn in sorted((t for t in segments if t['speaker']==speaker),key=lambda t:t['start']):
-            if merged and merged[-1]['speaker']==speaker and turn['start']-merged[-1]['end']<=.16:merged[-1]['end']=max(merged[-1]['end'],turn['end'])
-            else:merged.append(turn.copy())
-    pathlib.Path(output).write_text(json.dumps(dict(turns=sorted(merged,key=lambda x:x['start']),duration=offset)))
+    pathlib.Path(output).write_text(json.dumps(dict(turns=timeline.turns(),duration=offset,retrospectiveFIFO=True,frameCount=len(timeline.times))))
 
 def stream_clips(max_seconds=MAX_ASR_SECONDS):
     stream=sys.stdin.buffer
@@ -126,9 +124,11 @@ def align_stream(model_path,turns_path,output):
         if not isinstance(text,str) or not text or len(text)>100000:raise ValueError('Invalid alignment text')
         aligned=model.generate(audio=np.frombuffer(data,dtype='<f4'),text=text,language=alignment_language(language,text))
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
-        rows=attribute(text,items,turns,clip['start'],clip['end']-clip['start'])
+        rows=attribute(text,items,turns,clip['start'],clip['end']-clip['start'],protected_words=clip.get('hotwords',[]))
         if rows:rows[0]['separator']=clip.get('separator','' if index==0 else '\n')
         paragraphs.extend(rows);mx.clear_cache()
+    from paragraphs import group_words
+    paragraphs=group_words(paragraphs)
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
 
 def align_speakers(model_path,manifest_path,turns_path,output):
@@ -149,10 +149,12 @@ def align_speakers(model_path,manifest_path,turns_path,output):
         language=alignment_language(clip.get('language','auto'),clip['text'])
         aligned=model.generate(audio=audio,text=clip['text'],language=language)
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
-        rows=attribute(clip['text'],items,turns,clip['start'],clip['end']-clip['start'])
+        rows=attribute(clip['text'],items,turns,clip['start'],clip['end']-clip['start'],protected_words=clip.get('hotwords',[]))
         if rows:rows[0]['separator']=clip.get('separator','' if index==0 else '\n')
         paragraphs.extend(rows);mx.clear_cache()
         print('ForcedAligner: %d/%d'%(index+1,len(clips)),file=sys.stderr,flush=True)
+    from paragraphs import group_words
+    paragraphs=group_words(paragraphs)
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
 
 def main():

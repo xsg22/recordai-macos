@@ -604,7 +604,7 @@ final class AppState: ObservableObject {
                 guard outputs.contains(where: { !$0.text.isEmpty }) else { throw TranscriptionError.message("未识别到语音。请检查音频是否有清晰人声。") }
                 saveEdits()
                 var latest = try library.load(id)
-                try MeetingRecordingAppend.apply(outputs: outputs, files: files, durations: durations, appending: appending, to: &latest)
+                try MeetingRecordingAppend.apply(outputs: outputs.map { $0.readingFallback(hotwords: selectedHotwords) }, files: files, durations: durations, appending: appending, to: &latest)
                 latest.language = selectedLanguage
                 latest.transcriptionEngine = appending && !record.text.isEmpty && record.transcriptionEngine != "qwen3-asr-1.7b-8bit"
                     ? "mixed-history-and-qwen3-asr" : "qwen3-asr-1.7b-8bit"
@@ -621,7 +621,7 @@ final class AppState: ObservableObject {
                         let base = outputs[index]
                         let rows = try await withTaskCancellationHandler {
                             try await Task.detached(priority: .userInitiated) {
-                                try engine.analyzeSpeakers(audio: url, model: model, executable: executable, transcript: base, language: selectedLanguage,
+                                try engine.analyzeSpeakers(audio: url, model: model, executable: executable, transcript: base, language: selectedLanguage, hotwords: selectedHotwords,
                                     onPhase: { [weak self] phase in
                                         Task { @MainActor in
                                             guard let self, self.transcriptionGeneration == generation else { return }
@@ -646,9 +646,10 @@ final class AppState: ObservableObject {
                 }
                 saveEdits()
                 var analyzed = try library.load(id)
-                let hasLegacy = analyzed.transcriptParagraphs.contains { $0.start == nil }
-                analyzed.speakerAnalysisStatus = failures == 0 && !hasLegacy ? .completed : .partial
-                if failures == 0 { analyzed.speakerAnalysisMessage = hasLegacy ? "新增录音已分人；原有正文需重新识别后才能分人。" : "最多区分4位发言人；续录标签独立，可手动改名或合并。重叠与不确定片段请核对。" }
+                let hasLegacy = analyzed.transcriptParagraphs.contains { $0.start == nil && $0.audioFile == nil }
+                let hasPendingTiming = analyzed.transcriptParagraphs.contains { $0.start == nil && $0.audioFile != nil }
+                analyzed.speakerAnalysisStatus = failures == 0 && !hasLegacy && !hasPendingTiming ? .completed : .partial
+                if failures == 0 { analyzed.speakerAnalysisMessage = hasPendingTiming ? "部分文字时间待对齐，正文与已确认的发言人已保留。" : hasLegacy ? "新增录音已分人；原有正文需重新识别后才能分人。" : "最多区分4位发言人；续录标签独立，可手动改名或合并。重叠与不确定片段请核对。" }
                 analyzed.seconds = Date().timeIntervalSince(start)
                 try update(analyzed)
                 transcriptPhase = .completed

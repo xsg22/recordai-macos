@@ -75,12 +75,16 @@ enum MeetingRecordingAppend {
                                        file: String, to record: inout MeetingRecord) throws {
         let old = record.transcriptParagraphs.filter { $0.audioFile == file }
         if rows.isEmpty && base.text.isEmpty { return }
-        guard record.hasCurrentParagraphs, let first = old.first, let localStart = base.paragraphs.first?.start,
-              let globalStart = first.start,
+        let stored = old.enumerated().map { $0.offset == 0 ? $0.element.text : $0.element.separator + $0.element.text }.joined()
+        guard record.hasCurrentParagraphs, let first = old.first, stored == base.text,
               rows.map({ $0.separator + $0.text }).joined() == base.text else {
             throw TranscriptionError.message("正文已变化，未覆盖人工编辑或添加过期标签。")
         }
-        let offset = globalStart - localStart
+        let offset: Double
+        if let part = record.audioFiles.firstIndex(of: file), record.audioFiles.prefix(part).allSatisfy({ record.audioDurations[$0] != nil }) {
+            offset = record.audioFiles.prefix(part).reduce(0) { $0 + (record.audioDurations[$1] ?? 0) }
+        } else if let globalStart = first.start, let localStart = base.paragraphs.first?.start { offset = globalStart - localStart }
+        else { throw TranscriptionError.message("音频片段时间尚未确认，正文已保留。") }
         var scoped = rows
         for i in scoped.indices {
             scoped[i].audioFile = file
@@ -95,6 +99,15 @@ enum MeetingRecordingAppend {
         guard let index = record.transcriptParagraphs.firstIndex(where: { $0.audioFile == file }) else { return }
         record.transcriptParagraphs.removeAll { $0.audioFile == file }
         record.transcriptParagraphs.insert(contentsOf: scoped, at: index)
+        guard record.paragraphText == record.text else { throw TranscriptionError.message("发言人分段与正文不一致，正文已保留。") }
+        if record.transcriptParagraphs.allSatisfy({ $0.start != nil && $0.end != nil }) {
+            func stamp(_ time: Double) -> String {
+                let ms = Int((time * 1000).rounded())
+                return String(format: "%02d:%02d:%02d,%03d", ms/3600000, ms/60000%60, ms/1000%60, ms%1000)
+            }
+            record.subtitles = record.transcriptParagraphs.enumerated().map { i, p in "\(i+1)\n\(stamp(p.start!)) --> \(stamp(p.end!))\n\(p.text)" }.joined(separator: "\n\n") + "\n\n"
+        }
+
     }
 
     /// SRT 使用整场累计时间轴与连续序号，保留已有字幕正文。
