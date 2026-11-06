@@ -1,0 +1,9 @@
+{
+  "fill": {"solid": "srgb:0.98500,0.97800,0.97000,1.00000"},
+  "groups": [{
+    "layers": [{"image-name": "Artwork.png", "name": "TalkTuck", "glass": false}],
+    "shadow": {"kind": "neutral", "opacity": 0},
+    "translucency": {"enabled": false, "value": 0}
+  }],
+  "supported-platforms": {"squares": "shared", "circles": []}
+}
