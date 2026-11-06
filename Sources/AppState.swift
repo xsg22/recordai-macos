@@ -112,6 +112,20 @@ final class AppState: ObservableObject {
     private var recordingBaseDuration: Double = 0
     private var liveSegmentOffset: Double = 0
     @Published var liveStatus = ""
+    @Published private(set) var liveRefinementState = "inactive"
+    @Published private(set) var liveHotwordCount = 0
+    @Published private(set) var liveRefinementIssue: String?
+    @Published private(set) var liveRefinementAppliedBatches = 0
+    @Published private(set) var liveRefinementCacheReady = false
+    var liveRefinementCaption: String {
+        if liveRefinementIssue != nil { return "字幕修正暂不可用，原始字幕继续显示" }
+        switch liveRefinementState {
+        case "collecting": return "等待完整发言 · 已载入 \(liveHotwordCount) 个热词"
+        case "processing": return "正在修正字幕 · 已载入 \(liveHotwordCount) 个热词"
+        case "applied": return "字幕已修正 · 已载入 \(liveHotwordCount) 个热词"
+        default: return ""
+        }
+    }
     let dingTalkAccount: DingTalkAccountConnection
     let notionAccount: NotionAccountConnection
     let feishuAccount: FeishuAccountConnection
@@ -153,6 +167,7 @@ final class AppState: ObservableObject {
     private var liveRefiner: LivePreviewRefiner?
     private var livePrefix = ""
     private let storage: URL
+    private let liveCacheBaseURL: URL?
     var model: URL? { speechModels.ready ? ASRResources.qwen : nil }
 
     var activeRecordingID: UUID? { recordingID ?? (recording ? miniSessionID ?? selection : nil) }
@@ -205,6 +220,7 @@ final class AppState: ObservableObject {
         self.recorder = recorder ?? MeetingRecorder()
         storage = storageURL ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("CoHearTranscribe", isDirectory: true)
+        liveCacheBaseURL = storageURL
         let personalHotwords = PersonalHotwords(root: storage)
         hotwords = personalHotwords
         hotwordSync = HotwordSync(hotwords: personalHotwords)
@@ -216,6 +232,10 @@ final class AppState: ObservableObject {
         dingTalkAccount = dingTalkConnection ?? DingTalkAccountConnection()
         notionAccount = notionConnection ?? NotionAccountConnection(store: notion)
         feishuAccount = feishuConnection ?? FeishuAccountConnection()
+        if storageURL == nil {
+            LiveRefinementCache.discardLegacyOverride()
+            liveRefinementCacheReady = (try? LiveRefinementCache.prepare()) != nil
+        }
         speechModels.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
         hotwords.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
         hotwordSync.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &accountSubscriptions)
@@ -331,7 +351,10 @@ final class AppState: ObservableObject {
 
     private func publishRecordingStatus() {
         let snapshot = TalkTuckRuntimeStatus(recording: recording, paused: paused, preparing: preparing, busy: busy,
-            recordingID: recordingID ?? selection, status: status, issue: recordingIssue)
+            recordingID: recordingID ?? selection, status: status, issue: recordingIssue,
+            liveRefinementState: liveRefinementState, liveHotwordCount: liveHotwordCount,
+            liveRefinementIssue: liveRefinementIssue, liveRefinementAppliedBatches: liveRefinementAppliedBatches,
+            liveRefinementCache: "applicationCache", liveRefinementCacheReady: liveRefinementCacheReady)
         guard let data = try? AgentCodec.encoder().encode(snapshot) else { return }
         let url = agentDataURL.appendingPathComponent("runtime.json")
         guard (try? TalkTuckControlQueue.requireContained(url, root: agentDataURL)) != nil else { return }
@@ -1152,6 +1175,7 @@ final class AppState: ObservableObject {
             record.legacyLiveText = record.previewText; try? update(record)
         }
         liveRefiner?.cancel(); liveRefiner = nil
+        liveRefinementState = "inactive"; liveHotwordCount = 0; liveRefinementIssue = nil; liveRefinementAppliedBatches = 0
         liveCommitted = []; livePendingRefinement = []; liveCurrentPartial = ""; liveHasRefinement = false; liveText = livePrefix; livePartial = ""; liveStatus = ""
         liveGeneration = UUID()
         recorder.onAudio = nil
@@ -1175,18 +1199,35 @@ final class AppState: ObservableObject {
             try session.start(model: model, executable: executable, language: sessionLanguage, hotwords:hotwords.words)
             liveSession = session
             if !isCantonese, let qwenModel = self.model, let qwenExecutable = ASRResources.executable("qwen-asr") {
-                let scratchPath = UserDefaults.standard.string(forKey: "LivePreviewScratchDirectory")
-                let scratch = scratchPath.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? FileManager.default.temporaryDirectory
                 let hints = hotwords.words
+                liveHotwordCount = hints.count
                 let title = history.first(where: { $0.id == id })?.title ?? ""
-                let refiner = LivePreviewRefiner(model: qwenModel, executable: qwenExecutable, language: sessionLanguage,
-                    hotwords: hints, context: title, scratchRoot: scratch) { [weak self] original, refined in
+                do {
+                let refiner = try LivePreviewRefiner.production(model: qwenModel, executable: qwenExecutable, language: sessionLanguage,
+                    hotwords: hints, context: title, cacheBaseURL: liveCacheBaseURL,
+                    onFailure: { [weak self] code in
+                        Task { @MainActor in
+                            guard let self, self.liveGeneration == generation, self.recordingID == id else { return }
+                            self.liveRefinementState = "failed"; self.liveRefinementIssue = code
+                            if code == "cacheUnavailable" { self.liveRefinementCacheReady = false }
+                        }
+                    }, onProcessing: { [weak self] in
+                        Task { @MainActor in
+                            guard let self, self.liveGeneration == generation, self.recordingID == id else { return }
+                            self.liveRefinementState = "processing"
+                        }
+                    }) { [weak self] original, refined in
                     Task { @MainActor in
                         guard let self, self.liveGeneration == generation, self.recordingID == id else { return }
                         self.applyLiveRefinement(original: original, refined: refined, hotwords: hints, meetingID: id)
                     }
                 }
                 liveRefiner = refiner
+                liveRefinementCacheReady = true
+                liveRefinementState = "collecting"
+                } catch {
+                    liveRefinementState = "failed"; liveRefinementIssue = "cacheUnavailable"
+                }
             }
             let refiner = liveRefiner
             recorder.onAudio = { [weak session, weak refiner] samples in refiner?.append(samples); session?.append(samples) }
@@ -1248,7 +1289,10 @@ final class AppState: ObservableObject {
     }
 
     private func applyLiveRefinement(original: [LiveUtterance], refined: [TranscriptParagraph], hotwords: [String], meetingID: UUID) {
-        guard let replacement = LivePreviewRefiner.replacing(rows: liveCommitted, original: original, refined: refined, hotwords: hotwords) else { NSLog("TalkTuck live refinement: result rejected"); return }
+        guard let replacement = LivePreviewRefiner.replacing(rows: liveCommitted, original: original, refined: refined, hotwords: hotwords) else {
+            liveRefinementState = "failed"; liveRefinementIssue = "resultRejected"
+            NSLog("TalkTuck live refinement: result rejected"); return
+        }
         guard var record = history.first(where: { $0.id == meetingID }),
               let stored = LivePreviewRefiner.replacing(rows: record.liveUtterances, original: original, refined: refined, hotwords: hotwords) else { return }
         record.liveUtterances = stored
@@ -1260,9 +1304,11 @@ final class AppState: ObservableObject {
             try update(record)
             NSLog("TalkTuck live refinement: preview updated")
             liveCommitted = replacement; liveHasRefinement = true
+            liveRefinementState = "applied"; liveRefinementIssue = nil; liveRefinementAppliedBatches += 1
+            liveRefinementCacheReady = true
             pendingLivePresentation = (preview, liveCurrentPartial)
             flushLivePresentation()
-        } catch { self.error = "保存实时预览失败：\(error.localizedDescription)" }
+        } catch { liveRefinementState = "failed"; liveRefinementIssue = "saveFailed"; self.error = "保存实时预览失败：\(error.localizedDescription)" }
     }
 
     private func flushLivePresentation() {

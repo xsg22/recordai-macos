@@ -230,6 +230,10 @@ struct TranscriptTimelineView: View {
             .menuStyle(.borderlessButton).tint(TalkTuckTheme.ink).foregroundStyle(TalkTuckTheme.ink).help(L10n.text("修改名称或合并同一人的发言"))
     }
     @ViewBuilder private var currentLiveRows: some View {
+        if !state.liveRefinementCaption.isEmpty {
+            Label(L10n.text(state.liveRefinementCaption), systemImage: state.liveRefinementIssue == nil ? "text.badge.checkmark" : "exclamationmark.triangle")
+                .font(AppTypography.secondary).foregroundStyle(state.liveRefinementIssue == nil ? Color.secondary : Color.orange)
+        }
         if !state.text.isEmpty { Divider(); Text(L10n.text("本次实时识别 · 未定稿")).font(AppTypography.secondary).foregroundStyle(.secondary) }
         ForEach(state.recordingLiveUtterances) { row in liveRow(row) }
         if !state.displayedLivePartial.isEmpty {

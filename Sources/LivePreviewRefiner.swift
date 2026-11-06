@@ -10,6 +10,9 @@ final class LivePreviewRefiner: @unchecked Sendable {
     private let model: URL, executable: URL, scratchRoot: URL
     private let language: String, hotwords: [String], context: String
     private let onResult: ([LiveUtterance], [TranscriptParagraph]) -> Void
+    private let prepareScratch: (() throws -> URL)?
+    private let onFailure: (String) -> Void
+    private let onProcessing: () -> Void
     private var samples: [Float] = []
     private var firstSample = 0
     private var outstanding = 0
@@ -20,10 +23,25 @@ final class LivePreviewRefiner: @unchecked Sendable {
     private var maximumSamples: Int { sampleRate * policy.liveAudioBufferSeconds }
 
     init(model: URL, executable: URL, language: String, hotwords: [String], context: String,
-         scratchRoot: URL, onResult: @escaping ([LiveUtterance], [TranscriptParagraph]) -> Void) {
+         scratchRoot: URL, prepareScratch: (() throws -> URL)? = nil,
+         onFailure: @escaping (String) -> Void = { _ in }, onProcessing: @escaping () -> Void = {},
+         onResult: @escaping ([LiveUtterance], [TranscriptParagraph]) -> Void) {
         self.model = model; self.executable = executable; self.language = language
         self.hotwords = hotwords; self.context = context; self.scratchRoot = scratchRoot; self.onResult = onResult
+        self.prepareScratch = prepareScratch; self.onFailure = onFailure; self.onProcessing = onProcessing
         self.policy = ASRWindowPolicy.load(language: language)
+    }
+
+    static func production(model: URL, executable: URL, language: String, hotwords: [String], context: String,
+                           cacheBaseURL: URL? = nil, migrationDefaults: UserDefaults? = nil,
+                           onFailure: @escaping (String) -> Void = { _ in }, onProcessing: @escaping () -> Void = {},
+                           onResult: @escaping ([LiveUtterance], [TranscriptParagraph]) -> Void) throws -> LivePreviewRefiner {
+        if let migrationDefaults { LiveRefinementCache.discardLegacyOverride(migrationDefaults) }
+        else if cacheBaseURL == nil { LiveRefinementCache.discardLegacyOverride() }
+        let prepare = { try LiveRefinementCache.prepare(baseURL: cacheBaseURL) }
+        return LivePreviewRefiner(model: model, executable: executable, language: language, hotwords: hotwords,
+            context: context, scratchRoot: try prepare(), prepareScratch: prepare, onFailure: onFailure,
+            onProcessing: onProcessing, onResult: onResult)
     }
 
     func append(_ values: [Float]) {
@@ -58,14 +76,17 @@ final class LivePreviewRefiner: @unchecked Sendable {
             defer { lock.lock(); outstanding -= 1; lock.unlock() }
             lock.lock(); let cancelled = stopped; lock.unlock()
             guard !cancelled else { return }
-            let directory = scratchRoot.appendingPathComponent("TalkTuck-live-refine-" + UUID().uuidString, isDirectory: true)
+            var stage = "cacheUnavailable"
             do {
+                onProcessing()
+                let scratchRoot = try prepareScratch?() ?? self.scratchRoot
+                let directory = scratchRoot.appendingPathComponent("TalkTuck-live-refine-" + UUID().uuidString, isDirectory: true)
                 var isDirectory: ObjCBool = false
                 guard FileManager.default.fileExists(atPath: scratchRoot.path, isDirectory: &isDirectory), isDirectory.boolValue,
-                      FileManager.default.isWritableFile(atPath: scratchRoot.path) else { NSLog("TalkTuck live refinement: scratch unavailable"); return }
+                      FileManager.default.isWritableFile(atPath: scratchRoot.path) else { throw CocoaError(.fileWriteNoPermission) }
                 if scratchRoot.path.hasPrefix("/Volumes/") {
                     guard let mountedVolume = try scratchRoot.resourceValues(forKeys: [.volumeURLKey]).volume,
-                          mountedVolume.path.hasPrefix("/Volumes/") else { NSLog("TalkTuck live refinement: volume unavailable"); return }
+                          mountedVolume.path.hasPrefix("/Volumes/") else { throw CocoaError(.fileNoSuchFile) }
                 }
                 // Never recreate a missing parent or a disconnected volume's mount point.
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
@@ -78,14 +99,19 @@ final class LivePreviewRefiner: @unchecked Sendable {
                 audio.withUnsafeBufferPointer { if let base = $0.baseAddress { target.update(from: base, count: audio.count) } }
                 do { let file = try AVAudioFile(forWriting: url, settings: format.settings, commonFormat: .pcmFormatFloat32, interleaved: false); try file.write(from: buffer) }
                 let engine = TranscriptionEngine(temporaryRoot: directory)
+                stage = "recognitionFailed"
                 lock.lock(); if stopped { lock.unlock(); return }; runningEngine = engine; lock.unlock()
                 defer { lock.lock(); runningEngine = nil; lock.unlock() }
                 NSLog("TalkTuck live refinement: recognition started")
                 let output = try engine.transcribe(audio: url, model: model, executable: executable, language: language, hotwords: hotwords, context: context, offlineWindows:true, windowSeconds:policy.liveMaximumSeconds, overlapSeconds:0)
                 lock.lock(); let allowed = !stopped; lock.unlock()
                 if allowed && !output.paragraphs.isEmpty { NSLog("TalkTuck live refinement: recognition completed"); onResult(rows, output.paragraphs) }
-                else if allowed { NSLog("TalkTuck live refinement: empty result") }
-            } catch { NSLog("TalkTuck live refinement: processing failed code=%ld", (error as NSError).code) }
+                else if allowed { onFailure("emptyResult"); NSLog("TalkTuck live refinement: empty result") }
+            } catch {
+                lock.lock(); let report = !stopped; lock.unlock()
+                if report { onFailure(stage) }
+                NSLog("TalkTuck live refinement: processing failed code=%ld", (error as NSError).code)
+            }
         }
         return .queued
     }
