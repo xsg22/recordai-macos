@@ -18,7 +18,7 @@ import Foundation
         let zh=ASRWindowPolicy.load(defaults,language:"zh",memoryBytes:memory)
         let en=ASRWindowPolicy.load(defaults,language:"en",memoryBytes:memory)
         precondition(zh.offlineSeconds==480 && zh.liveTargetSeconds==30 && zh.liveMaximumSeconds>=30+24 && zh.liveAudioBufferSeconds>=zh.liveMaximumSeconds+24)
-        precondition(en.offlineSeconds==360 && en.liveTargetSeconds==6 && en.liveMaximumSeconds==30)
+        precondition(en.offlineSeconds==360 && en.liveTargetSeconds==30 && en.liveMaximumSeconds==54 && en.liveAudioBufferSeconds==120)
         precondition(ASRWindowPolicy.recommendedLiveTargetSeconds(language:"zh",memoryBytes:8*1024*1024*1024)==8)
         print("PASS: independent live/offline choices, bounded fallbacks and separate aligner limit")
     }
