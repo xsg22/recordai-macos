@@ -31,7 +31,7 @@ struct ASRWindowPolicy: Equatable, Sendable {
     }
     static func recommendedLiveTargetSeconds(language:String,memoryBytes:UInt64) -> Int {
         guard memoryBytes >= 16*1024*1024*1024 else { return 8 }
-        return language == "zh" ? 30 : 6
+        return ["zh", "en"].contains(language) ? 30 : 6
     }
     static func load(_ defaults:UserDefaults = .standard,language:String = "auto",memoryBytes:UInt64 = ProcessInfo.processInfo.physicalMemory) -> Self {
         let requested=defaults.object(forKey:"TalkTuck.asr.offlineWindowSeconds") as? Int
