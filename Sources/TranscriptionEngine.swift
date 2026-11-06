@@ -213,10 +213,27 @@ final class TranscriptionEngine: @unchecked Sendable {
             previous = original; previousEnd = hi
             if !text.isEmpty {
                 subtitles.append("\(subtitles.count + 1)\n\(Self.timestamp(segmentStart)) --> \(Self.timestamp(hi))\n\(text)")
-                paragraphs.append(TranscriptParagraph(text: text, separator: paragraphs.isEmpty ? "" : "\n", start: segmentStart, end: hi))
+                let parts = s.alignmentParts ?? [QwenOutput.Part(text: original, start: lo, end: hi)]
+                if s.alignmentParts != nil {
+                    guard !parts.isEmpty, parts.map(\.text).joined() == original,
+                          parts.allSatisfy({ $0.start.isFinite && $0.end.isFinite && $0.start >= lo && $0.end <= hi + 0.001 && $0.end > $0.start && $0.end - $0.start <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
+                        throw TranscriptionError.message("时间戳分段与定稿正文不一致，未保存部分结果。")
+                    }
+                    for pair in zip(parts, parts.dropFirst()) where pair.1.start < pair.0.start { throw TranscriptionError.message("时间戳分段顺序无效。") }
+                }
+                var remaining = original.count - text.count
+                var firstPart = true
+                for part in parts {
+                    let count = min(remaining, part.text.count); remaining -= count
+                    let body = String(part.text.dropFirst(count))
+                    guard !body.isEmpty else { continue }
+                    paragraphs.append(TranscriptParagraph(text: body, separator: paragraphs.isEmpty ? "" : firstPart ? "\n" : "", start: max(part.start, segmentStart), end: part.end))
+                    firstPart = false
+                }
+                guard remaining == 0 else { throw TranscriptionError.message("定稿重叠分段不完整。") }
             }
         }
-        return TranscriptionOutput(text: paragraphs.map(\.text).joined(separator: "\n"), subtitles: subtitles.isEmpty ? "" : subtitles.joined(separator: "\n\n") + "\n\n", paragraphs: paragraphs)
+        return TranscriptionOutput(text: paragraphs.map { $0.separator + $0.text }.joined(), subtitles: subtitles.isEmpty ? "" : subtitles.joined(separator: "\n\n") + "\n\n", paragraphs: paragraphs)
     }
     // Only remove strongly matching overlap; short or uncertain repetitions remain.
     static func removeExactOverlap(_ previous: String, _ current: String) -> String {
@@ -312,6 +329,9 @@ final class TranscriptionEngine: @unchecked Sendable {
     func analyzeSpeakers(audio: URL, model: URL, executable: URL, transcript: TranscriptionOutput, language: String = "zh",
                          onPhase: @escaping @Sendable (TranscriptPhase) -> Void = { _ in }) throws -> [TranscriptParagraph] {
         if transcript.paragraphs.isEmpty { return [] }
+        guard transcript.paragraphs.allSatisfy({ ($0.end ?? 0) - ($0.start ?? 0) <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
+            throw TranscriptionError.message("定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。")
+        }
         let root = model.deletingLastPathComponent()
         let sortformer = root.appendingPathComponent("Sortformer"), aligner = root.appendingPathComponent("QwenAligner")
         guard [sortformer, aligner].allSatisfy({ FileManager.default.fileExists(atPath: $0.appendingPathComponent("model.safetensors").path) }) else {
@@ -329,7 +349,7 @@ final class TranscriptionEngine: @unchecked Sendable {
             try runStreaming(executable, ["--align-stream", aligner.path, turns.path, aligned.path], directory: directory, stage: "发言人与文字对齐") { pipe in
                 for paragraph in transcript.paragraphs {
                     guard let start = paragraph.start, let end = paragraph.end else { throw TranscriptionError.message("文字与录音片段不一致，未强行添加发言人。") }
-                    try self.writeClip(reader, start: start, end: end, metadata: ["text": paragraph.text, "language": language], to: pipe)
+                    try self.writeClip(reader, start: start, end: end, metadata: ["text": paragraph.text, "language": language, "separator": paragraph.separator], to: pipe)
                 }
             }
         } else {
@@ -354,7 +374,7 @@ final class TranscriptionEngine: @unchecked Sendable {
                 let path = segments.appendingPathComponent("\(index).wav")
                 let writer = try AVAudioFile(forWriting: path, settings: reader.fileFormat.settings, commonFormat: reader.processingFormat.commonFormat, interleaved: reader.processingFormat.isInterleaved)
                 try writer.write(from: buffer)
-                clips.append(["audio": path.path, "start": start, "end": end, "text": paragraph.text, "language": language])
+                clips.append(["audio": path.path, "start": start, "end": end, "text": paragraph.text, "language": language, "separator": paragraph.separator])
             }
             try JSONSerialization.data(withJSONObject: clips).write(to: manifest, options: .atomic)
             onPhase(.diarizing)
@@ -377,11 +397,15 @@ final class TranscriptionEngine: @unchecked Sendable {
             }
             return TranscriptParagraph(text: row.text, separator: row.separator, start: row.start, end: row.end, speakerIDs: row.speakerIDs)
         }
+        for pair in zip(rows, rows.dropFirst()) where (pair.1.start ?? 0) < (pair.0.start ?? 0) - 0.15 {
+            throw TranscriptionError.message("时间戳分段顺序不一致，已保留正文。")
+        }
         return TranscriptReadability.groups(rows).map(\.combined)
     }
 
     private struct QwenOutput: Decodable {
-        struct Segment: Decodable { let text: String; let start: Double; let end: Double }
+        struct Part: Decodable { let text: String; let start: Double; let end: Double }
+        struct Segment: Decodable { let text: String; let start: Double; let end: Double; let alignmentParts: [Part]?; let alignmentIssue: String? }
         let segments: [Segment]
     }
     private static func timestamp(_ seconds: Double) -> String {

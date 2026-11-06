@@ -1,4 +1,9 @@
 {
+  "时间戳分段与定稿正文不一致，未保存部分结果。": "Timestamp segments do not match the final transcript. Partial results were not saved.",
+  "时间戳分段顺序无效。": "Timestamp segments are out of order.",
+  "定稿重叠分段不完整。": "Overlapping transcript segments are incomplete.",
+  "定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。": "The final transcript is saved, but timestamps are unconfirmed. Transcribe again to retry.",
+  "时间戳分段顺序不一致，已保留正文。": "Timestamp segments are out of order. The transcript has been preserved.",
   "返回正在录音": "Back to active recording",
   "静音录制": "Recording silence",
   "切换为声波": "Show waveform",

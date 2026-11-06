@@ -83,6 +83,21 @@ def stream_clips(max_seconds=MAX_ASR_SECONDS):
         if len(data)!=frames*4:raise ValueError('Incomplete clip PCM')
         yield item,data
 
+def recognized_segment(model,audio,*,start,end,language,hotwords=None):
+    generated=generate_complete(model,audio,language=language,hotwords=hotwords)
+    text=generated.text.strip();segment=dict(text=text,start=start,end=end)
+    if text and len(audio)/16000>MAX_ALIGNMENT_SECONDS:
+        from alignment_windows import prepare,AlignmentWindowError
+        try:
+            parts=prepare(model,audio,text,language=language,hotwords=hotwords)
+            segment['alignmentParts']=[dict(text=p['text'],start=start+p['start'],end=start+p['end']) for p in parts]
+        except (AlignmentWindowError,ValueError) as error:
+            # Recognition remains authoritative; optional speaker/timestamp
+            # analysis must not invent timing or erase this completed text.
+            segment['alignmentIssue']=str(error)
+            print('Bounded alignment preparation unavailable: '+str(error),file=sys.stderr,flush=True)
+    return segment
+
 def transcribe_stream(model_path,language,output,hints_path):
     import numpy as np
     import mlx.core as mx
@@ -93,9 +108,9 @@ def transcribe_stream(model_path,language,output,hints_path):
     configure_memory(mx)
     model=load(pathlib.Path(model_path).resolve(strict=True));selected_language=recognition_language(language);result=[]
     for clip,data in stream_clips():
-        generated=generate_complete(model,np.frombuffer(data,dtype='<f4'),language=selected_language,hotwords=select_hotwords(words,context) or None)
-        result.append(dict(text=generated.text.strip(),start=clip['start'],end=clip['end']))
-        context=(context+' '+generated.text)[-2000:];mx.clear_cache()
+        segment=recognized_segment(model,np.frombuffer(data,dtype='<f4'),start=clip['start'],end=clip['end'],language=selected_language,hotwords=select_hotwords(words,context) or None)
+        result.append(segment)
+        context=(context+' '+segment['text'])[-2000:];mx.clear_cache()
     output=pathlib.Path(output);temp=output.with_suffix('.partial')
     temp.write_text(json.dumps({'segments':result},ensure_ascii=False));temp.replace(output)
 
@@ -112,7 +127,7 @@ def align_stream(model_path,turns_path,output):
         aligned=model.generate(audio=np.frombuffer(data,dtype='<f4'),text=text,language=alignment_language(language,text))
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
         rows=attribute(text,items,turns,clip['start'],clip['end']-clip['start'])
-        if rows:rows[0]['separator']='' if index==0 else '\n'
+        if rows:rows[0]['separator']=clip.get('separator','' if index==0 else '\n')
         paragraphs.extend(rows);mx.clear_cache()
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
 
@@ -135,7 +150,7 @@ def align_speakers(model_path,manifest_path,turns_path,output):
         aligned=model.generate(audio=audio,text=clip['text'],language=language)
         items=[dict(text=i.text,start=i.start_time,end=i.end_time) for i in aligned.items]
         rows=attribute(clip['text'],items,turns,clip['start'],clip['end']-clip['start'])
-        if rows:rows[0]['separator']='' if index==0 else '\n'
+        if rows:rows[0]['separator']=clip.get('separator','' if index==0 else '\n')
         paragraphs.extend(rows);mx.clear_cache()
         print('ForcedAligner: %d/%d'%(index+1,len(clips)),file=sys.stderr,flush=True)
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs),ensure_ascii=False))
@@ -185,9 +200,9 @@ def main():
             with wave.open(clip['audio'],'rb') as w:audio=np.frombuffer(w.readframes(w.getnframes()),dtype='<i2').astype(np.float32)/32768
             validate_clip(dict(frames=len(audio),start=clip['start'],end=clip['end']))
             selected=select_hotwords(words,context)
-            generated=generate_complete(model,audio,language=selected_language,hotwords=selected or None)
-            result.append(dict(text=generated.text.strip(),start=clip['start'],end=clip['end']))
-            context=(context+' '+generated.text)[-2000:]
+            segment=recognized_segment(model,audio,start=clip['start'],end=clip['end'],language=selected_language,hotwords=selected or None)
+            result.append(segment)
+            context=(context+' '+segment['text'])[-2000:]
             print('Qwen3-ASR: %d/%d'%(index+1,len(clips)),file=sys.stderr,flush=True)
             mx.clear_cache()
     output=pathlib.Path(output);temp=output.with_suffix('.partial')

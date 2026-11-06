@@ -1152,11 +1152,11 @@ final class AppState: ObservableObject {
             record.legacyLiveText = record.previewText; try? update(record)
         }
         liveRefiner?.cancel(); liveRefiner = nil
-        liveWindowPolicy = ASRWindowPolicy.load()
         liveCommitted = []; livePendingRefinement = []; liveCurrentPartial = ""; liveHasRefinement = false; liveText = livePrefix; livePartial = ""; liveStatus = ""
         liveGeneration = UUID()
         recorder.onAudio = nil
         let sessionLanguage = history.first(where: { $0.id == id })?.language ?? language
+        liveWindowPolicy = ASRWindowPolicy.load(language: sessionLanguage)
         guard liveEnabled else { return }
         let isCantonese = sessionLanguage == "yue"
         guard let model = isCantonese ? ASRResources.qwen : ASRResources.paraformer,
