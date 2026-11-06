@@ -6,7 +6,7 @@ Alignment has its own 300s model limit. Never silently split or truncate input.
 import math
 
 RATE = 16000
-MAX_ASR_SECONDS = 240
+MAX_ASR_SECONDS = 480
 MAX_ALIGNMENT_SECONDS = 300
 
 def configure_memory(mx):

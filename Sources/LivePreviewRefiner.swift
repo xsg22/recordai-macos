@@ -15,14 +15,15 @@ final class LivePreviewRefiner: @unchecked Sendable {
     private var outstanding = 0
     private var stopped = false
     private var runningEngine: TranscriptionEngine?
-    private let policy = ASRWindowPolicy.load()
+    private let policy: ASRWindowPolicy
     private let sampleRate = 16_000
-    private let maximumSamples = 16_000 * 60
+    private var maximumSamples: Int { sampleRate * policy.liveAudioBufferSeconds }
 
     init(model: URL, executable: URL, language: String, hotwords: [String], context: String,
          scratchRoot: URL, onResult: @escaping ([LiveUtterance], [TranscriptParagraph]) -> Void) {
         self.model = model; self.executable = executable; self.language = language
         self.hotwords = hotwords; self.context = context; self.scratchRoot = scratchRoot; self.onResult = onResult
+        self.policy = ASRWindowPolicy.load(language: language)
     }
 
     func append(_ values: [Float]) {

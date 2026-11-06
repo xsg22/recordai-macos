@@ -7,13 +7,13 @@ from inference_policy import token_budget,validate_clip,generate_complete
 
 class PolicyTests(unittest.TestCase):
     def test_transport_limits_and_exact_coverage(self):
-        for seconds in [6,24,45,60,120,240]:
+        for seconds in [6,24,45,60,120,240,360,480]:
             validate_clip(dict(frames=seconds*16000,start=500,end=500+seconds))
         validate_clip(dict(frames=300*16000,start=0,end=300),300)
-        for row in [dict(frames=480000,start=0,end=60),dict(frames=16000,start=0,end=2),dict(frames=True,start=0,end=1),dict(frames=16000,start=float('nan'),end=1),dict(frames=241*16000,start=0,end=241)]:
+        for row in [dict(frames=480000,start=0,end=60),dict(frames=16000,start=0,end=2),dict(frames=True,start=0,end=1),dict(frames=16000,start=float('nan'),end=1),dict(frames=481*16000,start=0,end=481)]:
             with self.assertRaises(ValueError):validate_clip(row)
     def test_budget_is_separate_from_audio_length(self):
-        self.assertEqual([token_budget(x) for x in [24,45,60,120,240]],[512,848,1088,2048,3968])
+        self.assertEqual([token_budget(x) for x in [24,45,60,120,240,360,480]],[512,848,1088,2048,3968,5888,7808])
         with self.assertRaises(ValueError):token_budget(1200)
     def test_decoder_rejects_partial_results(self):
         class Fake:

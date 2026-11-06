@@ -21,3 +21,7 @@ xcrun swiftc -module-cache-path cache -swift-version 5 -parse-as-library "$proje
 xcrun swiftc -module-cache-path cache -swift-version 5 -parse-as-library $common "$projectRoot/Tests/OfflineWindowSpeakerSmoke.swift" -o alignment-smoke
 ./alignment-smoke "$runDir/alignment" "$projectRoot/Tests/OfflineWindowSpeakerWorkerFake.py"
 print "Evidence directory: $runDir"
+
+xcrun swiftc -module-cache-path cache -swift-version 5 -parse-as-library $common "$projectRoot/Tests/ASRProfileLongWindowSmoke.swift" -o profile-smoke
+mkdir -p "$runDir/profiles"
+./profile-smoke "$runDir/profiles" "$projectRoot/Tests/ASRProfileLongWindowWorkerFake.py"
