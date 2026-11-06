@@ -47,7 +47,7 @@ def score(case,text,boundaries):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--manifest',type=pathlib.Path,required=True);p.add_argument('--case',required=True);p.add_argument('--model',type=pathlib.Path,required=True);p.add_argument('--window',type=float,required=True);p.add_argument('--overlap',type=float,default=3);p.add_argument('--output',type=pathlib.Path,required=True);p.add_argument('--memory-gib',type=float,default=6);a=p.parse_args()
     assert not a.output.exists() and a.output.parent.is_dir()
-    assert 0<=a.overlap<a.window<=300
+    assert 0<=a.overlap<a.window<=1200
     case=next(x for x in json.loads(a.manifest.read_text())['cases'] if x['id']==a.case)
     source=pathlib.Path(case['path']);before=hashlib.sha256(source.read_bytes()).hexdigest();assert before==case['sha256']
     with wave.open(str(source),'rb') as f:
@@ -61,7 +61,7 @@ def main():
     while begin<len(pcm):
       end=min(len(pcm),begin+int(a.window*16000));audio=pcm[begin:end];duration=len(audio)/16000
       if float(np.max(np.abs(audio)))>2/32768:
-       tokens=max(512,min(8192,math.ceil(duration*16)+128));t=time.monotonic()
+       tokens=max(512,min(32768,math.ceil(duration*16)+128));t=time.monotonic()
        try:
         result=model.generate(audio=audio,language={'zh':'Chinese','en':'English'}[case['language']],max_tokens=tokens,temperature=0,chunk_duration=a.window+1,min_chunk_duration=.1,repetition_penalty=1.05,verbose=False)
         elapsed=time.monotonic()-t
@@ -70,6 +70,7 @@ def main():
         assert result.generation_tokens<tokens,'Token budget reached; partial result rejected'
         raw=result.text.strip();text=overlap(previous,raw) if a.overlap else raw;pieces.append(text);previous=raw
         windows.append(dict(start=begin/16000,end=end/16000,seconds=elapsed,tokens=result.generation_tokens,tokenLimit=tokens,internalChunks=len(result.segments),raw=raw,text=text))
+        print(json.dumps(dict(event="window-complete",case=a.case,window=a.window,start=begin/16000,end=end/16000,computeSeconds=elapsed,generatedTokens=result.generation_tokens,peakMetalBytes=mx.get_peak_memory())),flush=True)
         mx.clear_cache()
        except Exception as error:
         failure={'type':type(error).__name__,'message':str(error),'start':begin/16000,'end':end/16000};break
