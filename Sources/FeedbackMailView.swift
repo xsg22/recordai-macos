@@ -47,13 +47,14 @@ struct FeedbackMailView: View {
             if includeLogs {
                 let store = try OSLogStore(scope: .currentProcessIdentifier)
                 let position = store.position(date: Date().addingTimeInterval(-24 * 3600))
-                let subsystem = Bundle.main.bundleIdentifier ?? "com.xsg.talktuck"
-                let entries = try store.getEntries(at: position).compactMap { $0 as? OSLogEntryLog }.filter { $0.subsystem == subsystem && $0.category == "FeedbackDiagnostics" }
-                let lines = entries.suffix(1000).map { "\($0.date) [\($0.category)] \($0.composedMessage)" }
-                let header = "TalkTuck macOS \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") · \(ProcessInfo.processInfo.operatingSystemVersionString)\n"
+                let entries = try store.getEntries(at: position).compactMap { $0 as? OSLogEntryLog }
+                let lines = entries.map { "\($0.date) [\($0.subsystem)] [\($0.category)] [\(String(describing: $0.level))] \($0.composedMessage)" }
+                let header = "TalkTuck macOS \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?") · \(ProcessInfo.processInfo.operatingSystemVersionString)\nScope: readable current-process unified logs from the last 24 hours; earlier processes and worker-process logs are not included. Persistent events are in the accompanying JSONL file.\n"
                 let data = Data((header + (lines.isEmpty ? "No application log entries available.\n" : lines.joined(separator: "\n"))).utf8)
                 let file = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-feedback-\(UUID().uuidString).log")
                 try data.write(to: file, options: [.atomic, .completeFileProtectionUnlessOpen]); items.append(file)
+                let eventsFile = FileManager.default.temporaryDirectory.appendingPathComponent("talktuck-events-\(UUID().uuidString).jsonl")
+                try FeedbackDiagnostics.shared.snapshot().write(to: eventsFile, options: [.atomic, .completeFileProtectionUnlessOpen]); items.append(eventsFile)
             }
             guard let service = NSSharingService(named: .composeEmail), service.canPerform(withItems: items) else {
                 error = L10n.text("无法打开邮件，请配置邮件应用后重试；反馈内容仍会保留。收件人：xsgnzb1@gmail.com")
