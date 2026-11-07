@@ -371,7 +371,7 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
         let current=waiters;waiters=[]
         for w in current {
             if ready.completedFrames==journal.observed { w.resume(returning:ready) }
-            else { w.resume(throwing:TranscriptionError.message("部分录音尚未定稿，原音、已完成结果与重试位置均已保存。")) }
+            else { w.resume(throwing:TranscriptionError.message("录音已停止并保存。部分转录尚未完成，可继续转录；原音、已有定稿与重试位置均已保留。")) }
         }
     }
 }

@@ -1228,5 +1228,8 @@
   "已有定稿候选检查点不一致，原音和候选已保留，未覆盖检查点。": "The saved candidate checkpoint does not match. Audio and candidates are preserved; the checkpoint was not overwritten.",
   "接缝归属尚未确认，原音和两侧候选均已保留。": "The seam ownership is not confirmed yet. Original audio and both candidates are preserved.",
   "重试接缝时间对齐": "Retrying seam alignment",
-  "核对接缝文字保全": "Checking seam text preservation"
+  "核对接缝文字保全": "Checking seam text preservation",
+  "录音已保存": "Recording saved",
+  "录音已停止并保存。": "Recording has stopped and is saved.",
+  "录音已停止并保存。部分转录尚未完成，可继续转录；原音、已有定稿与重试位置均已保留。": "Recording has stopped and is saved. Some transcription is pending and can be continued. Original audio, finalized text and retry positions are preserved."
 }
