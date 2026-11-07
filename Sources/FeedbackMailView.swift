@@ -59,7 +59,7 @@ struct FeedbackMailView: View {
                 error = L10n.text("无法打开邮件，请配置邮件应用后重试；反馈内容仍会保留。收件人：xsgnzb1@gmail.com")
                 return
             }
-            service.recipients = ["xsgnzb1@gmail.com"]; service.subject = "TalkTuck 意见反馈 (Mac)"
+            service.recipients = ["xsgnzb1@gmail.com"]; service.subject = L10n.text("TalkTuck 意见反馈 (Mac)")
             sharingService = service; error = nil; service.perform(withItems: items)
         } catch { self.error = L10n.text("图片或客户端日志准备失败，请重试，或取消勾选日志后发送。") }
     }
