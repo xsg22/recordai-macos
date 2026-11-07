@@ -59,7 +59,7 @@ struct RecordingAppConfigurationView: View {
                 TalkTuckSettingRow(title: L10n.text("外观")) {
                     Picker(L10n.text("外观"), selection: $appAppearance.selection) {
                         ForEach(InterfaceAppearance.allCases) { Text($0.title).tag($0) }
-                    }.labelsHidden().accessibilityLabel(L10n.text("外观"))
+                    }.id(appLanguage.effective).labelsHidden().accessibilityLabel(L10n.text("外观"))
                         .accessibilityIdentifier("settings-appearance")
                 }
                 Text(L10n.text("跟随系统自动切换，或固定使用浅色、深色外观。"))

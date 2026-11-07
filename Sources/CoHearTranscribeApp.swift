@@ -551,14 +551,21 @@ struct MainView: View {
             Text(L10n.text("会议、访谈、课程、灵感…\nTalkTuck 帮你录音、转写和整理，\n让重要的内容不再遗漏。"))
                 .font(.system(size: 14)).lineSpacing(9).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 8).padding(.bottom, 14)
             recordingLanguagePicker
-            ZStack {
-                Button { state.toggleRecording() } label: { Label(L10n.text("开始录音"), systemImage: "mic").padding(.trailing, 24).frame(maxWidth: .infinity) }
-                    .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
-                Menu { recordingSettingsMenu } label: { Color.clear.frame(width: 30, height: 46).contentShape(Rectangle()) }
-                    .menuStyle(.borderlessButton).menuIndicator(.hidden).frame(width: 30, height: 46)
-                    .overlay { Image(systemName: "chevron.down").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).allowsHitTesting(false) }
-                    .offset(x: 52).disabled(state.locked).help(L10n.text("录音设置")).accessibilityLabel(L10n.text("录音设置"))
-            }.clipShape(RoundedRectangle(cornerRadius: 10))
+            Button { state.toggleRecording() } label: {
+                Label(L10n.text("开始录音"), systemImage: "mic").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing)
+            Menu { recordingSettingsMenu } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "slider.horizontal.3")
+                    Text(L10n.text("录音设置"))
+                    Text(recordingConfigurationSummary).foregroundStyle(.secondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Image(systemName: "chevron.down").font(.system(size: 10))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .id(appLanguage.effective).disabled(state.locked)
+            .help(L10n.text("录音设置")).accessibilityLabel(L10n.text("录音设置"))
             HStack(alignment: .top, spacing: 14) {
                 Button { state.chooseAudio() } label: { homeChoice("导入音频", detail: "支持 MP3、M4A、WAV\n常用音频格式", symbol: "doc.badge.plus") }.disabled(state.locked)
                 Button { state.recordingMode = .systemAudio; state.toggleRecording() } label: { homeChoice("录制系统声音", detail: "录制线上会议、视频\n或电脑播放的声音", symbol: "desktopcomputer") }.disabled(state.locked || state.syncing)
@@ -588,7 +595,7 @@ struct MainView: View {
                 state.recording ? (state.history.first { $0.id == state.activeRecordingID }?.language ?? state.language) : state.language
             },set:{state.language = $0})) {
                 ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) }
-            }.labelsHidden().pickerStyle(.menu).frame(width:130)
+            }.id(appLanguage.effective).labelsHidden().pickerStyle(.menu).frame(width:130)
                 .disabled(state.locked).accessibilityIdentifier("recording-language-picker")
             Spacer(minLength:0)
 
@@ -603,7 +610,7 @@ struct MainView: View {
     private var recordingConfigurationSummary: String {
         let language = TranscriptionLanguage(rawValue:state.language)?.title ?? L10n.text("普通话")
         let profile = state.recordingProfile == .realtime ? "实时转录" : state.recordingProfile == .backgroundRealtime ? "后台实时" : "仅录音 · 录完转录"
-        return [state.recordingMode.title, language, profile].joined(separator: " · ")
+        return [state.recordingMode.title, language, L10n.text(profile)].joined(separator: " · ")
     }
     private func clock(_ value: Double) -> String {
         let seconds = Int(max(0, value))
