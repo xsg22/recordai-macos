@@ -15,9 +15,14 @@ struct TranscriptTimelineView: View {
     private var selectedProcessing: Bool { state.busy && state.isViewingActiveTask }
     private var showingLive: Bool { selectedRecording || selectedPreparing || (selectedProcessing && state.transcriptPhase == .recognizing) }
 
+    private var showsStageBanner: Bool {
+        selectedPreparing || state.current?.status == .failed ||
+        (selectedRecording && (state.recordingIssue != nil || state.progressiveIssue != nil))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if selectedRecording || selectedPreparing || state.current?.status == .failed { stageBanner }
+            if showsStageBanner { stageBanner }
             if history || state.editingTranscript {
             HStack {
                 if !state.displayedLiveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
@@ -73,14 +78,16 @@ struct TranscriptTimelineView: View {
             else { Image(systemName: selectedRecording ? "waveform" : state.current?.status == .completed ? "checkmark.circle.fill" : "text.alignleft").foregroundStyle(accent) }
             VStack(alignment: .leading, spacing: 3) {
                 Text(L10n.text(stageTitle)).font(AppTypography.body.weight(.medium))
-                Text(L10n.text(stageDetail)).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if let detail = stageDetail {
+                    Text(L10n.text(detail)).font(AppTypography.secondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
             }
             Spacer(minLength: 0)
         }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
     }
     private var stageTitle: String {
-        if selectedRecording { return state.paused ? "录音已暂停" : (state.progressiveCompletedBatches>0 ? L10n.format("录音中 · 已完成 {0} 批定稿",String(state.progressiveCompletedBatches)):"正在实时识别") }
         if selectedPreparing { return "正在保存录音" }
+        if selectedRecording { return state.paused ? "录音已暂停" : "需要处理" }
         if selectedProcessing {
             switch state.transcriptPhase {
             case .diarizing: return "正在区分发言人"
@@ -90,15 +97,16 @@ struct TranscriptTimelineView: View {
         }
         return state.current?.status == .completed ? "转录已保存" : "等待转录"
     }
-    private var stageDetail: String {
+    private var stageDetail: String? {
+        if selectedPreparing { return nil }
         if selectedRecording && state.paused {
             return state.canRetryMicrophone
                 ? "麦克风可能已断开。重新连接后点击“重试并继续”；已有录音会保留。"
                 : (state.recordingIssue == nil ? "采集已暂停，已有文字保留；继续后接着记录。" : "已有原轨保留，请停止并保存后检查输入设备。")
         }
-        if selectedRecording || selectedPreparing {
+        if selectedRecording {
             if state.progressiveIssue != nil { return "分批定稿稍后重试，原音和实时文字已保留" }
-            return "先出实时字幕，再快速修正，分批生成定稿；停止后只补尾段。"
+            return state.recordingIssue
         }
         if selectedProcessing && [.diarizing, .aligning].contains(state.transcriptPhase) { return "正文已保存；分析可取消，不影响已有文字。" }
         if selectedProcessing { return "正在核对录音中的语音片段，实时历史仍可回看。" }
