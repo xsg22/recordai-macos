@@ -67,7 +67,6 @@ final class AppState: ObservableObject {
     @Published var playbackTime: Double = 0
     @Published var playbackDuration: Double = 0
     @Published var showSettings = false
-    @Published var showExecutionTrace = false
     @Published var showModelDownload = false
     @Published private(set) var agentOnboardingRecordingID: UUID?
     @Published private(set) var agentSetupIssue: String?
@@ -1556,7 +1555,7 @@ final class AppState: ObservableObject {
     var agentCLIURL: URL { agentSetup.cliURL }
     var agentSetup: AgentSetup { AgentSetup(appURL: Bundle.main.bundleURL, dataRoot: agentDataURL) }
     var canShowAgentOnboarding: Bool {
-        !locked && !syncing && error == nil && !showSettings && !showModelDownload && !showExecutionTrace && deletionRequest == nil &&
+        !locked && !syncing && error == nil && !showSettings && !showModelDownload && deletionRequest == nil &&
         current?.id == agentOnboardingRecordingID && current.map { $0.status == .completed && !$0.audioFiles.isEmpty && $0.pendingAudioFiles.isEmpty && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } == true
     }
     func agentOnboardingDidAppear() {

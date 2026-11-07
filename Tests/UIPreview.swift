@@ -190,7 +190,6 @@ import CryptoKit
         case 25: RecordingDeliveryView(state: state)
         case 26...28: SyncReviewView(state: state) { presented = 0 }
         case 29...30: CaptureRecoveryView(state: state)
-        case 31: TalkTuckExecutionView(state: state)
         case 32:
             if let paragraph = state.current?.transcriptParagraphs.first {
                 TranscriptParagraphEditor(paragraph: paragraph, speakerName: state.current?.paragraphSpeaker(paragraph) ?? "", cancel: { presented = 0 }) { text in
@@ -218,7 +217,7 @@ import CryptoKit
         // State fixtures are isolated; no microphone, model inference or external writes run here.
         mini.hide(); state.recording = false; state.paused = false; state.busy = false
         state.syncing = false; state.syncStatus = ""; state.syncReceipt = ""; state.remoteURL = nil; state.recordingIssue = nil; state.error = nil; state.search = ""
-        state.deletionRequest = nil; state.showModelDownload = false; state.showSettings = false; state.showExecutionTrace = false
+        state.deletionRequest = nil; state.showModelDownload = false; state.showSettings = false
         presented = 0; state.showRecordingWindow(); state.select(demoID); page = number
         state.status = "准备就绪 · 音频仅在这台 Mac 上处理"
         state.transcriptPhase = .idle; state.liveText = ""; state.livePartial = ""

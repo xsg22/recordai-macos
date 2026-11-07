@@ -69,9 +69,6 @@ struct CoHearTranscribeApp: App {
             CommandGroup(replacing: .appSettings) {
                 SettingsLink { Text(L10n.text("设置…")) }.keyboardShortcut(",")
             }
-            CommandMenu("TalkTuck") {
-                Button(L10n.text("打开执行追踪")) { state.showExecutionTrace = true }
-            }
         }
         MenuBarExtra(isInserted: Binding(get: { state.miniMode || state.recording || state.preparing || state.busy || state.recoveryBusy }, set: { _ in })) {
             RecordingMenuBarView(state: state)
@@ -92,7 +89,6 @@ struct MainView: View {
     @State private var targeted = false
     @State private var delivering = false
     @State private var recovering = false
-    @State private var showingExecution = false
     @State private var managingCollections = false
     @State private var batchMode = false
     @State private var batchIDs = Set<UUID>()
@@ -180,8 +176,6 @@ struct MainView: View {
                 HStack(spacing: 16) {
                     SettingsLink { Label(L10n.text("设置"), systemImage: "gearshape").frame(maxWidth: .infinity, minHeight: 32, alignment: .leading) }
                         .buttonStyle(.plain).help(L10n.text("录音、TalkTuck 账号、第三方账号与 Agent"))
-                    Button { showingExecution = true } label: { Label(L10n.text("执行追踪"), systemImage: "point.3.connected.trianglepath.dotted").frame(minHeight: 32) }
-                        .buttonStyle(.plain).help(L10n.text("查看采集、ASR、转录和Agent发布状态"))
                 }.font(AppTypography.secondary).fixedSize(horizontal: false, vertical: true)
 
             }.padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -209,7 +203,7 @@ struct MainView: View {
                     missingMicrophoneView
                 } else if state.current != nil {
                     meetingToolbar
-                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingExecution {
+                    if state.canShowAgentOnboarding && !delivering && !recovering {
                         TalkTuckCard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
                     }
                     if let issue = state.recordingIssue, state.isViewingRecording {
@@ -288,7 +282,6 @@ struct MainView: View {
                 ASRModelSetupView(store: state.speechModels, close: { state.showModelDownload = false })
             }.padding(28).frame(width: 720).controlSize(.large)
         }
-        .sheet(isPresented: Binding(get: { showingExecution || state.showExecutionTrace }, set: { value in showingExecution = value; state.showExecutionTrace = value })) { TalkTuckExecutionView(state: state) }
         .sheet(isPresented: $delivering) { RecordingDeliveryView(state: state) }
         .sheet(item: $state.deletionRequest) { record in ConfirmTrashView(state: state, record: record) }
         .sheet(isPresented: $state.showSettings) { ConnectionsView(state: state) }
@@ -488,7 +481,6 @@ struct MainView: View {
             Menu {
                 Button(L10n.text(state.editingTranscript ? "完成全文编辑" : "编辑全文")) { state.editingTranscript.toggle() }.disabled(state.locked)
                 Button(L10n.text("导入音频…")) { state.chooseAudio() }.disabled(state.locked)
-                Button(L10n.text("执行追踪")) { showingExecution = true }
                 Menu(L10n.text("录音设置")) {
                     Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
                     Picker(L10n.text("转录语言"), selection: $state.language) { ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) } }
