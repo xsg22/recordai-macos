@@ -115,7 +115,7 @@ struct MainView: View {
                         Text(L10n.text("本地录音 · AI 转写")).font(AppTypography.secondary).foregroundStyle(.secondary)
                     }
                 }.padding(.bottom, 8)
-                Button { state.toggleRecording() } label: {
+                Button { showNewRecordingSetup() } label: {
                     Label(L10n.text("开始新录音"), systemImage: "mic").frame(maxWidth: .infinity)
                 }.buttonStyle(TalkTuckPrimaryButtonStyle()).disabled(state.locked || state.syncing || missingMicrophone)
                 VStack(spacing: 3) {
@@ -488,7 +488,7 @@ struct MainView: View {
                 }.disabled(state.locked)
                 Divider()
                 Button(L10n.text("继续录音")) { state.continueRecording() }.disabled(state.locked || state.syncing)
-                Button(L10n.text("开始新录音")) { state.toggleRecording() }.disabled(state.locked || state.syncing)
+                Button(L10n.text("开始新录音")) { showNewRecordingSetup() }.disabled(state.locked || state.syncing)
                 Divider()
                 Button(L10n.text("复制转录 Markdown")) {
                     NSPasteboard.general.clearContents()
@@ -533,6 +533,14 @@ struct MainView: View {
             .background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
     }
 
+    private func showNewRecordingSetup() {
+        state.select(nil)
+        guard state.selection == nil else { return }
+        filter = "全部"
+        state.search = ""
+        state.groupFilter = ""
+    }
+
     private var captureCard: some View {
         VStack(alignment: .center, spacing: 18) {
             Image(systemName: "waveform").font(.system(size: 48)).foregroundStyle(accent)
@@ -542,7 +550,6 @@ struct MainView: View {
             Text(L10n.text(state.history.isEmpty ? "开始你的第一段录音" : "开始一段新录音")).font(.system(size: 27, weight: .semibold))
             Text(L10n.text("会议、访谈、课程、灵感…\nTalkTuck 帮你录音、转写和整理，\n让重要的内容不再遗漏。"))
                 .font(.system(size: 14)).lineSpacing(9).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 8).padding(.bottom, 14)
-            recordingLanguagePicker
             Button { state.toggleRecording() } label: {
                 Label(L10n.text("开始录音"), systemImage: "mic").frame(maxWidth: .infinity)
             }
@@ -579,19 +586,6 @@ struct MainView: View {
             Text(L10n.text(detail)).font(.system(size: 12)).lineSpacing(5).foregroundStyle(.secondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, minHeight: 110).padding(.vertical, 22).padding(.horizontal, 10)
             .background(TalkTuckTheme.quiet, in: RoundedRectangle(cornerRadius: 12))
-    }
-    private var recordingLanguagePicker: some View {
-        HStack(spacing:10) {
-            Label(L10n.text("转录语言"),systemImage:"globe").foregroundStyle(.secondary)
-            Picker(L10n.text("转录语言"),selection:Binding(get:{
-                state.recording ? (state.history.first { $0.id == state.activeRecordingID }?.language ?? state.language) : state.language
-            },set:{state.language = $0})) {
-                ForEach(TranscriptionLanguage.allCases) { Text($0.title).tag($0.rawValue) }
-            }.id(appLanguage.effective).labelsHidden().pickerStyle(.menu).frame(width:130)
-                .disabled(state.locked).accessibilityIdentifier("recording-language-picker")
-            Spacer(minLength:0)
-
-        }.font(.system(size:12)).padding(.vertical,5)
     }
     @ViewBuilder private var recordingSettingsMenu: some View {
         Picker(L10n.text("音源"), selection: $state.recordingMode) { ForEach(MeetingRecordingMode.allCases) { Text($0.title).tag($0) } }
