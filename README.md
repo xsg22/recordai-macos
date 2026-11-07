@@ -6,7 +6,7 @@
 
 [产品介绍](https://xueshengguo.com/apps/talktuck/) · [个人主页](https://xueshengguo.com/) · [GitHub Releases](https://github.com/xsg22/talktuck/releases)
 
-**[下载 0.17.3（55）](https://github.com/xsg22/talktuck/releases/tag/v0.17.3)** · [DMG](https://github.com/xsg22/talktuck/releases/download/v0.17.3/TalkTuck-0.17.3-arm64.dmg) · [PKG](https://github.com/xsg22/talktuck/releases/download/v0.17.3/TalkTuck-0.17.3-arm64.pkg)
+**[下载 0.17.3（2120）功能验证版](https://github.com/xsg22/talktuck/releases/tag/v0.17.3-preview.2120)** · [PKG 直接下载](https://github.com/xsg22/talktuck/releases/download/v0.17.3-preview.2120/TalkTuck-0.17.3-2120-arm64.pkg) · [SHA-256](https://github.com/xsg22/talktuck/releases/download/v0.17.3-preview.2120/TalkTuck-0.17.3-2120-arm64.pkg.sha256)
 
 适用于 Apple Silicon、macOS 14 或更新版本。Python 3.12 和语音引擎随包提供，首次使用仍需下载模型。当前发布为主功能验证版，采用本地签名，尚未 Apple 公证。
 
@@ -22,7 +22,11 @@
 - 用分组、搜索和星标管理录音；原音与文字保存在本机。
 - 通过 Skill、CLI 或 MCP，让本机 Agent 查询定稿并按需整理重点。
 
-以下为 0.17.3（55）正式客户端的实际截图。转录示例来自公开的 Google FLEURS 粤语朗读测试，未人工修改识别文字；搜索已限定为这条公开测试录音，避免展示私人资料。识别仍可能出错，请结合原音核对。数据集采用 CC BY 4.0，见 [Google FLEURS](https://huggingface.co/datasets/google/fleurs)。
+以下为 0.17.3（2120）客户端的实际界面，截图使用隔离演示资料：
+
+![TalkTuck 主界面、录音设置和账号入口](Docs/images/talktuck-macos/main-2120.jpg)
+
+以下转录示例为 0.17.3（55）截图，来自公开的 Google FLEURS 粤语朗读测试，未人工修改识别文字；搜索已限定为这条公开测试录音，避免展示私人资料。识别仍可能出错，请结合原音核对。数据集采用 CC BY 4.0，见 [Google FLEURS](https://huggingface.co/datasets/google/fleurs)。
 
 ![TalkTuck 最新资料库、音频波形、逐段回听与分组](Docs/images/talktuck-macos/library-0173.jpg)
 
@@ -31,6 +35,10 @@
 ![TalkTuck 录音与转录设置](Docs/images/talktuck-macos/settings-0173.jpg)
 
 界面支持简体中文和 English，与转录语言分别设置。TalkTuck 账号、第三方账号、个人热词与 Agent 接入在设置中分别管理。
+
+主窗口右上角可直接打开 TalkTuck 账号设置。以下为 2120 版客户端的账号页面，使用隔离演示资料截图：
+
+![TalkTuck 账号登录与同步设置](Docs/images/talktuck-macos/account-settings-2120.jpg)
 
 ## Agent 接入
 
@@ -61,6 +69,10 @@ zsh Scripts/release.zsh --candidate
 可在设置中暂停全部同步，暂停状态会保留；恢复后自动补传离线修改。相同账号会拉取另一端的资料和原音，不同账号的数据保持隔离。双方同时修改时保留冲突版本，由用户选择。第三方工作区分享仍需单独操作。
 
 ## 联系方式
+
+TalkTuck 微信交流群：扫码加入，一起交流使用体验和建议。此群二维码 **2026 年 11 月 14 日前有效**；过期后可发邮件联系获取新二维码。
+
+<img src="Docs/images/talktuck-macos/wechat-group-20261114.jpg" alt="TalkTuck 微信交流群二维码，有效期至 2026 年 11 月 14 日前" width="260">
 
 邮箱：[xsgnzb1@gmail.com](mailto:xsgnzb1@gmail.com)
 
