@@ -1,6 +1,9 @@
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
+import OSLog
+
+private let feedbackDiagnosticLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.xsg.talktuck", category: "FeedbackDiagnostics")
 
 /// A hidden login-item launch may never install a SwiftUI window's StateObject.
 /// Keep application services alive independently of that presentation lifecycle.
@@ -93,6 +96,7 @@ struct MainView: View {
     @State private var batchMode = false
     @State private var batchIDs = Set<UUID>()
     @FocusState private var editingTitle: Bool
+    @State private var showingFeedback = false
     @State private var filter = "全部"
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var windowWidth: CGFloat = 1440
@@ -258,6 +262,8 @@ struct MainView: View {
                 }
             }.padding(28).frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity).background(TalkTuckTheme.surface)
         }
+        .toolbar { ToolbarItem(placement: .primaryAction) { Button { showingFeedback = true } label: { Label(L10n.text("意见反馈"), systemImage: "headphones") }.help(L10n.text("意见反馈")) } }
+        .sheet(isPresented: $showingFeedback) { FeedbackMailView() }
         .overlay(alignment: .bottom) {
             if state.recording && !state.miniMode && (state.showsInlineRecorder || emptyFilter || filter == "回收站") && !missingMicrophone, let controller = state.miniController {
                 MiniRecordingView(state: state, controller: controller, inline: true).padding(.bottom, 28)
@@ -272,7 +278,9 @@ struct MainView: View {
             Color.clear.onAppear { windowWidth = geometry.size.width }
                 .onChange(of: geometry.size.width) { _, width in windowWidth = width }
         })
-        .onAppear { state.openRecordingWindow = { openWindow(id: "recordings") } }
+        .onAppear { state.openRecordingWindow = { openWindow(id: "recordings") }; feedbackDiagnosticLog.notice("Main window opened") }
+        .onChange(of: state.recording) { _, recording in feedbackDiagnosticLog.notice("Recording active: \(recording, privacy: .public)") }
+        .onChange(of: state.busy) { _, busy in feedbackDiagnosticLog.notice("Processing active: \(busy, privacy: .public)") }
         .onChange(of: state.recordingNavigationRevision) { filter = "全部"; batchMode = false }
         .sheet(isPresented: $managingCollections) { CollectionManager(state: state) }
         .onChange(of: state.history.map(\.id)) { batchIDs.formIntersection(Set(state.history.map(\.id))) }
