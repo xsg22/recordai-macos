@@ -65,5 +65,20 @@ def group_words(rows,protected_words=()):
                 # unresolved start from one with an unresolved end on regroup.
                 block['startUncertain']=bool(start_bad);block['endUncertain']=bool(end_bad)
                 if start_bad or end_bad:block['timingUncertain']=True
-            result.append(block);pos=stop
+            # Do not disable playback for a whole sentence because its leading
+            # or trailing zero-time token has no real anchor. Keep only that
+            # unresolved edge separate, with the sentence's same speaker label.
+            cuts=[]
+            if block.get('timingUncertain'):
+                valid=[i for i,x in enumerate(unit) if x['end']>x['start'] and not x.get('timingUncertain')]
+                if valid:
+                    if block.get('startUncertain') and valid[0]>0:cuts.append(valid[0])
+                    if block.get('endUncertain') and valid[-1]+1<len(unit):cuts.append(valid[-1]+1)
+            if cuts:
+                # Re-evaluate each smaller unit once. Unresolved-only edges have
+                # no valid word, so recursion is bounded by these two cuts.
+                edges=[0,*sorted(set(cuts)),len(unit)]
+                for a,b in zip(edges,edges[1:]):result.extend(group_words(unit[a:b],protected_words=protected_words))
+            else:result.append(block)
+            pos=stop
     return result
