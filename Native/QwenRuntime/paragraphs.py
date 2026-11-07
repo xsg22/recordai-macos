@@ -48,6 +48,22 @@ def group_words(rows,protected_words=()):
             block=dict(run[pos])
             for row in run[pos+1:stop]:
                 block['text']+=row.get('separator','')+row['text'];block['end']=max(block['end'],row['end'])
-                if row.get('timingUncertain'):block['timingUncertain']=True
+            unit=run[pos:stop]
+            if any(x.get('timingUncertain') or x.get('hasUnalignedWords') for x in unit):
+                # Missing internal word times do not erase valid paragraph
+                # boundaries. A zero-length boundary can use a coincident real
+                # word anchor, never an interpolated/character-count estimate.
+                start_bad=unit[0].get('startUncertain',unit[0].get('timingUncertain',False))
+                end_bad=unit[-1].get('endUncertain',unit[-1].get('timingUncertain',False))
+                starts=[x['start'] for x in unit if not x.get('startUncertain',x.get('timingUncertain',False)) and x['end']>x['start']]
+                ends=[x['end'] for x in unit if not x.get('endUncertain',x.get('timingUncertain',False)) and x['end']>x['start']]
+                if starts and abs(unit[0]['start']-starts[0])<=.15:start_bad=False
+                if ends and abs(unit[-1]['end']-ends[-1])<=.15:end_bad=False
+                for key in ['timingUncertain','startUncertain','endUncertain']:block.pop(key,None)
+                block['hasUnalignedWords']=True
+                # Explicit false values distinguish a grouped row with an
+                # unresolved start from one with an unresolved end on regroup.
+                block['startUncertain']=bool(start_bad);block['endUncertain']=bool(end_bad)
+                if start_bad or end_bad:block['timingUncertain']=True
             result.append(block);pos=stop
     return result

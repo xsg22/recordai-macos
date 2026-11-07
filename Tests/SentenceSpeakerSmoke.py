@@ -60,7 +60,13 @@ assert len(r)==2,'Pause over five seconds must split'
 # word times can still bound the complete sentence.
 r=attribute('我说完。',[dict(text='我',start=0,end=0),dict(text='说',start=0,end=.2),dict(text='完',start=.2,end=.4)],[],0,.4,frames=[frame(0,.4,.95,.01)])
 assert len(r)==1 and r[0]['start']==0 and r[0]['end']==.4 and body(r)=='我说完。',r
-assert r[0].get('timingUncertain') is True,'Grouping cannot conceal an unresolved word timestamp'
+assert not r[0].get('timingUncertain') and r[0].get('hasUnalignedWords'),'A coincident real word anchor can bound the paragraph, without inventing the missing word time'
+r=attribute('我说完。',[dict(text='我',start=0,end=0),dict(text='说',start=.3,end=.5),dict(text='完',start=.5,end=.7)],[],0,.7,frames=[frame(0,.7,.95,.01)])
+assert r[0].get('timingUncertain') is True,'A missing sentence boundary cannot borrow a distant word time'
+r=attribute('说完了。',[dict(text='说',start=0,end=.2),dict(text='完',start=.2,end=.4),dict(text='了',start=.4,end=.4)],[],0,.4,frames=[frame(0,.4,.95,.01)])
+assert not r[0].get('timingUncertain') and r[0]['end']==.4,'Coincident real end anchor must remain playable'
+from paragraphs import group_words
+assert group_words(r)==r,'Timing uncertainty and anchors must survive regrouping'
 for frames in ([[0,1,1.1]], [[0,1,.8],[.5,2,.8]], [[0,float('nan'),.8]]):
     try:VoiceEvidence([],frames);raise AssertionError('Invalid voice evidence accepted')
     except ValueError:pass
