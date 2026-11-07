@@ -16,7 +16,7 @@ def splice_prefix(original,repaired,count,seconds):
 
 def crop(words,cut,previous_text,proof=None):
     if cut<=0:return list(words),[]
-    dropped=[];kept=[]
+    dropped=[];kept=[];acknowledged_edges=set()
     for word in words:
         (dropped if word['end']<=cut+1e-8 else kept).append(word)
     context=normalized(previous_text)
@@ -25,7 +25,9 @@ def crop(words,cut,previous_text,proof=None):
     # word similarity or a new repetition beginning after the boundary.
     while kept and kept[0]['start']<cut-1e-8:
         prefix=normalized(''.join(w['text']for w in dropped+[kept[0]]))
-        if len(prefix)>=4 and context.endswith(prefix):dropped.append(kept.pop(0))
+        if len(prefix)>=4 and context.endswith(prefix):
+            edge=kept.pop(0);dropped.append(edge);acknowledged_edges.add(id(edge))
+            if proof is not None:proof.append(dict(method='acknowledged-straddler',start=edge['start'],end=edge['end'],contextSuffixLength=len(prefix),cut=cut))
         else:break
     uncertain=[]
     for index,word in enumerate(words):
@@ -35,11 +37,12 @@ def crop(words,cut,previous_text,proof=None):
         # strictly inside the old context. Keep the original times unchanged.
         right=next((w for w in words[index+1:] if w['end']>w['start']),None)
         left=next((w for w in reversed(words[:index]) if w['end']>w['start']),None)
+        acknowledged=right is not None and id(right)in acknowledged_edges
         bounded=(right is not None and right['start']>=word['start']-0.15
-                 and right['end']<=cut-0.05
+                 and (right['end']<=cut-0.05 or acknowledged)
                  and (left is None or left['end']<=cut-0.05))
         if bounded:
-            if proof is not None:proof.append(dict(index=index,method='ordered-left-context',leftEnd=None if left is None else left['end'],rightEnd=right['end'],cut=cut))
+            if proof is not None:proof.append(dict(index=index,method='acknowledged-right-anchor'if acknowledged else'ordered-left-context',leftEnd=None if left is None else left['end'],rightEnd=right['end'],cut=cut))
         else:uncertain.append(word)
     if uncertain:
         # Text equality alone cannot distinguish a repeated word at the edge

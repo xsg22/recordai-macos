@@ -38,6 +38,13 @@ source=[w('麻',.48,.48),w('烦',.48,.56),w('点击三连。',.64,1.12),w('我�
 kept,dropped=crop(source,3,'麻烦点三连。我们下期再见。',proof)
 assert ''.join(x['text']for x in kept)=='Deepseek' and len(proof)==1
 assert source[0]['start']==source[0]['end']==.48 # ownership does not fabricate timing
+proof=[]
+words=[w('可以',2.72,2.88),w('在',2.88,2.88),w('这',2.88,3.04),w('里',3.04,3.2)]
+kept,dropped=crop(words,3,'前文可以在这',proof)
+assert ''.join(x['text']for x in kept)=='里' and any(x['method']=='acknowledged-right-anchor'for x in proof)
+# The same edge without an acknowledged full prefix must remain uncertain.
+try:crop(words,3,'另一段内容');raise AssertionError('Unconfirmed straddler used as an ownership anchor')
+except ValueError:pass
 try:crop([w('尾句。',1,2.8),w('我',3,3),w('继续。',3.2,4)],3,'尾句。');raise AssertionError('Ambiguous boundary word discarded')
 except ValueError:pass
 old=[w('我',0,0),w('说',1,2),w('完。',4,5)]
