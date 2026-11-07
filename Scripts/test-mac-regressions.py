@@ -22,6 +22,9 @@ import wave
 from urllib.parse import urlparse
 
 CORE = [
+    ("window-recovery", "ProgressiveWindowRecoverySmoke", False),
+    ("progressive", "ProgressiveTranscriptionSmoke", True),
+    ("multilingual", "MultilingualSentenceSmoke", False),
     ("paragraph-policy", "TranscriptParagraphPolicySmoke", False),
     ("appearance", "AppAppearanceSmoke", False), ("window-policy", "ASRWindowPolicySmoke", False), ("live-refinement", "LivePreviewRefinerSmoke", False), ("hotwords", "PersonalHotwordsSmoke", True),
     ("language", "TranscriptionLanguageSmoke", False), ("localization", "LocalizationSmoke", False),
@@ -33,6 +36,7 @@ CORE = [
     ("cold-start", "AgentColdStartSmoke", True),
 ]
 EXTRA = [
+    ("progressive-real", "ProgressiveRealPipelineSmoke", True),
     ("cli-fixture", "AgentCLIFixture", False), ("account", "TalkTuckAccountSmoke", True),
     ("automatic-sync", "LibraryAutomaticSyncSmoke", True), ("text-sync", "LibrarySyncSmoke", True),
     ("remote-edit", "LibrarySyncRemoteEditSmoke", True), ("audio-retry", "LibraryAudioSmoke", True),
@@ -103,9 +107,10 @@ def main():
     for path in (source/"Resources/Localization").glob("*.json"):
         (app/"Contents/Resources/Localization"/path.name).write_bytes(path.read_bytes())
     (app/"Contents/Info.plist").write_bytes(plistlib.dumps(dict(CFBundleIdentifier="com.xsg.talktuck.regressions", CFBundleExecutable="regressions", CFBundlePackageType="APPL")))
+    shutil.copy2(source/"Resources/SentenceRules.json",app/"Contents/Resources/SentenceRules.json")
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip()
     canonical_cases = ["canonical-capture","canonical-long","segmented-manifest","segmented-track","canonical-player","canonical-transcription","offline-windows","canonical-windows","window-speakers", "long-windows", "profile-long-windows", "live-long-utterance", "live-cache"]
-    plan = ["compile"]+canonical_cases+[x[0] for x in CORE]+["cli-compile", "cli-fixture", "cli-mcp", "group-cli", "localization-catalog", "agent-setup", "speaker-fragments", "sentence-speakers", "speaker-timeline", "language-policy", "inference-policy", "alignment-windows", "reporting"]
+    plan = ["compile"]+canonical_cases+[x[0] for x in CORE]+["cli-compile", "cli-fixture", "cli-mcp", "group-cli", "localization-catalog", "agent-setup", "speaker-fragments", "sentence-speakers", "multilingual-native", "speaker-timeline", "language-policy", "inference-policy", "alignment-windows", "reporting"]
     if args.server_repo and args.node: plan += ["server-typecheck", "server-contracts", "account", "automatic-sync", "text-offline-seed", "remote-edit", "text-conflict-resolve", "audio-retry", "hotword-sync", "canonical-sync"]
     if args.engine_dir and args.model_root: plan += ["synthesize", "convert", "offline-asr", "format-asr", "append-asr", "synthesize-cantonese", "convert-cantonese", "live-cantonese", "synthesize-english", "english-final-speakers", "canonical-real-asr", "quiet-real-asr"]
     (run/"readiness.json").write_text(json.dumps(dict(commit=commit, inputs=inputs, cases=plan, compiledEntrypoints=[x[0] for x in specs],
@@ -127,7 +132,8 @@ def main():
         if not network: command = ["/usr/bin/sandbox-exec", "-p", "(version 1)(allow default)(deny network*)", *command]
         return call(label or case, command, extra=dict(TALKTUCK_REGRESSION_CASE=case, **extra), timeout=900 if case == "canonical-long" else 360 if "asr" in case else 90)
     for case, _, _ in CORE:
-        arguments = [run/"fixtures/cold-start"] if case == "cold-start" else []
+        arguments = [run/"fixtures"/case] if case in {"cold-start","progressive"} else []
+        if case=="window-recovery": arguments=[run/"fixtures"/case,source/"Tests/ProgressiveWindowRecoveryWorkerFake.py"]
         extra = {"TALKTUCK_TEST_AGENT_OUT": str(run/"fixtures/organization-agent")} if case == "organization" else {}
         swift(case, *arguments, **extra)
     for case in canonical_cases:
@@ -160,6 +166,7 @@ def main():
     if (run/"fixtures/organization-agent").exists(): call("group-cli", [sys.executable, source/"Tests/OrganizationCLIIntegration.py", cli, run/"fixtures/organization-agent"])
     for case, script in [("localization-catalog", "Scripts/check-localization.py"), ("agent-setup", "Scripts/test-agent-setup.py"), ("speaker-fragments", "Tests/SpeakerAttributionSmoke.py"), ("speaker-timeline", "Tests/SpeakerTimelineSmoke.py"), ("language-policy", "Tests/LanguagePolicySmoke.py"), ("inference-policy", "Tests/InferencePolicySmoke.py"), ("alignment-windows", "Tests/AlignmentWindowsSmoke.py")]:
         call(case, [sys.executable, source/script])
+    call("multilingual-native", [sys.executable, source/"Tests/MultilingualSentenceSmoke.py"])
     call("sentence-speakers", [sys.executable, source/"Tests/SentenceSpeakerSmoke.py"])
     call("reporting", [sys.executable, "-m", "unittest", "discover", "-s", "Tests/reporting", "-v"])
     @contextlib.contextmanager

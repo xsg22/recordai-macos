@@ -6,6 +6,7 @@ All boundaries remain on aligned tokens; no text or timing is synthesized.
 """
 import bisect,math
 from paragraphs import ends_sentence,group_words
+from sentence_rules import sentence_ends
 
 class VoiceEvidence:
     def __init__(self,turns,frames=None):
@@ -75,12 +76,14 @@ def sentence_speaker(pieces):
 
 def attribute_sentences(words,turns,*,frames=None,protected_words=()):
     evidence=VoiceEvidence(turns,frames);sentences=[]
+    full=''.join(w.get('separator','')+w['text']for w in words);boundaries=sentence_ends(full);cursor=0
     for word in words:
         if sentences:
             prev=sentences[-1][-1]
-            if not ends_sentence(prev['text']) and word['start']-prev['end']<=5+1e-8:
-                sentences[-1].append(dict(word));continue
+            if cursor not in boundaries and word['start']-prev['end']<=5+1e-8:
+                sentences[-1].append(dict(word));cursor+=len(word.get('separator','')+word['text']);continue
         sentences.append([dict(word)])
+        cursor+=len(word.get('separator','')+word['text'])
     output=[]
     for sentence in sentences:
         pieces=evidence.pieces(sentence);runs=decisive_runs(pieces);cuts=set()

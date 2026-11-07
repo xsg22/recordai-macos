@@ -1209,5 +1209,19 @@
   "发言人分段与正文不一致，正文已保留。": "Speaker paragraphs do not match the transcript. The text has been preserved.",
   "时间对齐模型缺失，正文和发言人分析状态已保留。": "The alignment model is missing. The transcript and speaker analysis status have been preserved.",
   "部分文字时间待对齐，正文与已确认的发言人已保留。": "Some text is awaiting timing alignment. The transcript and confirmed speakers have been preserved.",
-  "部分字词时间待对齐；回放已对齐的语音范围": "Some word times are pending; replay the aligned speech range."
+  "部分字词时间待对齐；回放已对齐的语音范围": "Some word times are pending; replay the aligned speech range.",
+  "正在录音 · 实时出字、快速修正、分批定稿": "Recording · Live captions, quick corrections and batch finalization",
+  "分批定稿稍后重试，原音和实时文字已保留": "Batch finalization will retry later. Original audio and live text are preserved.",
+  "正文已修改，后台定稿已另存，未覆盖人工编辑。": "The transcript was edited. Background results are saved separately; manual edits were preserved.",
+  "正在补齐最后一批 · 已完成的定稿直接复用": "Finishing the last batch · Reusing completed results",
+  "转录完成 · 分批定稿已保存，仅补齐尾段": "Transcription complete · Batch results saved; only the tail was processed",
+  "已完成的定稿和原音已保存，剩余片段可重试": "Completed text and original audio are saved. Remaining ranges can be retried.",
+  "实时字幕持续更新 · 后台分批生成定稿": "Live captions keep updating · Finalizing batches in the background",
+  "这一批有声音但尚未识别出文字，原音和检查点已保留，可重试。": "This batch contains sound but no recognized text. Audio and checkpoints are preserved for retry.",
+  "部分录音尚未定稿，原音、已完成结果与重试位置均已保存。": "Some audio is not finalized yet. Originals, completed results and retry positions are saved.",
+  "核对分批边界": "Checking batch boundaries",
+  "定稿边界数据无效。": "Invalid final-transcript boundary data.",
+  "录音中 · 已完成 {0} 批定稿": "Recording · {0} batches finalized",
+  "先出实时字幕，再快速修正，分批生成定稿；停止后只补尾段。": "Live captions appear first, followed by quick corrections and finalized batches. Stopping processes only the tail.",
+  "转录未完成。": "Transcription is incomplete."
 }

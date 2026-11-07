@@ -147,13 +147,18 @@ def run_live(model_path, language, hints_path=None):
 
     # Begin draining stdin before loading weights, without retaining unbounded audio.
     threading.Thread(target=reader, daemon=True).start()
-    model = load(pathlib.Path(model_path).resolve(strict=True))
-    mx.eval(model.parameters())
+    from inference_lock import exclusive
+    from inference_policy import configure_memory
+    configure_memory(mx)
+    with exclusive():
+        model = load(pathlib.Path(model_path).resolve(strict=True))
+        mx.eval(model.parameters())
 
     def decode(audio):
-        result = model.generate(audio=audio, language=selected, hotwords=words[-12:] or None,
-                                max_tokens=256, temperature=0, chunk_duration=15,
-                                min_chunk_duration=.1, repetition_penalty=1.05, verbose=False)
+        with exclusive():
+            result = model.generate(audio=audio, language=selected, hotwords=words[-12:] or None,
+                                    max_tokens=256, temperature=0, chunk_duration=15,
+                                    min_chunk_duration=.1, repetition_penalty=1.05, verbose=False)
         if result.generation_tokens >= 256:
             raise ValueError('Live transcript limit reached; original audio is preserved')
         text = result.text

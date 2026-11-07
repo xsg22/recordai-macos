@@ -11,6 +11,7 @@ hidden=mlx_hidden+collect_submodules('mlx_audio.stt.models.qwen3_asr')+collect_s
  'transformers.models.qwen2.tokenization_qwen2_fast']
 datas=mlx_data+collect_data_files('mlx_audio',include_py_files=True,
  includes=['__init__.py','utils.py','audio_io.py','version.py','dsp.py','base.py','stt/**','lm/**','vad/**'])
+datas.append((str(root/'Resources/SentenceRules.json'),'.'))
 for name in ['mlx','mlx-metal','mlx-audio','transformers','huggingface-hub','numpy','scipy','tokenizers','safetensors','tqdm','regex','packaging']:
  datas+=copy_metadata(name)
 a=Analysis([str(root/'Native/QwenRuntime/worker.py')],pathex=[],binaries=mlx_binaries,datas=datas,

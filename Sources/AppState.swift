@@ -45,7 +45,7 @@ final class AppState: ObservableObject {
         didSet { if miniShowsCaptions { flushLivePresentation() } }
     }
     var recordingIsMuted: Bool { recording && activeRecordingSources.isMuted }
-    var miniTranscriptPreview: MiniTranscriptPreview { MiniTranscriptPreview(text: liveText, partial: livePartial) }
+    var miniTranscriptPreview: MiniTranscriptPreview { MiniTranscriptPreview(text: recording ? (liveCommitted.last?.text ?? liveText):liveText, partial: livePartial) }
     @Published var level: Float = 0
     @Published var liveLevels = [Float](repeating: 0, count: 72)
     @Published var recordingIssue: String?
@@ -141,6 +141,18 @@ final class AppState: ObservableObject {
     private var continuousWorker: Task<Void, Never>?
     private var continuousWorkerEngine: TranscriptionEngine?
     private var continuousMeetingID: UUID?
+    private var progressiveSession: ProgressiveTranscriptionSession?
+    private var progressiveBase: MeetingRecord?
+    private var progressiveExpectedText=""
+    private var progressiveAudioFile: String?
+    private var progressiveTail:[TranscriptParagraph]=[]
+    private var progressiveTailSubtitles=""
+    private var progressiveGeneration: UUID?
+    private var progressiveFinishTask: Task<Void,Never>?
+    @Published private(set) var progressiveFinalizedThrough: Double=0
+    @Published private(set) var progressiveCompletedBatches=0
+    @Published private(set) var progressiveIssue:String?
+    private var lastCompactMeter=Date.distantPast
     @Published private(set) var continuousProcessingCount = 0
     var continuousProcessing: Bool { continuousWorker != nil }
     var continuousQueuedCount: Int { continuousSegments.filter { $0.status == "queued" }.count }
@@ -179,7 +191,7 @@ final class AppState: ObservableObject {
     var showsInlineRecorder: Bool { recording && !isViewingRecording && !miniMode }
     var displayedLiveText: String { recording && !isViewingRecording ? current?.previewText ?? "" : liveText }
     var displayedLivePartial: String { recording && !isViewingRecording ? "" : livePartial }
-    var recordingLiveUtterances: [LiveUtterance] { (recordingRecord?.liveUtterances ?? []).filter { $0.start >= liveSegmentOffset - 0.001 } }
+    var recordingLiveUtterances: [LiveUtterance] { Array((recordingRecord?.liveUtterances ?? []).filter { $0.end > max(liveSegmentOffset,progressiveFinalizedThrough) + 0.001 }.suffix(200)) }
     var current: MeetingRecord? { history.first { $0.id == selection } }
     var syncStore: MCPConnectionStore {
         switch syncDestination { case .dingtalk: return dingTalk; case .feishu: return feishu; case .notion: return notion }
@@ -211,7 +223,7 @@ final class AppState: ObservableObject {
          cloudAccount: TalkTuckAccountStore? = nil,
          captureStarter: @escaping @MainActor (MeetingRecorder, MeetingCaptureRequest) async throws -> Void = { recorder, request in
              try await recorder.start(mode: request.mode, directory: request.directory, sessionMode: request.sessionMode,
-                 meetingOffset: request.meetingOffset, segmenter: request.segmenter)
+                 meetingOffset: request.meetingOffset, segmenter: request.segmenter,progressive:request.progressive)
          },
          playbackFactory: @escaping @MainActor (URL) throws -> MeetingAudioPlayer = { try MeetingAudioPlayer(contentsOf: $0) }) {
         self.captureStarter = captureStarter
@@ -261,6 +273,10 @@ final class AppState: ObservableObject {
             guard let self else { return }
             if self.elapsed != Int(seconds) { self.elapsed = Int(seconds) }
             guard !self.compactRecordingUI || self.miniWindowVisible else { return }
+            if self.compactRecordingUI {
+                guard Date().timeIntervalSince(self.lastCompactMeter)>=0.5 else { return }
+                self.lastCompactMeter=Date()
+            }
             self.level = level
             if self.recording && !self.paused { self.liveLevels.append(level); self.liveLevels = Array(self.liveLevels.suffix(72)) }
         }
@@ -545,7 +561,8 @@ final class AppState: ObservableObject {
         guard model != nil else { showModelDownload = true; return }
         let target = targetID.flatMap { id in history.first { $0.id == id } } ?? (targetID == nil ? current : nil)
         guard let model, !locked, var record = target, let library else { return }
-        if record.recordingSessionMode == .continuous {
+        if resumeProgressiveIfPresent(record) { return }
+        if record.recordingSessionMode == .continuous && !record.continuousSegmentFiles.isEmpty {
             retryContinuousSegments(record)
             return
         }
@@ -695,7 +712,7 @@ final class AppState: ObservableObject {
         record.status = cancelled ? .recorded : .failed
         do { try update(record) } catch { self.error = error.localizedDescription }
     }
-    func cancel() { task?.cancel() }
+    func cancel() { task?.cancel();if !recording { progressiveSession?.cancel() } }
 
     func toggleRecording() {
         guard !quitting, !preparing else { return }
@@ -766,8 +783,11 @@ final class AppState: ObservableObject {
         error = nil
         if activeRecordingProfile != .realtime || activeRecordingSessionMode == .continuous { showMiniRecorder() }
         continuousSegments = []
+        continuousSegmenter=nil
         continuousProcessingCount = 0
         recordingIssue = nil; liveLevels = [Float](repeating: 0, count: 72)
+        progressiveSession?.cancel();progressiveSession=nil;progressiveGeneration=nil
+        progressiveBase=nil;progressiveAudioFile=nil;progressiveCompletedBatches=0;progressiveFinalizedThrough=0;progressiveIssue=nil
         saveEdits(); stopPlayback(); preparing = true
         Task { [self] in
             var record = continuing ? current! : MeetingRecord(title: L10n.text("录音 ") + Date().formatted(Date.FormatStyle(date: .numeric, time: .shortened).locale(L10n.locale)), language: language, status: .recording)
@@ -786,9 +806,12 @@ final class AppState: ObservableObject {
                 miniSessionID = record.id
                 select(record.id)
                 startLiveTranscription(for: record.id)
+                // Existing legacy chapter recordings retain their recovery path.
+                // All new sessions/profiles use one incremental finalizer.
+                if record.continuousSegmentFiles.isEmpty { prepareProgressive(record) }
                 let directory = library.directory(for: record.id).appendingPathComponent("Capture", isDirectory: true)
                 let segmentDirectory = directory.appendingPathComponent("Segments", isDirectory: true)
-                if activeRecordingSessionMode == .continuous {
+                if activeRecordingSessionMode == .continuous && progressiveSession == nil {
                     continuousSegmenter = ContinuousRecordingSegmenter(directory: segmentDirectory, timelineOffset: recordingBaseDuration, onError: { [weak self] issue in
                         Task { @MainActor in self?.error = "持续录音切片中断，原始音轨仍在保存：\(issue.localizedDescription)" }
                     }) { [weak self] segment in
@@ -796,13 +819,14 @@ final class AppState: ObservableObject {
                     }
                 }
                 try await captureStarter(recorder, MeetingCaptureRequest(mode: recordingMode, directory: directory,
-                    sessionMode: activeRecordingSessionMode, meetingOffset: recordingBaseDuration, segmenter: continuousSegmenter))
+                    sessionMode: activeRecordingSessionMode, meetingOffset: recordingBaseDuration, segmenter: continuousSegmenter,progressive:progressiveSession))
                 activeRecordingSources = recorder.activeSources
                 switchingRecordingSource = nil
                 recording = true; paused = false; elapsed = 0
-                status = liveEnabled ? "正在录音并实时转录 · 停止后自动生成定稿" : "正在录制\(recordingMode.title) · 停止后自动转录"
+                status = "正在录音 · 实时出字、快速修正、分批定稿"
             } catch {
                 liveSession?.cancel(); liveRefiner?.cancel(); liveRefiner = nil; liveSession = nil; liveGeneration = nil; recorder.onAudio = nil
+                progressiveSession?.cancel();progressiveSession=nil;progressiveGeneration=nil
                 record = original
                 if !continuing { record.status = .failed; record.recoveryMessage = "录音未能正常开始。" }
                 do { try update(record) } catch { }
@@ -959,6 +983,7 @@ final class AppState: ObservableObject {
         Task {
             var shouldFinalize = false
             var saved = false
+            var progressiveFrames:Int64?
             let stoppedID = recordingID
             do {
                 let result = try await recorder.stop()
@@ -979,13 +1004,19 @@ final class AppState: ObservableObject {
                 if let recordingIssue, activeRecordingSessionMode == .continuous {
                     record.captureWarnings.append(recordingIssue)
                 }
-                if activeRecordingSessionMode == .continuous {
+                if activeRecordingSessionMode == .continuous && progressiveSession == nil {
                     // 完整混音用于回放；识别队列只消费已经按边界关闭的片段，避免整段音频重复识别。
                     _ = try library.importAudio(result.audioURL, into: &record, recordingDuration: nil, captureSession: UUID(uuidString: result.audioURL.deletingLastPathComponent().lastPathComponent))
                     record.duration = max(record.duration, recordingBaseDuration + result.seconds)
                     record.status = .recorded
                 } else {
-                    _ = try library.importAudio(result.audioURL, into: &record, recordingDuration: result.seconds, captureSession: UUID(uuidString: result.audioURL.deletingLastPathComponent().lastPathComponent))
+                    _ = try library.importAudio(result.audioURL, into: &record, recordingDuration: result.seconds,
+                        captureSession: UUID(uuidString: result.audioURL.deletingLastPathComponent().lastPathComponent),
+                        timelineEnd: progressiveSession == nil ? nil:recordingBaseDuration+result.seconds)
+                }
+                if let progressiveSession,let snapshot=progressiveSession.currentSnapshot() {
+                    progressiveAudioFile=record.importedCaptureSessions[snapshot.captureID.uuidString]
+                    progressiveFrames=try CanonicalAudioReader(manifestURL:result.audioURL).durationFrames
                 }
                 if let warning = result.warning {
                     record.recoveryMessage = "已保存中断前的音频：" + warning
@@ -993,12 +1024,15 @@ final class AppState: ObservableObject {
                 }
                 record = try library.save(record)
                 publishStoredRecord(record)
+                if let snapshot=progressiveSession?.currentSnapshot() { try applyProgressive(snapshot,complete:false) }
                 if selection == id { select(id, saveCurrent: false) }
                 status = result.warning == nil ? "录音已保存，可以开始转录" : "中断前音频已保存，正在处理已有录音"
                 saved = true
                 shouldFinalize = finalize
             } catch {
                 liveSession?.cancel()
+                progressiveGeneration=nil
+                if let progressiveSession { await progressiveSession.cancelAndWait() }
                 if let id = recordingID, var record = history.first(where: { $0.id == id }) {
                     record.status = .interrupted; record.recoveryMessage = "原始音轨已保留，可从“恢复中断录音”检查并恢复可读取片段。"
                     do { try update(record) } catch { }
@@ -1010,6 +1044,7 @@ final class AppState: ObservableObject {
             if selection != stoppedID { liveText = current?.previewText ?? ""; livePartial = "" }
             recorder.onAudio = nil; liveRefiner?.cancel(); liveRefiner = nil; liveSession = nil; liveGeneration = nil
             if !finalize {
+                if let progressiveSession { await progressiveSession.cancelAndWait() };progressiveGeneration=nil
                 continuousWorker?.cancel()
                 continuousWorkerEngine?.cancel()
                 if let continuousWorker { await continuousWorker.value }
@@ -1017,7 +1052,9 @@ final class AppState: ObservableObject {
                 if saved && saveBeforeQuit() { onSaved?() }
             }
             if shouldFinalize {
-                if activeRecordingSessionMode == .continuous {
+                if let progressiveSession,let progressiveFrames,let stoppedID {
+                    startProgressiveFinish(progressiveSession,id:stoppedID,frames:progressiveFrames)
+                } else if activeRecordingSessionMode == .continuous {
                     status = "持续录音已保存，继续处理剩余片段"
                     processNextContinuousSegment()
                     finishContinuousIfDrained()
@@ -1027,6 +1064,78 @@ final class AppState: ObservableObject {
                 }
             }
         }
+    }
+
+    private func prepareProgressive(_ savedRecord:MeetingRecord) {
+        let record=ProgressiveTranscriptCommit.normalizedBase(savedRecord)
+        guard let model,let executable=ASRResources.executable("qwen-asr") else { return }
+        let generation=UUID();progressiveGeneration=generation;progressiveBase=record;progressiveExpectedText=record.text
+        progressiveTail=[];progressiveTailSubtitles=""
+        progressiveFinalizedThrough=record.duration
+        progressiveSession=ProgressiveTranscriptionSession(model:model,executable:executable,language:record.language,
+            hotwords:hotwords.words,context:record.title,baseOffset:record.duration,baseRecord:record,onUpdate:{ [weak self] snapshot in
+                Task { @MainActor in
+                    guard let self,self.progressiveGeneration==generation else { return }
+                    do { try self.applyProgressive(snapshot,complete:false);self.progressiveIssue=nil } catch { self.error=error.localizedDescription }
+                }
+            },onFailure:{ [weak self] message in
+                Task { @MainActor in guard let self,self.progressiveGeneration==generation else { return };self.liveStatus="分批定稿稍后重试，原音和实时文字已保留";self.progressiveIssue=message }
+            })
+    }
+
+    private func applyProgressive(_ snapshot:ProgressiveSnapshot,complete:Bool) throws {
+        guard let base=progressiveBase,let library else { return }
+        var latest=try library.load(base.id)
+        try ProgressiveTranscriptCommit.apply(snapshot,base:base,expectedText:progressiveExpectedText,
+            audioFile:progressiveAudioFile,complete:complete,recording:recording && !preparing,tail:progressiveTail,tailSubtitles:progressiveTailSubtitles,to:&latest)
+        try update(latest);progressiveExpectedText=latest.text
+        progressiveFinalizedThrough=base.duration+Double(snapshot.completedFrames)/16000;progressiveCompletedBatches=snapshot.jobs
+        if selection==base.id { text=latest.text }
+    }
+
+    private func startProgressiveFinish(_ session:ProgressiveTranscriptionSession,id:UUID,frames:Int64) {
+        busy=true;transcriptionRecordingID=id;transcriptPhase = .recognizing
+        status="正在补齐最后一批 · 已完成的定稿直接复用"
+        progressiveFinishTask=Task { [self] in
+            var succeeded=false
+            do {
+                let snapshot=try await session.finish(totalFrames:frames)
+                try applyProgressive(snapshot,complete:true)
+                status="转录完成 · 分批定稿已保存，仅补齐尾段";transcriptPhase = .completed
+                if let completed=history.first(where:{$0.id==id}) { hotwords.extract(from:completed.text) }
+                succeeded=true
+            } catch {
+                status="已完成的定稿和原音已保存，剩余片段可重试"
+                self.error=error.localizedDescription
+                if var record=try? library?.load(id) { record.status = .recorded;record.speakerAnalysisStatus = .partial;try? update(record) }
+            }
+            progressiveGeneration=nil;progressiveSession=nil;busy=false;transcriptionRecordingID=nil;progressiveFinishTask=nil
+            if succeeded,let remaining=history.first(where:{$0.id==id}),!remaining.pendingAudioFiles.isEmpty { transcribe(recordingID:id) }
+        }
+    }
+
+    private func resumeProgressiveIfPresent(_ record:MeetingRecord) -> Bool {
+        guard let library,let model,let executable=ASRResources.executable("qwen-asr") else { return false }
+        for (key,file) in record.importedCaptureSessions.sorted(by:{$0.key<$1.key}) where record.pendingAudioFiles.contains(file) {
+            guard let id=UUID(uuidString:key) else { continue }
+            let capture=library.directory(for:record.id).appendingPathComponent("Capture").appendingPathComponent(id.uuidString)
+            let saved=capture.deletingLastPathComponent().appendingPathComponent("Progressive").appendingPathComponent(id.uuidString).appendingPathComponent("progress.json")
+            guard FileManager.default.fileExists(atPath:saved.path) else { continue }
+            do {
+                let base=try ProgressiveTranscriptionSession.baseRecord(capture:capture)
+                prepareProgressive(base)
+                guard let session=progressiveSession else { throw BalancedAudioError.invalidManifest }
+                _ = model;_ = executable
+                try session.bindCanonicalArchive(capture)
+                let total=try CanonicalAudioReader(manifestURL:capture.appendingPathComponent("final.manifest.json")).durationFrames
+                let restored=try ProgressiveTranscriptRecovery(original:base,record:record,file:file,captureID:id,totalFrames:total,session:session)
+                progressiveBase=restored.base;progressiveTail=restored.tail;progressiveTailSubtitles=restored.tailSubtitles
+                progressiveExpectedText=record.text;progressiveAudioFile=file
+                startProgressiveFinish(session,id:record.id,frames:total)
+            } catch { progressiveSession?.cancel();progressiveSession=nil;progressiveGeneration=nil;self.error=error.localizedDescription }
+            return true
+        }
+        return false
     }
 
     private func receiveContinuousSegment(_ segment: ContinuousSegmentInfo) {
@@ -1245,6 +1354,9 @@ final class AppState: ObservableObject {
             let value = event.text.trimmingCharacters(in: .whitespacesAndNewlines)
             let partial = event.type == "partial" ? value : ""
             liveCurrentPartial = partial
+            // A small current phrase is cheap and must remain immediate, even
+            // when the full transcript/waveform presentation is throttled.
+            livePartial=partial
             if event.type == "commit", !value.isEmpty {
                 let row = LiveUtterance(text: value, start: liveSegmentOffset + event.start, end: liveSegmentOffset + event.end)
                 liveCommitted.append(row)
@@ -1263,13 +1375,17 @@ final class AppState: ObservableObject {
                     }
                 }
             }
-            let pieces = liveCommitted.map(\.text) + (!partial.isEmpty ? [partial] : [])
-            let preview = ([livePrefix] + pieces).filter { !$0.isEmpty }.joined(separator: "\n")
+            let shouldSave = event.type == "commit" || Date().timeIntervalSince(lastLiveSave) >= (compactRecordingUI ? 5 : 2)
+            // Partial captions in a compact/hidden window only rebuild a short
+            // display tail. The durable full preview is assembled on save.
+            let visibleRows = compactRecordingUI && !shouldSave ? Array(liveCommitted.suffix(200)) : liveCommitted
+            let pieces = visibleRows.map(\.text) + (!partial.isEmpty ? [partial] : [])
+            let prefix = compactRecordingUI && !shouldSave ? String(livePrefix.suffix(12000)) : livePrefix
+            let preview = ([prefix] + pieces).filter { !$0.isEmpty }.joined(separator: "\n")
             pendingLivePresentation = (preview, partial)
             // 隐藏或精简窗口只抑制呈现，不暂停音频输入、识别或已确认句保存。
-            if !compactRecordingUI || ((miniWindowVisible || inlineRecorderVisible) && miniShowsCaptions) || Date().timeIntervalSince(lastLivePresentation) >= 2 { flushLivePresentation() }
-            if liveStatus != "实时预览 · 停止后生成完整定稿" { liveStatus = "实时预览 · 停止后生成完整定稿" }
-            let shouldSave = event.type == "commit" || Date().timeIntervalSince(lastLiveSave) >= (compactRecordingUI ? 5 : 2)
+            if !compactRecordingUI || Date().timeIntervalSince(lastLivePresentation)>=0.5 { flushLivePresentation() }
+            liveStatus = progressiveSession == nil ? "实时预览 · 停止后生成完整定稿":"实时字幕持续更新 · 后台分批生成定稿"
             guard shouldSave else { return }
             lastLiveSave = Date()
             if var record = history.first(where: { $0.id == meetingID }) {
@@ -1314,7 +1430,7 @@ final class AppState: ObservableObject {
 
     private func flushLivePresentation() {
         guard let pending = pendingLivePresentation else { return }
-        livePartial = pending.partial; liveText = pending.text
+        livePartial = pending.partial; liveText = compactRecordingUI ? String(pending.text.suffix(12_000)):pending.text
         pendingLivePresentation = nil; lastLivePresentation = Date()
     }
     func showRecordingWindow() {
@@ -1679,6 +1795,9 @@ final class AppState: ObservableObject {
         defer { quitting = false }
         let pending = task
         pending?.cancel()
+        let progressive=progressiveFinishTask
+        if let progressiveSession { await progressiveSession.cancelAndWait() }
+        if let progressive { await progressive.value }
         continuousWorker?.cancel()
         continuousWorkerEngine?.cancel()
         if let pending { await pending.value }

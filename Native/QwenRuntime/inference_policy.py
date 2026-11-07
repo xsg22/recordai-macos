@@ -3,7 +3,7 @@
 The original model supports 1200s; local app windows remain deliberately bounded.
 Alignment has its own 300s model limit. Never silently split or truncate input.
 """
-import math
+import math,os
 
 RATE = 16000
 MAX_ASR_SECONDS = 480
@@ -12,6 +12,9 @@ MAX_ALIGNMENT_SECONDS = 300
 def configure_memory(mx):
     info=mx.device_info()
     budget=min(6*1024**3,int(info['memory_size']*.5),int(info['max_recommended_working_set_size']*.8))
+    requested=int(os.environ.get('TALKTUCK_ASR_MEMORY_MB','6144'))
+    if not 512<=requested<=6144:raise ValueError('Invalid memory budget')
+    budget=min(budget,requested*1024**2)
     mx.set_memory_limit(budget)
     mx.set_cache_limit(256*1024**2)
 

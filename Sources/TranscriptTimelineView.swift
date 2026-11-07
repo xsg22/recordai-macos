@@ -17,7 +17,7 @@ struct TranscriptTimelineView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if selectedPreparing || state.current?.status == .failed { stageBanner }
+            if selectedRecording || selectedPreparing || state.current?.status == .failed { stageBanner }
             if history || state.editingTranscript {
             HStack {
                 if !state.displayedLiveText.isEmpty || !(state.current?.liveUtterances.isEmpty ?? true) {
@@ -79,7 +79,7 @@ struct TranscriptTimelineView: View {
         }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
     }
     private var stageTitle: String {
-        if selectedRecording { return state.paused ? "录音已暂停" : "正在实时识别" }
+        if selectedRecording { return state.paused ? "录音已暂停" : (state.progressiveCompletedBatches>0 ? L10n.format("录音中 · 已完成 {0} 批定稿",String(state.progressiveCompletedBatches)):"正在实时识别") }
         if selectedPreparing { return "正在保存录音" }
         if selectedProcessing {
             switch state.transcriptPhase {
@@ -97,9 +97,8 @@ struct TranscriptTimelineView: View {
                 : (state.recordingIssue == nil ? "采集已暂停，已有文字保留；继续后接着记录。" : "已有原轨保留，请停止并保存后检查输入设备。")
         }
         if selectedRecording || selectedPreparing {
-            return state.activeRecordingSessionMode == .continuous
-                ? "录音继续；片段关闭后依次定稿并区分发言人。"
-                : "文字持续出现，停止后生成定稿和发言人标签。"
+            if state.progressiveIssue != nil { return "分批定稿稍后重试，原音和实时文字已保留" }
+            return "先出实时字幕，再快速修正，分批生成定稿；停止后只补尾段。"
         }
         if selectedProcessing && [.diarizing, .aligning].contains(state.transcriptPhase) { return "正文已保存；分析可取消，不影响已有文字。" }
         if selectedProcessing { return "正在核对录音中的语音片段，实时历史仍可回看。" }

@@ -107,6 +107,24 @@ enum MeetingRecordingAppend {
 
     }
 
+    static func sliceSRT(_ source:String,beforeEnd:Double?=nil,afterStart:Double?=nil) throws -> String {
+        let regex=try NSRegularExpression(pattern:"(\\d{2,}):(\\d{2}):(\\d{2}),(\\d{3})")
+        var result=""
+        for block in source.replacingOccurrences(of:"\r\n",with:"\n").components(separatedBy:"\n\n") where !block.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty {
+            let lines=block.components(separatedBy:"\n")
+            guard lines.count>=3 else { throw BalancedAudioError.invalidManifest }
+            let times=regex.matches(in:lines[1],range:NSRange(lines[1].startIndex...,in:lines[1])).map { match -> Double in
+                let parts=(1...4).map{Double((lines[1]as NSString).substring(with:match.range(at:$0)))!}
+                return parts[0]*3600+parts[1]*60+parts[2]+parts[3]/1000
+            }
+            guard times.count==2 else { throw BalancedAudioError.invalidManifest }
+            if let beforeEnd,times[1]>beforeEnd+0.001 {continue}
+            if let afterStart,times[0]<afterStart-0.001 {continue}
+            result=try appendSRT(block,to:result,offset:0)
+        }
+        return result
+    }
+
     /// SRT 使用整场累计时间轴与连续序号，保留已有字幕正文。
     static func appendSRT(_ new: String, to previous: String, offset: Double) throws -> String {
         let regex = try NSRegularExpression(pattern: "(\\d{2,}):(\\d{2}):(\\d{2}),(\\d{3})")

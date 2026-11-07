@@ -102,8 +102,10 @@ enum TranscriptReadability {
     static func fallback(_ text: String, hotwords: [String] = []) -> [TranscriptParagraph] {
         let chars = Array(text)
         guard !chars.isEmpty else { return [] }
-        var prefix = [0]
-        for c in chars { prefix.append(prefix.last! + ((c.isLetter || c.isNumber) ? 1 : 0)) }
+        let words=SentencePolicy.usesWords(text)
+        let prefix=SentencePolicy.unitPrefix(chars,words:words),boundaries=SentencePolicy.boundaries(chars)
+        let target=words ? SentencePolicy.rules.wordTarget : SentencePolicy.rules.characterTarget
+        let maximum=words ? SentencePolicy.rules.wordMaximum : SentencePolicy.rules.characterMaximum
         let protected = hotwords.flatMap { word -> [Range<Int>] in
             guard !word.isEmpty else { return [] }
             var result: [Range<Int>] = [], cursor = text.startIndex
@@ -116,15 +118,15 @@ enum TranscriptReadability {
         while start < chars.count {
             let weight: (Int) -> Int = { prefix[$0] - prefix[start] }
             var stop = chars.count
-            if weight(chars.count) > 50 {
-                let endings = (start..<chars.count).filter { "。！？!?；;".contains(chars[$0]) || (chars[$0] == "." && ($0 + 1 == chars.count || chars[$0+1].isWhitespace)) }
-                if let sentence = endings.first(where: { weight($0+1) >= 50 }), weight(sentence+1) <= 75 { stop = sentence+1 }
+            if weight(chars.count) > target {
+                let endings = boundaries.filter { $0>start }.sorted()
+                if let sentence = endings.first(where: { weight($0) >= target }), weight(sentence) <= maximum { stop = sentence }
                 else {
-                    let clauses = (start..<chars.count).filter { "，,、：:".contains(chars[$0]) && (25...75).contains(weight($0+1)) }
-                    stop = clauses.min(by: { abs(weight($0+1)-50) < abs(weight($1+1)-50) }).map { $0+1 } ?? (start..<chars.count).first(where: { weight($0+1) >= 50 }).map { $0+1 } ?? chars.count
+                    let clauses = (start..<chars.count).filter { "，,、：:；;،؛".contains(chars[$0]) && (target/2...maximum).contains(weight($0+1)) }
+                    stop = clauses.min(by: { abs(weight($0+1)-target) < abs(weight($1+1)-target) }).map { $0+1 } ?? (start..<chars.count).first(where: { weight($0+1) >= target }).map { $0+1 } ?? chars.count
                 }
             }
-            while stop < chars.count && chars[stop-1].isASCII && chars[stop].isASCII && (chars[stop-1].isLetter || chars[stop-1].isNumber) && (chars[stop].isLetter || chars[stop].isNumber || chars[stop] == "'") { stop += 1 }
+            while stop < chars.count && (words || (chars[stop-1].isASCII && chars[stop].isASCII)) && (chars[stop-1].isLetter || chars[stop-1].isNumber) && (chars[stop].isLetter || chars[stop].isNumber || "'’-".contains(chars[stop])) { stop += 1 }
             for span in protected where span.lowerBound < stop && stop < span.upperBound { stop = span.upperBound }
             while stop < chars.count && (chars[stop].isWhitespace || "”’\"'」』）)]}".contains(chars[stop])) { stop += 1 }
             result.append(TranscriptParagraph(text: String(chars[start..<stop])))
@@ -151,7 +153,7 @@ enum TranscriptReadability {
               [start, end, aStart, bEnd].allSatisfy(\.isFinite),
               start >= end - 0.15, start - end <= 0.45,
               !b.separator.contains("\n"),
-              !a.text.trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "”’\"'」』）)]}"))).hasSuffix(where: { "。！？!?；;.".contains($0) }),
+              !SentencePolicy.boundaries(Array(a.text)).contains(a.text.count),
               combinedLength + b.text.count <= 180 else { return false }
         let letters: (String) -> Int = { $0.filter { $0.isLetter || $0.isNumber }.count }
         // 短暂归属抖动只影响阅读分组；正常长句和完整短答保留各自边界。

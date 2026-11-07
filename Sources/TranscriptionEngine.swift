@@ -9,7 +9,7 @@ enum TranscriptionError: LocalizedError {
 
 private struct HotwordHints: Encodable { let words: [String]; let context: String }
 
-struct TranscriptionOutput: Sendable {
+struct TranscriptionOutput: Codable, Sendable {
     let text: String
     let subtitles: String
     var paragraphs: [TranscriptParagraph] = []
@@ -23,11 +23,13 @@ final class TranscriptionEngine: @unchecked Sendable {
     private let lock = NSLock()
     private let temporaryRoot: URL
     private let evidenceRoot: URL?
+    private let memoryLimitMB: Int?
     private var process: Process?
     private var cancelled = false
 
-    init(temporaryRoot: URL? = nil, evidenceRoot: URL? = nil) {
+    init(temporaryRoot: URL? = nil, evidenceRoot: URL? = nil, memoryLimitMB: Int? = nil) {
         self.evidenceRoot = evidenceRoot
+        self.memoryLimitMB = memoryLimitMB
         let configured = ProcessInfo.processInfo.environment["RECORD_AI_TRANSCRIPTION_TMP_ROOT"]
             .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
         self.temporaryRoot = temporaryRoot ?? configured ?? FileManager.default.temporaryDirectory
@@ -50,6 +52,8 @@ final class TranscriptionEngine: @unchecked Sendable {
     }
 
     private func run(_ executable: URL, _ arguments: [String], directory: URL, stage: String) throws {
+        let heavy = executable.lastPathComponent == "qwen-asr"
+        if heavy { InferenceGate.enter() }; defer { if heavy { InferenceGate.leave() } }
         let logURL = directory.appendingPathComponent(UUID().uuidString + ".log")
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
         let log = try FileHandle(forWritingTo: logURL)
@@ -59,6 +63,8 @@ final class TranscriptionEngine: @unchecked Sendable {
         child.arguments = arguments
         var environment = ProcessInfo.processInfo.environment
         environment["TMPDIR"] = temporaryRoot.path
+        environment["TALKTUCK_INFERENCE_LOCK"] = InferenceGate.coordinationPath
+        if let memoryLimitMB { environment["TALKTUCK_ASR_MEMORY_MB"] = String(memoryLimitMB) }
         child.environment = environment
         child.standardOutput = log
         child.standardError = log
@@ -68,6 +74,7 @@ final class TranscriptionEngine: @unchecked Sendable {
         do { try child.run() } catch { process = nil; lock.unlock(); throw error }
         lock.unlock()
         child.waitUntilExit()
+        if child.terminationStatus != 0 { try? captureEvidence(logURL,name:"worker-failure-"+logURL.lastPathComponent) }
         lock.lock()
         process = nil
         let wasCancelled = cancelled
@@ -84,6 +91,7 @@ final class TranscriptionEngine: @unchecked Sendable {
     /// rather than terminating the app while it is writing audio.
     private func runStreaming(_ executable: URL, _ arguments: [String], directory: URL, stage: String,
                               feed: (FileHandle) throws -> Void) throws {
+        InferenceGate.enter(); defer { InferenceGate.leave() }
         let logURL = directory.appendingPathComponent(UUID().uuidString + ".log")
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
         let log = try FileHandle(forWritingTo: logURL); defer { try? log.close() }
@@ -98,6 +106,8 @@ final class TranscriptionEngine: @unchecked Sendable {
         let child = Process(); child.executableURL = executable; child.arguments = arguments
         var environment = ProcessInfo.processInfo.environment
         environment["TMPDIR"] = temporaryRoot.path
+        environment["TALKTUCK_INFERENCE_LOCK"] = InferenceGate.coordinationPath
+        if let memoryLimitMB { environment["TALKTUCK_ASR_MEMORY_MB"] = String(memoryLimitMB) }
         child.environment = environment
         child.standardInput = input; child.standardOutput = log; child.standardError = log
         lock.lock()
@@ -109,6 +119,7 @@ final class TranscriptionEngine: @unchecked Sendable {
         do { try feed(output); try output.close() }
         catch { feedError = error; try? output.close(); if child.isRunning { child.terminate() } }
         child.waitUntilExit()
+        if child.terminationStatus != 0 { try? captureEvidence(logURL,name:"worker-failure-"+logURL.lastPathComponent) }
         lock.lock(); process = nil; let wasCancelled = cancelled; lock.unlock()
         if wasCancelled { throw CancellationError() }
         if let feedError {
@@ -277,6 +288,28 @@ final class TranscriptionEngine: @unchecked Sendable {
         return String(current[end...])
     }
 
+    /// A decoder-limit failure must not publish truncated text. Retry only
+    /// this unacknowledged batch, with a finite smaller-window sequence.
+    func transcribeBatch(audio:URL,model:URL,executable:URL,language:String,hotwords:[String],context:String,
+                         windowSeconds:Int,onRecovery:(Int)->Void = {_ in}) throws -> TranscriptionOutput {
+        var seen=Set<Int>();var last:Error=TranscriptionError.message("转录未完成。")
+        for seconds in [windowSeconds,120,60,24] where seconds<=windowSeconds && seen.insert(seconds).inserted {
+            try checkCancelled()
+            do {
+                return try transcribe(audio:audio,model:model,executable:executable,language:language,hotwords:hotwords,context:context,
+                    offlineWindows:true,windowSeconds:seconds,overlapSeconds:seconds==windowSeconds ? 0:3)
+            } catch {
+                last=error;try checkCancelled()
+                guard Self.isRecoverableWindowFailure(error) else { throw error }
+                onRecovery(seconds)
+            }
+        }
+        throw last
+    }
+    static func isRecoverableWindowFailure(_ error:Error)->Bool {
+        let message=error.localizedDescription.lowercased()
+        return ["transcript token limit reached","memory limit","out of memory","failed to allocate"].contains{message.contains($0)}
+    }
     func transcribe(audio: URL, model: URL, executable: URL, language: String, hotwords: [String] = [], context: String = "", offlineWindows: Bool = false, windowSeconds:Int? = nil, overlapSeconds:Int? = nil) throws -> TranscriptionOutput {
         let directory = try temporaryDirectory(prefix: "CoHear-")
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -341,8 +374,9 @@ final class TranscriptionEngine: @unchecked Sendable {
 
     /// 正文已经提交后再调用；分析失败由调用方保留正式转录，不回滚为转录失败。
     func analyzeSpeakers(audio: URL, model: URL, executable: URL, transcript: TranscriptionOutput, language: String = "zh", hotwords: [String] = [],
+                         speakerCheckpoint: URL? = nil,
                          onPhase: @escaping @Sendable (TranscriptPhase) -> Void = { _ in }) throws -> [TranscriptParagraph] {
-        if transcript.paragraphs.isEmpty { return [] }
+        if transcript.paragraphs.isEmpty && speakerCheckpoint == nil { return [] }
         let root = model.deletingLastPathComponent()
         let sortformer = root.appendingPathComponent("Sortformer"), aligner = root.appendingPathComponent("QwenAligner")
         guard FileManager.default.fileExists(atPath: sortformer.appendingPathComponent("model.safetensors").path) else {
@@ -353,10 +387,12 @@ final class TranscriptionEngine: @unchecked Sendable {
         let turns = directory.appendingPathComponent("turns.json"), aligned = directory.appendingPathComponent("aligned.json")
         if let reader = try canonicalReader(for: audio) {
             onPhase(.diarizing)
-            try runStreaming(executable, ["--diarize-stream", sortformer.path, turns.path], directory: directory, stage: "发言人区分") {
+            let command = speakerCheckpoint.map { ["--diarize-stream-checkpoint", sortformer.path, turns.path, $0.path] } ?? ["--diarize-stream", sortformer.path, turns.path]
+            try runStreaming(executable, command, directory: directory, stage: "发言人区分") {
                 try self.writeAudio(reader, start: 0, end: reader.durationFrames, to: $0)
             }
             try captureEvidence(turns, name: "diarization.json")
+            if transcript.paragraphs.isEmpty { return [] }
             guard FileManager.default.fileExists(atPath: aligner.appendingPathComponent("model.safetensors").path) else { throw TranscriptionError.message("时间对齐模型缺失，正文和发言人分析状态已保留。") }
             guard transcript.paragraphs.allSatisfy({ ($0.end ?? 0) - ($0.start ?? 0) <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
                 throw TranscriptionError.message("定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。")
@@ -377,8 +413,10 @@ final class TranscriptionEngine: @unchecked Sendable {
             let reader = try AVAudioFile(forReading: wav)
             guard reader.processingFormat.sampleRate == 16_000, reader.processingFormat.channelCount == 1 else { throw TranscriptionError.message("音频格式无效。") }
             onPhase(.diarizing)
-            try run(executable, ["--diarize", sortformer.path, wav.path, turns.path], directory: directory, stage: "发言人区分")
+            let command = speakerCheckpoint.map { ["--diarize-checkpoint", sortformer.path, wav.path, turns.path, $0.path] } ?? ["--diarize", sortformer.path, wav.path, turns.path]
+            try run(executable, command, directory: directory, stage: "发言人区分")
             try captureEvidence(turns, name: "diarization.json")
+            if transcript.paragraphs.isEmpty { return [] }
             guard FileManager.default.fileExists(atPath: aligner.appendingPathComponent("model.safetensors").path) else { throw TranscriptionError.message("时间对齐模型缺失，正文和发言人分析状态已保留。") }
             guard transcript.paragraphs.allSatisfy({ ($0.end ?? 0) - ($0.start ?? 0) <= Double(ASRWindowPolicy.maximumAlignmentSeconds) }) else {
                 throw TranscriptionError.message("定稿正文已保存，时间戳分段暂未确认；可以重新转录后重试。")
@@ -404,12 +442,26 @@ final class TranscriptionEngine: @unchecked Sendable {
             try run(executable, ["--align-speakers", aligner.path, manifest.path, turns.path, aligned.path], directory: directory, stage: "发言人与文字对齐")
         }
         try captureEvidence(aligned, name: "alignment.json")
+        return try Self.decodeSpeakerParagraphs(Data(contentsOf: aligned), text: transcript.text)
+    }
+
+    func cropSpeakerEvidence(at directory: URL, trimBefore: Double, previousText: String, executable: URL, hotwords: [String] = []) throws -> TranscriptionOutput {
+        guard trimBefore.isFinite, trimBefore>=0,trimBefore<=3.001 else { throw TranscriptionError.message("音频片段时间无效。") }
+        let prior=directory.appendingPathComponent("prior.txt"),out=directory.appendingPathComponent("owned.json")
+        try JSONEncoder().encode(HotwordHints(words:hotwords,context:previousText)).write(to:prior,options:.atomic)
+        try run(executable,["--crop-speakers",directory.appendingPathComponent("alignment.json").path,directory.appendingPathComponent("diarization.json").path,String(trimBefore),prior.path,out.path],directory:directory,stage:"核对分批边界")
+        let data=try Data(contentsOf:out)
+        guard let value=try JSONSerialization.jsonObject(with:data)as? [String:Any],let text=value["text"]as? String else { throw TranscriptionError.message("定稿边界数据无效。") }
+        return TranscriptionOutput(text:text,subtitles:"",paragraphs:try Self.decodeSpeakerParagraphs(data,text:text))
+    }
+
+    private static func decodeSpeakerParagraphs(_ data: Data, text: String) throws -> [TranscriptParagraph] {
         struct Response: Decodable {
             struct Row: Decodable { let text: String; let separator: String; let start: Double; let end: Double; let speakerIDs: [String]; let timingUncertain: Bool?; let alignedStart: Double?; let alignedEnd: Double? }
             let paragraphs: [Row]
         }
-        let response = try JSONDecoder().decode(Response.self, from: Data(contentsOf: aligned))
-        guard response.paragraphs.map({ $0.separator + $0.text }).joined() == transcript.text else {
+        let response = try JSONDecoder().decode(Response.self, from: data)
+        guard response.paragraphs.map({ $0.separator + $0.text }).joined() == text else {
             throw TranscriptionError.message("发言人分段与正文不一致，已保留正文。")
         }
         let rows = try response.paragraphs.map { row in

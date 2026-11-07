@@ -33,6 +33,7 @@ struct MeetingCaptureRequest {
     let sessionMode: RecordingSessionMode
     let meetingOffset: Double
     let segmenter: ContinuousRecordingSegmenter?
+    var progressive: ProgressiveTranscriptionSession? = nil
 }
 
 enum MeetingRecorderError: LocalizedError {
@@ -89,13 +90,13 @@ final class MeetingRecorder {
     /// directory 应传入 App 自有 Recordings 目录；每次录音创建唯一子目录。
     func start(mode: MeetingRecordingMode, directory root: URL,
                sessionMode: RecordingSessionMode = .conference, meetingOffset: TimeInterval = 0,
-               segmenter: ContinuousRecordingSegmenter? = nil) async throws {
-        try await start(sources: RecordingSources(mode: mode), directory: root, sessionMode: sessionMode, meetingOffset: meetingOffset, segmenter: segmenter)
+               segmenter: ContinuousRecordingSegmenter? = nil, progressive: ProgressiveTranscriptionSession? = nil) async throws {
+        try await start(sources: RecordingSources(mode: mode), directory: root, sessionMode: sessionMode, meetingOffset: meetingOffset, segmenter: segmenter,progressive:progressive)
     }
 
     func start(sources: RecordingSources, directory root: URL,
                sessionMode: RecordingSessionMode = .conference, meetingOffset: TimeInterval = 0,
-               segmenter: ContinuousRecordingSegmenter? = nil) async throws {
+               segmenter: ContinuousRecordingSegmenter? = nil, progressive: ProgressiveTranscriptionSession? = nil) async throws {
         guard state == .idle else { throw MeetingRecorderError.message("已有录音正在进行。") }
         state = .preparing
         sessionID = UUID()
@@ -123,6 +124,7 @@ final class MeetingRecorder {
             try BalancedAudioIO.save(CanonicalCaptureContext(mode: sessionMode, meetingOffset: meetingOffset), to: directory.appendingPathComponent("capture-context.json"))
             self.directory = directory
             segmenter?.bindCanonicalArchive(directory)
+            try progressive?.bindCanonicalArchive(directory)
             failure = nil
             canRetryMicrophone = false
             pausedAt = nil
@@ -130,7 +132,7 @@ final class MeetingRecorder {
             started = MeetingCaptureTimeline.now
             recordingActivity = ProcessInfo.processInfo.beginActivity(options: [.userInitiated, .idleSystemSleepDisabled], reason: "正在本地录音")
             let mode: MeetingRecordingMode = sources.microphone ? (sources.systemAudio ? .meeting : .microphone) : .systemAudio
-            let sink = MeetingAudioSink(directory: directory, started: started, mode: mode, sessionMode: sessionMode, segmenter: segmenter, onAudio: onAudio, canonicalRecordingID: captureID) { [weak self] error in
+            let sink = MeetingAudioSink(directory: directory, started: started, mode: mode, sessionMode: sessionMode, segmenter: segmenter, progressive:progressive,onAudio: onAudio, canonicalRecordingID: captureID) { [weak self] error in
                 Task { @MainActor in
                     guard let self, self.state == .preparing || self.state == .recording || self.state == .paused else { return }
                     self.reportFailure(error)
@@ -504,6 +506,7 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
     init(directory: URL, started: TimeInterval, mode: MeetingRecordingMode = .microphone,
          sessionMode: RecordingSessionMode = .conference,
          segmenter: ContinuousRecordingSegmenter? = nil,
+         progressive: ProgressiveTranscriptionSession? = nil,
          onAudio: (([Float]) -> Void)? = nil, canonicalRecordingID: UUID? = nil, onError: @escaping (Error) -> Void) {
         self.directory = directory
         self.timeline = MeetingCaptureTimeline(started: started)
@@ -513,10 +516,11 @@ final class MeetingAudioSink: NSObject, SCStreamOutput, SCStreamDelegate, @unche
         self.enabledSources = RecordingSources(mode: mode)
         let activeSegmenter = sessionMode == .continuous ? segmenter : nil
         self.segmenter = activeSegmenter
-        if onAudio != nil || activeSegmenter != nil {
+        if onAudio != nil || activeSegmenter != nil || progressive != nil {
             live = MeetingLiveAudioMixer(trackCount: mode == .meeting ? 2 : 1) { samples, offset in
                 onAudio?(samples)
                 activeSegmenter?.append(samples, at: offset)
+                progressive?.append(samples,at:offset)
             }
         }
         super.init()

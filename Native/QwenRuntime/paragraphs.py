@@ -1,5 +1,6 @@
 """Reading paragraphs preserve every character and reliable speaker boundaries."""
 import unicodedata,re
+from sentence_rules import sentence_ends,units,word_language,RULES
 
 TARGET=50
 SOFT_MAX=75
@@ -10,7 +11,7 @@ def ends_sentence(text):
     stripped=text.rstrip(CLOSERS)
     # A period following an English abbreviation/decimal is only a candidate
     # after the aligner's complete token; never split an individual token.
-    return bool(stripped) and stripped[-1] in ENDINGS+'.'
+    return len(text) in sentence_ends(text)
 
 def length(text):
     return sum(unicodedata.category(c)[0] in 'LN' for c in text)
@@ -29,21 +30,25 @@ def group_words(rows,protected_words=()):
     result=[]
     for run in runs:
         full=''.join(x.get('separator','')+x['text']for x in run)
+        words=word_language(full)
+        target=RULES['wordTarget'] if words else TARGET
+        maximum=RULES['wordMaximum'] if words else SOFT_MAX
+        sentence_boundaries=sentence_ends(full)
         spans=[m.span()for word in protected_words if word for m in re.finditer(re.escape(word),full,re.IGNORECASE)]
         offsets=[0]
         for x in run:offsets.append(offsets[-1]+len(x.get('separator','')+x['text']))
         pos=0
         while pos<len(run):
             counts=[];n=0
-            for row in run[pos:]:n+=length(row.get('separator','')+row['text']);counts.append(n)
-            if counts[-1]<=TARGET:stop=len(run)
+            for row in run[pos:]:n+=units(row.get('separator','')+row['text'],words);counts.append(n)
+            if counts[-1]<=target:stop=len(run)
             else:
-                sentences=[i for i in range(pos,len(run)) if ends_sentence(run[i]['text']) and counts[i-pos]>=TARGET]
-                if sentences and counts[sentences[0]-pos]<=SOFT_MAX:stop=sentences[0]+1
+                sentences=[i for i in range(pos,len(run)) if offsets[i+1]in sentence_boundaries and counts[i-pos]>=target]
+                if sentences and counts[sentences[0]-pos]<=maximum:stop=sentences[0]+1
                 else:
-                    boundaries=[i for i in range(pos,len(run)) if run[i]['text'].rstrip(CLOSERS).endswith(tuple('，,、：:')) and TARGET//2<=counts[i-pos]<=SOFT_MAX]
-                    if boundaries:stop=min(boundaries,key=lambda i:abs(counts[i-pos]-TARGET))+1
-                    else:stop=next((i+1 for i in range(pos,len(run)) if counts[i-pos]>=TARGET),len(run))
+                    boundaries=[i for i in range(pos,len(run)) if run[i]['text'].rstrip(CLOSERS).endswith(tuple('，,、：:；;،؛')) and target//2<=counts[i-pos]<=maximum]
+                    if boundaries:stop=min(boundaries,key=lambda i:abs(counts[i-pos]-target))+1
+                    else:stop=next((i+1 for i in range(pos,len(run)) if counts[i-pos]>=target),len(run))
             while stop<len(run)and any(lo<offsets[stop]<hi for lo,hi in spans):stop+=1
             block=dict(run[pos])
             for row in run[pos+1:stop]:

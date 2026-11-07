@@ -62,6 +62,10 @@ final class LiveTranscriptionSession: @unchecked Sendable {
             child.arguments = ["xasr", hotwordModel.path, language, model.appendingPathComponent("silero_vad.onnx").path, wordsFile.path]
         } else { child.arguments = [model.path, language] }
         child.standardInput = incoming; child.standardOutput = outgoing; child.standardError = log
+        var environment = ProcessInfo.processInfo.environment
+        environment["TALKTUCK_INFERENCE_LOCK"] = InferenceGate.coordinationPath
+        if language == "yue" { environment["TALKTUCK_ASR_MEMORY_MB"] = "3072" }
+        child.environment = environment
         input = incoming.fileHandleForWriting; output = outgoing.fileHandleForReading; process = child
         child.terminationHandler = { [weak self] child in
             self?.reader.async { [weak self] in self?.complete(status: child.terminationStatus) }

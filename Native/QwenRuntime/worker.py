@@ -41,28 +41,41 @@ def pcm_chunks(stream):
         if len(data)%4:raise ValueError('Incomplete PCM stream')
         yield data
 
-def diarize(model_path,audio_path,output,streaming=False):
+def diarize(model_path,audio_path,output,streaming=False,checkpoint=None):
     import miniaudio,numpy as np
     import mlx.core as mx
     from mlx_audio.vad import load
+    configure_memory(mx)
     model=load(pathlib.Path(model_path).resolve(strict=True),strict=True)
     from speaker_timeline import SpeakerTimeline
-    state=model.init_streaming_state();offset=0.0
+    from diarization_checkpoint import restore,save
+    state,base=restore(model,checkpoint,mx) if checkpoint else (model.init_streaming_state(),0.0)
+    skip=float(json.loads(pathlib.Path(checkpoint).read_text()).get('skipSeconds',0)) if checkpoint and pathlib.Path(checkpoint).exists() else 0
+    if not 0<=skip<=3.001:raise ValueError('Invalid diarization overlap')
+    remaining=round(skip*16000)
+    offset=0.0
     frame_duration=model.config.processor_config.hop_length*model.config.fc_encoder_config.subsampling_factor/16000
     timeline=SpeakerTimeline(frame_duration)
     chunks=(pcm_chunks(sys.stdin.buffer) if streaming else miniaudio.stream_file(audio_path,output_format=miniaudio.SampleFormat.FLOAT32,nchannels=1,sample_rate=16000,frames_to_read=240000))
     for chunk in chunks:
         samples=(np.frombuffer(chunk,dtype='<f4') if streaming else np.asarray(chunk,dtype=np.float32));duration=len(samples)/16000
+        if remaining:
+            n=min(remaining,len(samples));samples=samples[n:];remaining-=n;offset+=n/16000;duration=len(samples)/16000
+            if not len(samples):continue
         # Offline finalization can revise the preceding chunk after more voice
         # context. Retain two transport chunks in a bounded FIFO, not a new
         # speaker identity space per ASR window.
         result,state=model.feed(samples,state,sample_rate=16000,threshold=0.5,min_duration=0.12,merge_gap=0.16,fifo_max=376)
         scores=np.asarray(result.speaker_probs).tolist()
         revised=np.asarray(state.fifo_preds)[0].tolist()
+        # Earlier FIFO frames are already in the durable prior job; preserve
+        # their identity cache but only revise frames present in this job.
+        revised=revised[-(len(timeline.scores)+len(scores)):] if scores or timeline.scores else []
         timeline.append(scores,offset,duration,revised)
         offset+=duration;mx.clear_cache()
         print('Sortformer: %.1fs'%offset,file=sys.stderr,flush=True)
     pathlib.Path(output).write_text(json.dumps(dict(turns=timeline.turns(),frames=timeline.frames(),duration=offset,retrospectiveFIFO=True,frameCount=len(timeline.times))))
+    if checkpoint:save(state,checkpoint,base+offset-skip,mx)
 
 def stream_clips(max_seconds=MAX_ASR_SECONDS):
     stream=sys.stdin.buffer
@@ -116,6 +129,7 @@ def align_stream(model_path,turns_path,output):
     import numpy as np
     import mlx.core as mx
     from mlx_audio.stt import load
+    configure_memory(mx)
     from speaker_attribution import aligned_words
     from sentence_speakers import attribute_sentences
     voice=json.loads(pathlib.Path(turns_path).read_text())
@@ -138,6 +152,7 @@ def align_speakers(model_path,manifest_path,turns_path,output):
     import numpy as np
     import mlx.core as mx
     from mlx_audio.stt import load
+    configure_memory(mx)
     from speaker_attribution import aligned_words
     from sentence_speakers import attribute_sentences
     manifest=pathlib.Path(manifest_path).resolve(strict=True);clips=json.loads(manifest.read_text())
@@ -164,6 +179,20 @@ def align_speakers(model_path,manifest_path,turns_path,output):
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs,alignedWords=words,attributionPolicy='sentence-v1'),ensure_ascii=False))
 
 def main():
+    if len(sys.argv)==7 and sys.argv[1]=='--crop-speakers':
+        from speaker_attribution import normalized
+        from sentence_speakers import attribute_sentences
+        source,voice,cut,prior,output=sys.argv[2:];cut=float(cut)
+        data=json.loads(pathlib.Path(source).read_text());words=data['alignedWords'];hints=json.loads(pathlib.Path(prior).read_text());context=hints['context']
+        from overlap_words import crop
+        words,dropped=crop(words,cut,context)
+        if words:words[0]['separator']=''
+        v=json.loads(pathlib.Path(voice).read_text());rows=attribute_sentences(words,v['turns'],frames=v.get('frames'),protected_words=hints['words'])
+        pathlib.Path(output).write_text(json.dumps(dict(paragraphs=rows,text=''.join(r.get('separator','')+r['text']for r in rows),discardedOverlap=''.join(w['text']for w in dropped)),ensure_ascii=False));return
+    if len(sys.argv)==5 and sys.argv[1]=='--diarize-stream-checkpoint':
+        diarize(sys.argv[2],None,sys.argv[3],streaming=True,checkpoint=sys.argv[4]);return
+    if len(sys.argv)==6 and sys.argv[1]=='--diarize-checkpoint':
+        diarize(sys.argv[2],sys.argv[3],sys.argv[4],checkpoint=sys.argv[5]);return
     if len(sys.argv)==6 and sys.argv[1]=='--transcribe-stream':
         transcribe_stream(*sys.argv[2:]);return
     if len(sys.argv)==5 and sys.argv[1]=='--align-stream':
@@ -220,7 +249,11 @@ if __name__=='__main__':
     # 冻结运行时的资源追踪子进程必须先分流，不能误作ASR请求。
     import multiprocessing
     multiprocessing.freeze_support()
-    try:main()
+    try:
+        from inference_lock import exclusive
+        if len(sys.argv)>1 and sys.argv[1]=='--live':main()
+        else:
+            with exclusive():main()
     except Exception as e:
         print('本地Qwen3-ASR推理失败：'+str(e),file=sys.stderr,flush=True)
         sys.exit(1)

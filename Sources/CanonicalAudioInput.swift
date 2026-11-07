@@ -20,7 +20,10 @@ enum CanonicalAudioInput {
         let range = try JSONDecoder().decode(CanonicalAudioRange.self, from: Data(contentsOf: url))
         guard range.kind == "talktuck-canonical-range-v1", try reader(for: url) != nil else { throw Failure.invalidReference }
         let parent = url.deletingLastPathComponent()
-        let capture = parent.lastPathComponent == "Audio" ? parent.deletingLastPathComponent().appendingPathComponent("Capture") : parent.deletingLastPathComponent()
+        let capture:URL
+        if parent.lastPathComponent == "Audio" { capture=parent.deletingLastPathComponent().appendingPathComponent("Capture") }
+        else if parent.deletingLastPathComponent().lastPathComponent == "Progressive" { capture=parent.deletingLastPathComponent().deletingLastPathComponent() }
+        else { capture=parent.deletingLastPathComponent() }
         let final = capture.appendingPathComponent(range.sourceRecordingID.uuidString).appendingPathComponent("final.manifest.json")
         guard FileManager.default.fileExists(atPath: final.path) else { throw Failure.notReady }
         return final
@@ -40,6 +43,11 @@ enum CanonicalAudioInput {
         let capture: URL
         if parent.lastPathComponent == "Audio" { capture = parent.deletingLastPathComponent().appendingPathComponent("Capture") }
         else if parent.lastPathComponent == "Segments", parent.deletingLastPathComponent().lastPathComponent == "Capture" { capture = parent.deletingLastPathComponent() }
+        else if parent.lastPathComponent == range.sourceRecordingID.uuidString,
+                parent.deletingLastPathComponent().lastPathComponent == "Progressive",
+                parent.deletingLastPathComponent().deletingLastPathComponent().lastPathComponent == "Capture" {
+            capture=parent.deletingLastPathComponent().deletingLastPathComponent()
+        }
         else { throw Failure.invalidReference }
         let root = capture.appendingPathComponent(range.sourceRecordingID.uuidString)
         guard root.resolvingSymlinksInPath().path == root.path else { throw Failure.invalidReference }

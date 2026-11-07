@@ -64,7 +64,7 @@ final class LivePreviewRefiner: @unchecked Sendable {
         guard !stopped else { lock.unlock(); return .discard }
         guard begin >= firstSample else { lock.unlock(); return .discard }
         guard end <= firstSample + samples.count else { lock.unlock(); return .retry }
-        guard outstanding < 2 else { lock.unlock(); return .retry }
+        guard outstanding < 1 else { lock.unlock(); return .retry }
         let audio = Array(samples[(begin-firstSample)..<(end-firstSample)])
         guard !audio.isEmpty else { lock.unlock(); return .discard }
         outstanding += 1
