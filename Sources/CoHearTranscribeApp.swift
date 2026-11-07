@@ -97,6 +97,7 @@ struct MainView: View {
     @State private var batchIDs = Set<UUID>()
     @FocusState private var editingTitle: Bool
     @State private var showingFeedback = false
+    @State private var showingAccount = false
     @State private var filter = "全部"
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var windowWidth: CGFloat = 1440
@@ -207,7 +208,7 @@ struct MainView: View {
                     missingMicrophoneView
                 } else if state.current != nil {
                     meetingToolbar
-                    if state.canShowAgentOnboarding && !delivering && !recovering {
+                    if state.canShowAgentOnboarding && !delivering && !recovering && !showingAccount {
                         TalkTuckCard(quiet: true) { AgentConnectionView(state: state, onboarding: true) }
                     }
                     if let issue = state.recordingIssue, state.isViewingRecording {
@@ -262,8 +263,23 @@ struct MainView: View {
                 }
             }.padding(28).frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity).background(TalkTuckTheme.surface)
         }
-        .toolbar { ToolbarItem(placement: .primaryAction) { Button { showingFeedback = true } label: { Label(L10n.text("意见反馈"), systemImage: "headphones") }.help(L10n.text("意见反馈")) } }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { showingFeedback = true } label: {
+                    Label(L10n.text("意见反馈"), systemImage: "headphones")
+                }.help(L10n.text("意见反馈"))
+                TalkTuckAccountToolbarButton(store: state.cloudAccount) { showingAccount = true }
+            }
+        }
         .sheet(isPresented: $showingFeedback) { FeedbackMailView() }
+        .sheet(isPresented: $showingAccount) {
+            VStack(alignment: .trailing, spacing: 0) {
+                Button(L10n.text("完成")) { showingAccount = false }
+                    .keyboardShortcut(.cancelAction)
+                    .padding(.top, 16).padding(.trailing, 20)
+                RecordingAppConfigurationView(state: state, initialSection: "talktuck")
+            }
+        }
         .overlay(alignment: .bottom) {
             if state.recording && !state.miniMode && (state.showsInlineRecorder || emptyFilter || filter == "回收站") && !missingMicrophone, let controller = state.miniController {
                 MiniRecordingView(state: state, controller: controller, inline: true).padding(.bottom, 28)
@@ -609,6 +625,20 @@ struct MainView: View {
     private func clock(_ value: Double) -> String {
         let seconds = Int(max(0, value))
         return seconds >= 3600 ? String(format: "%d:%02d:%02d", seconds / 3600, seconds / 60 % 60, seconds % 60) : String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+}
+
+private struct TalkTuckAccountToolbarButton: View {
+    @ObservedObject var store: TalkTuckAccountStore
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(L10n.text(store.isSignedIn ? "TalkTuck 账号" : "登录 TalkTuck"),
+                  systemImage: store.isSignedIn ? "person.crop.circle.fill" : "person.crop.circle")
+        }
+        .help(L10n.text(store.isSignedIn ? "TalkTuck 账号" : "登录 TalkTuck"))
+        .accessibilityIdentifier("talktuck-account-entry")
     }
 }
 
