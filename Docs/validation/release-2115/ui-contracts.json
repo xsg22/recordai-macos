@@ -1,0 +1,15 @@
+{
+  "sourceDigest": "81f1f2cf7d1f3c141e80513ade59a5ab87606fc11cc4f2a3fb5a85164a50b1fc",
+  "exit_code": 0,
+  "tests": [
+    "BrowserAuthorizationSmoke",
+    "NotionConnectionSmoke",
+    "DingTalkNotificationSmoke",
+    "DingTalkSyncStagesSmoke",
+    "FeishuAuthorizationRecoverySmoke",
+    "OptionalModelSmoke",
+    "OptionalModelFallbackSmoke",
+    "IntelligenceSmoke"
+  ],
+  "scope": "Local contract tests with simulated external services"
+}

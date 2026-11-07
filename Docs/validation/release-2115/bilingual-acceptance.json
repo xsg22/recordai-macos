@@ -1,0 +1,9 @@
+{
+  "sourceDigest": "81f1f2cf7d1f3c141e80513ade59a5ab87606fc11cc4f2a3fb5a85164a50b1fc",
+  "packagedEngineSHA256": "1155c7f0414392c5256dd172991a019c7db72bcc8099403578c39837f3339b9c",
+  "englishTranscriptionAndAlignment": true,
+  "mixedTranscriptionAndAlignment": true,
+  "nativeEnglishInterface": true,
+  "localeDataInvariant": true,
+  "scope": "Synthetic speech on the packaged engine. Native locale switch preserved exact meeting and Agent snapshot bytes."
+}

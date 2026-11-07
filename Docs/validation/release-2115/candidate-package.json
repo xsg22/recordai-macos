@@ -1,0 +1,17 @@
+{
+  "sourceDigest": "81f1f2cf7d1f3c141e80513ade59a5ab87606fc11cc4f2a3fb5a85164a50b1fc",
+  "version": "0.17.3",
+  "build": "2115",
+  "script_exit_code": 0,
+  "embedded_asr_sha256": "1155c7f0414392c5256dd172991a019c7db72bcc8099403578c39837f3339b9c",
+  "assets": {
+    "pkg": {
+      "bytes": 156195979,
+      "sha256": "3fdd729c18a5e5ee7d68db3dfc18dc833d03876875353d6abee0d31467071314"
+    },
+    "dmg": {
+      "bytes": 173038710,
+      "sha256": "cc257bfc4c6d7ecdd56fd56ac33780dca3be8c04e6ad8d1d79758680223b2dd4"
+    }
+  }
+}

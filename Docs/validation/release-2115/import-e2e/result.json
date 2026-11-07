@@ -1,0 +1,65 @@
+{
+  "app_version": "0.17.3",
+  "app_build": "2115",
+  "fixture": "Four synthetic Mandarin turns, two voices, offline",
+  "paragraph_count": 4,
+  "fixture_audio_sha256": "1ec732105bdf8fa8bd34e7a2af35065313dc4e25bbbe09c0387e259cd7efce05",
+  "direct_entry_recheck": {
+    "sourceDigest": "81f1f2cf7d1f3c141e80513ade59a5ab87606fc11cc4f2a3fb5a85164a50b1fc",
+    "direct_start_button_verified": true,
+    "clicked_direct_button": true,
+    "completed": true,
+    "speaker_analysis_completed": true,
+    "source_preserved": true,
+    "speaker_sequence": [
+      "0",
+      "1",
+      "0",
+      "1"
+    ],
+    "paragraph_ranges_seconds": [
+      [
+        0,
+        6.4
+      ],
+      [
+        7.6,
+        13.6
+      ],
+      [
+        15.12,
+        21.6
+      ],
+      [
+        22.72,
+        28.96
+      ]
+    ]
+  },
+  "segment_playback": {
+    "passed": true,
+    "start": 7.6,
+    "end": 13.6,
+    "observedPlaying": 8.8944375,
+    "observedStopped": 13.6
+  },
+  "manual_correction": {
+    "saved": true,
+    "timestamps_speakers_ids_and_audio_unchanged": true,
+    "raw_subtitles_unchanged": true
+  },
+  "export": {
+    "markdown_original": true,
+    "markdown_corrected": true,
+    "speaker_and_time_markers": true,
+    "original_srt": true
+  },
+  "groupAndAgent": {
+    "appExited": true,
+    "cliListReadAndAudio": true,
+    "mcpGetRecording": true,
+    "groupName": "产品讨论",
+    "correctedTranscriptAndAudioMatch": true,
+    "sourceUnchanged": true
+  }
+}

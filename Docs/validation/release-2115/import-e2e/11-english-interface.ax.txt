@@ -1,0 +1,47 @@
+Window: "TalkTuck Settings", App: TalkTuck.
+0 standard window TalkTuck Settings, ID: com_apple_SwiftUI_Settings_window, Secondary Actions: Raise
+	1 container
+		2 text Settings
+		3 button (selected) Description: Recording & transcription, ID: settings-section-recording
+		4 button Description: Local models, ID: settings-section-models
+		5 button Description: Personal hotwords, ID: settings-section-hotwords
+		6 button Description: TalkTuck account, ID: settings-section-talktuck
+		7 button Description: Third-party accounts, ID: settings-section-accounts
+		8 button Description: Agents & data, ID: settings-section-data
+		9 text Stored on this Mac
+		10 scroll area Secondary Actions: Scroll Up, Scroll Down
+			11 text Recording & transcription Choose the audio source and processing mode for your next recording. Appearance
+			12 pop up button Description: Appearance, Appearance, Value: 浅色, ID: settings-appearance
+			13 text Follow the system automatically, or always use light or dark appearance. Interface language
+			14 pop up button Description: Interface language, Interface language, Value: English
+			15 text Interface and transcription languages are independent. Existing recordings are never translated. Default audio source
+			16 menu button Default audio source
+			17 text Session type
+			18 menu button Recording session
+			19 text Default transcription language
+			20 menu button Default transcription language
+			21 text Recording mode
+			22 menu button Recording mode
+			23 text Live transcription Live text appears while recording, even when minimized or hidden. The final transcript, speakers and timestamps are generated after stopping.
+			24 image Description: Info, ID: info.circle
+			25 text Settings are locked while recording. Changes apply to the next recording. Hiding the window or using mini keeps recording active.
+			26 image Description: Info, ID: info.circle
+			27 text Mandarin and English live captions use a bilingual model. Cantonese captions may be delayed by a few seconds. Final transcription uses the selected language.
+			28 scroll bar (settable, float) 0
+				29 value indicator (settable, float) 0
+				30 increment arrow button
+				31 decrement arrow button
+				32 increment page button
+				33 decrement page button
+	34 text TalkTuck Settings
+	35 menu button Window sharing
+36 menu bar
+	37 TalkTuck
+	38 File
+	39 Edit
+	40 View
+	41 TalkTuck
+	42 Window
+	43 Help
+
+The focused UI element is 3 button (selected) Description: Recording & transcription, ID: settings-section-recording

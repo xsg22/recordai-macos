@@ -1,0 +1,27 @@
+{
+  "verifiedSourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc",
+  "version": "0.17.3",
+  "build": "2115",
+  "evidenceRoot": "Docs/validation/release-2115",
+  "sourceDigest": "81f1f2cf7d1f3c141e80513ade59a5ab87606fc11cc4f2a3fb5a85164a50b1fc",
+  "runtimeInputDigest": "8496ae0a0a97296f7de8d20bb86eb77e7c088f7ed37262ce63d2076bee91383a",
+  "runtimeInputs": [
+    "Native/QwenRuntime/alignment_windows.py",
+    "Native/QwenRuntime/diarization_checkpoint.py",
+    "Native/QwenRuntime/inference_lock.py",
+    "Native/QwenRuntime/inference_policy.py",
+    "Native/QwenRuntime/language_policy.py",
+    "Native/QwenRuntime/live_transcription.py",
+    "Native/QwenRuntime/overlap_words.py",
+    "Native/QwenRuntime/paragraphs.py",
+    "Native/QwenRuntime/requirements.lock",
+    "Native/QwenRuntime/sentence_rules.py",
+    "Native/QwenRuntime/sentence_speakers.py",
+    "Native/QwenRuntime/speaker_attribution.py",
+    "Native/QwenRuntime/speaker_timeline.py",
+    "Native/QwenRuntime/worker.py",
+    "Resources/SentenceRules.json",
+    "Scripts/qwen-runtime.spec"
+  ],
+  "embeddedAsrSha256": "1155c7f0414392c5256dd172991a019c7db72bcc8099403578c39837f3339b9c"
+}

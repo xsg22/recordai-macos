@@ -1,0 +1,94 @@
+{
+  "sourceDigest": "81f1f2cf7d1f3c141e80513ade59a5ab87606fc11cc4f2a3fb5a85164a50b1fc",
+  "exit_code": 0,
+  "regression_groups": 14,
+  "groups": [
+    {
+      "name": "catalog",
+      "exitCode": 0,
+      "seconds": 0.18
+    },
+    {
+      "name": "localization",
+      "exitCode": 0,
+      "seconds": 29.65
+    },
+    {
+      "name": "language-policy",
+      "exitCode": 0,
+      "seconds": 0.05
+    },
+    {
+      "name": "recording-entry",
+      "exitCode": 0,
+      "seconds": 35.23
+    },
+    {
+      "name": "agent-setup",
+      "exitCode": 0,
+      "seconds": 1.3
+    },
+    {
+      "name": "service-namespace",
+      "exitCode": 0,
+      "seconds": 2.57
+    },
+    {
+      "name": "library-management",
+      "exitCode": 0,
+      "seconds": 31.54
+    },
+    {
+      "name": "seam-recovery",
+      "exitCode": 0,
+      "seconds": 2.93,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    },
+    {
+      "name": "progressive",
+      "exitCode": 0,
+      "seconds": 1.15,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    },
+    {
+      "name": "paragraph-policy",
+      "exitCode": 0,
+      "seconds": 0.04,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    },
+    {
+      "name": "hotwords",
+      "exitCode": 0,
+      "seconds": 0.19,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    },
+    {
+      "name": "paragraph-playback",
+      "exitCode": 0,
+      "seconds": 2.32,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    },
+    {
+      "name": "live-cache",
+      "exitCode": 0,
+      "seconds": 0.5,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    },
+    {
+      "name": "sentence-speakers",
+      "exitCode": 0,
+      "seconds": 0.04,
+      "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc"
+    }
+  ],
+  "macSuite": {
+    "sourceCommit": "c85647aaf452ecccc32f54fc29e0adad083966fc",
+    "passed": 50,
+    "failed": 0,
+    "notRun": 0,
+    "reused": [
+      "canonical-long"
+    ],
+    "reusedCaseInputHashesVerified": true
+  }
+}
