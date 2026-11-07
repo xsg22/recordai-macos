@@ -57,6 +57,16 @@ import Foundation
         precondition(state.playing)
         for _ in 0..<100 where state.playing { try await Task.sleep(nanoseconds: 20_000_000) }
         precondition(abs(state.playbackTime - 0.3) < 0.001, "合并阅读段播到完整段尾")
+        var wholeSentence = record
+        wholeSentence.text = "我说完。"
+        let partialSentence = TranscriptParagraph(text:wholeSentence.text,audioFile:record.audioFiles[0],speakerIDs:["0"],localStart:0.1,alignedStart:0.1,alignedEnd:0.3)
+        wholeSentence.transcriptParagraphs=[partialSentence]
+        state.history=[wholeSentence];state.select(record.id,saveCurrent:false)
+        precondition(state.canPlayTranscriptParagraph(partialSentence))
+        state.playTranscriptParagraph(partialSentence)
+        precondition(state.playing)
+        for _ in 0..<100 where state.playing { try await Task.sleep(nanoseconds:20_000_000) }
+        precondition(!state.playing && abs(state.playbackTime-0.3)<0.001,"An intact sentence with uncertain timing still plays its real aligned span and stops")
         state.history = [record]; state.select(record.id, saveCurrent: false)
         var invalid = first; invalid.end = nil
         precondition(!state.canPlayTranscriptParagraph(invalid))

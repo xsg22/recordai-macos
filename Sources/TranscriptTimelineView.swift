@@ -181,7 +181,7 @@ struct TranscriptTimelineView: View {
             Group {
                 if state.canPlayTranscriptParagraph(paragraph) {
                     Button { state.playTranscriptParagraph(paragraph) } label: { paragraphText(paragraph) }.buttonStyle(.plain)
-                        .help(L10n.text("点击播放本段，播完自动暂停；文字校正请使用段落菜单"))
+                        .help(L10n.text(paragraph.start == nil ? "部分字词时间待对齐；回放已对齐的语音范围" : "点击播放本段，播完自动暂停；文字校正请使用段落菜单"))
                         .accessibilityLabel(L10n.text("播放本段：") + paragraph.text)
                 } else { paragraphText(paragraph).textSelection(.enabled) }
             }

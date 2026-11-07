@@ -53,7 +53,7 @@ final class AgentDataPublisher {
         let paragraphs = record.hasCurrentParagraphs ? record.transcriptParagraphs.map { row in
             AgentParagraph(id: row.id, text: row.text, separator: row.separator, start: row.start, end: row.end,
                 audioPart: row.audioFile.flatMap { record.audioFiles.firstIndex(of: $0).map { $0 + 1 } }, localStart: row.localStart,
-                speakers: Array(Set(row.speakerIDs.map { record.speakerName($0) })).sorted(), speakerIDs: Array(Set(row.speakerIDs.map { record.canonicalSpeaker($0) })).sorted())
+                speakers: Array(Set(row.speakerIDs.map { record.speakerName($0) })).sorted(), speakerIDs: Array(Set(row.speakerIDs.map { record.canonicalSpeaker($0) })).sorted(), alignedStart: row.alignedStart, alignedEnd: row.alignedEnd)
         } : []
         let transcriptionReady = !record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && record.status == .completed
         let catalogURL = libraryRoot.appendingPathComponent("organization.json")

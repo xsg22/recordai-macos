@@ -62,8 +62,10 @@ r=attribute('我说完。',[dict(text='我',start=0,end=0),dict(text='说',start
 assert len(r)==1 and r[0]['start']==0 and r[0]['end']==.4 and body(r)=='我说完。',r
 assert not r[0].get('timingUncertain') and r[0].get('hasUnalignedWords'),'A coincident real word anchor can bound the paragraph, without inventing the missing word time'
 r=attribute('我说完。',[dict(text='我',start=0,end=0),dict(text='说',start=.3,end=.5),dict(text='完',start=.5,end=.7)],[],0,.7,frames=[frame(0,.7,.95,.01)])
-assert len(r)==2 and r[0].get('timingUncertain') is True and not r[1].get('timingUncertain') and r[1]['start']==.3,'Only the unresolved edge stays pending; the valid sentence body remains playable'
-assert r[0]['speakerIDs']==r[1]['speakerIDs']==['0'],'Time uncertainty must not invent a speaker change'
+assert len(r)==1 and r[0]['text']=='我说完。' and r[0].get('timingUncertain') is True,'An unresolved edge must never split the sentence'
+assert r[0]['speakerIDs']==['0'] and r[0]['alignedStart']==.3 and r[0]['alignedEnd']==.7,'Keep true aligned playback bounds separate from uncertain full-sentence times'
+from paragraphs import group_words
+assert group_words(r)==r,'Regrouping must retain both full sentence and partial playback bounds'
 r=attribute('说完了。',[dict(text='说',start=0,end=.2),dict(text='完',start=.2,end=.4),dict(text='了',start=.4,end=.4)],[],0,.4,frames=[frame(0,.4,.95,.01)])
 assert not r[0].get('timingUncertain') and r[0]['end']==.4,'Coincident real end anchor must remain playable'
 from paragraphs import group_words

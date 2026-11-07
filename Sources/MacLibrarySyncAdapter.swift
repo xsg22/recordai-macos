@@ -122,7 +122,9 @@ import Foundation
         record.speakerNames = Dictionary(uniqueKeysWithValues: content.speakers.map { ($0.id.uuidString,$0.name) })
         record.customSpeakerNameIDs = Set(record.speakerNames.keys); record.speakerAliases = [:]
         record.transcriptParagraphs = content.paragraphs.map { row in
-            TranscriptParagraph(id:row.id,text:row.text,separator:row.separator,start:row.startMs.map { Double($0)/1000 },end:row.endMs.map { Double($0)/1000 },audioFile:previous[row.id]?.audioFile,speakerIDs:row.speakerIds.map(\.uuidString),localStart:previous[row.id]?.localStart)
+            let prior = previous[row.id]
+            let sameText = prior?.text == row.text && prior?.separator == row.separator
+            return TranscriptParagraph(id:row.id,text:row.text,separator:row.separator,start:row.startMs.map { Double($0)/1000 },end:row.endMs.map { Double($0)/1000 },audioFile:prior?.audioFile,speakerIDs:row.speakerIds.map(\.uuidString),localStart:prior?.localStart,alignedStart:sameText ? prior?.alignedStart : nil,alignedEnd:sameText ? prior?.alignedEnd : nil)
         }
         }
         _ = try library.save(record)

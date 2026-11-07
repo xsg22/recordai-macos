@@ -38,3 +38,5 @@ Repeated start requests must not stop an existing session. Do not automatically 
 `read` includes `organization`: the resolved group and an independent revision. A `metadata` event requires refreshing the group, while transcript `revision` and `contentDigest` remain stable when only grouping changes. Existing source paragraph IDs and citations remain usable. Removed groups resolve to ungrouped. These read interfaces do not modify grouping. Use a paragraph's audioPart and localStart for transcript playback; preserve the source ID when citing.
 
 Brief attribution uncertainty can split older transcripts into tiny paragraphs. Read their adjacent text in context and preserve paragraph IDs for citations. A speaker number is not a verified identity; do not infer speaker count from label changes.
+
+Timing uncertainty does not split a sentence. If `start`/`end` are missing but `alignedStart`/`alignedEnd` exist, they bound only the aligned speech inside that paragraph. Use the audio part and `localStart` to replay that known span; do not cite those bounds as exact timestamps for every word or for the full sentence.

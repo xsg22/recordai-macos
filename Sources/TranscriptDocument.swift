@@ -15,6 +15,14 @@ struct TranscriptParagraph: Codable, Equatable, Identifiable, Sendable {
     var localStart: Double? = nil
     /// 仅本段上一次人工归属，支持重启后撤销；旧记录没有此字段。
     var previousSpeakerIDs: [String]? = nil
+    /// 仅已对齐语音的全局范围；整句起止不确定时用于回放，不冒充整句时间。
+    var alignedStart: Double? = nil
+    var alignedEnd: Double? = nil
+    mutating func applyAudioOffset(_ offset: Double) {
+        if let local = start ?? alignedStart { localStart = local }
+        start = start.map { $0 + offset }; end = end.map { $0 + offset }
+        alignedStart = alignedStart.map { $0 + offset }; alignedEnd = alignedEnd.map { $0 + offset }
+    }
 }
 struct LiveUtterance: Codable, Equatable, Identifiable {
     var id = UUID()
@@ -56,7 +64,9 @@ struct TranscriptPlaybackRange: Equatable {
     let end: Double
     init?(paragraph: TranscriptParagraph, record: MeetingRecord, duration: Double? = nil) {
         guard let file = paragraph.audioFile, let index = record.audioFiles.firstIndex(of: file),
-              let globalStart = paragraph.start, let globalEnd = paragraph.end,
+              (paragraph.start == nil) == (paragraph.end == nil),
+              let globalStart = paragraph.start ?? paragraph.alignedStart,
+              let globalEnd = paragraph.end ?? paragraph.alignedEnd,
               globalStart.isFinite, globalEnd.isFinite, globalEnd > globalStart else { return nil }
         let earlier = record.audioFiles.prefix(index).reduce(0.0) { $0 + (record.audioDurations[$1] ?? 0) }
         // 无localStart时，只有前置片段时长齐全才能安全换算，不能猜测。

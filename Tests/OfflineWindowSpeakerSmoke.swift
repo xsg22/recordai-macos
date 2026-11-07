@@ -22,6 +22,7 @@ import AVFoundation
   setenv("TALKTUCK_TEST_UNCERTAIN_SENTENCE","1",1);defer {unsetenv("TALKTUCK_TEST_UNCERTAIN_SENTENCE")}
   let sentence=try TranscriptionEngine(temporaryRoot:base).analyzeSpeakers(audio:audio,model:models.appendingPathComponent("Qwen3ASR"),executable:executable,transcript:transcript)
   precondition(sentence.count==1 && sentence[0].start==nil && sentence[0].end==nil && sentence[0].speakerIDs==["0"] && sentence[0].text==text,"Grouping must preserve word-time uncertainty independently of confirmed speaker identity")
+  precondition(sentence[0].alignedStart==0.2 && sentence[0].alignedEnd==1,"Real aligned speech bounds survive without fabricating the sentence start")
   print("PASS: standard audio speaker attribution uses transcript windows")
  }
 }

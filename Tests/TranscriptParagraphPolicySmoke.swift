@@ -1,6 +1,6 @@
 import Foundation
 @main struct TranscriptParagraphPolicySmoke {
-    static func main() throws {
+    @MainActor static func main() throws {
         let text = String(repeating: String(repeating: "字", count: 30) + "。", count: 4)
         let rows = TranscriptReadability.fallback(text)
         precondition(rows.count == 2 && rows.map(\.text).joined() == text)
@@ -24,6 +24,35 @@ import Foundation
         try MeetingRecordingAppend.applySpeakerParagraphs(aligned,base:base,file:"a",to:&record)
         precondition(record.hasCurrentParagraphs && record.transcriptParagraphs.count == 2 && record.subtitles.contains("00:00:08,000"))
         precondition(TranscriptPlaybackRange(paragraph:record.transcriptParagraphs[1],record:record)?.start == 8)
+        // A missing prefix time never creates a separate display/storage row.
+        let full = "我说完。"
+        var partial = record; partial.text = full; partial.status = .completed
+        partial.transcriptParagraphs = [TranscriptParagraph(text:full,start:0,end:20,audioFile:"a")]
+        let beforeSRT = partial.subtitles
+        let uncertain = TranscriptParagraph(text:full,speakerIDs:["0"],alignedStart:1,alignedEnd:2)
+        try MeetingRecordingAppend.applySpeakerParagraphs([uncertain],base:TranscriptionOutput(text:full,subtitles:"",paragraphs:[]),file:"a",to:&partial)
+        precondition(partial.transcriptParagraphs.count == 1 && partial.paragraphText == full && partial.subtitles == beforeSRT)
+        let p = partial.transcriptParagraphs[0]
+        precondition(p.start == nil && p.end == nil && p.localStart == 1 && TranscriptPlaybackRange(paragraph:p,record:partial)?.end == 2)
+        var shifted = uncertain; shifted.audioFile = "b"; shifted.applyAudioOffset(10)
+        var continued = partial; continued.audioFiles = ["a","b"]; continued.audioDurations = ["a":10,"b":20]
+        precondition(shifted.start == nil && shifted.alignedStart == 11 && shifted.localStart == 1 && TranscriptPlaybackRange(paragraph:shifted,record:continued)?.start == 1)
+        let root=FileManager.default.temporaryDirectory.appendingPathComponent("sentence-time-"+UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at:root) }
+        let library=try MeetingLibrary(root:root), user=UUID()
+        let adapter=MacLibrarySyncAdapter(library:library);try adapter.activate(userId:user)
+        partial.userId=user;_ = try library.save(partial)
+        let value=try adapter.values(userId:user).first { $0.recording?.id==partial.id }!
+        precondition(value.recording!.paragraphs[0].startMs==nil && value.recording!.paragraphs[0].endMs==nil,"Local partial bounds must not become exact cloud timestamps")
+        try adapter.apply(LibrarySyncEntity(kind:.recording,id:partial.id,version:1,value:value),userId:user)
+        let saved=try library.load(partial.id)
+        precondition(saved.transcriptParagraphs.count==1 && saved.transcriptParagraphs[0].alignedStart==1 && saved.transcriptParagraphs[0].alignedEnd==2)
+        let published=try AgentDataPublisher.snapshot(saved,libraryRoot:root)
+        precondition(published.paragraphs[0].start==nil && published.paragraphs[0].alignedStart==1 && published.paragraphs[0].text==full)
+        var changed=value; changed.recording!.paragraphs[0].text="人工改写。"
+        try adapter.apply(LibrarySyncEntity(kind:.recording,id:partial.id,version:2,value:changed),userId:user)
+        let changedRecord=try library.load(partial.id)
+        precondition(changedRecord.transcriptParagraphs[0].alignedStart==nil,"Remote text edits invalidate the old partial alignment")
         print("PASS: 50-character fallback, immutable text, pending timing, protected words, hard speaker/gap boundaries, aligned save/SRT/playback")
     }
 }

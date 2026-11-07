@@ -1208,5 +1208,6 @@
   "音频片段时间尚未确认，正文已保留。": "Audio timing is not yet confirmed. The transcript has been preserved.",
   "发言人分段与正文不一致，正文已保留。": "Speaker paragraphs do not match the transcript. The text has been preserved.",
   "时间对齐模型缺失，正文和发言人分析状态已保留。": "The alignment model is missing. The transcript and speaker analysis status have been preserved.",
-  "部分文字时间待对齐，正文与已确认的发言人已保留。": "Some text is awaiting timing alignment. The transcript and confirmed speakers have been preserved."
+  "部分文字时间待对齐，正文与已确认的发言人已保留。": "Some text is awaiting timing alignment. The transcript and confirmed speakers have been preserved.",
+  "部分字词时间待对齐；回放已对齐的语音范围": "Some word times are pending; replay the aligned speech range."
 }

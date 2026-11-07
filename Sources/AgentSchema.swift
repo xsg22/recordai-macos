@@ -22,6 +22,9 @@ struct AgentParagraph: Codable, Equatable {
     var localStart: Double?
     var speakers: [String]
     var speakerIDs: [String]
+    /// Partial aligned speech bounds, not exact timestamps for the full text.
+    var alignedStart: Double? = nil
+    var alignedEnd: Double? = nil
 }
 struct AgentCollection: Codable, Equatable {
     var id: UUID

@@ -18,8 +18,7 @@ enum MeetingRecordingAppend {
             var rows = output.paragraphs.isEmpty ? [TranscriptParagraph(text: output.text)] : output.paragraphs
             for index in rows.indices {
                 rows[index].audioFile = file
-                if let local = rows[index].start { rows[index].localStart = local; rows[index].start = start + local }
-                if let local = rows[index].end { rows[index].end = start + local }
+                rows[index].applyAudioOffset(start)
             }
             rows[0].separator = prior + rows[0].separator
             record.transcriptParagraphs.append(contentsOf: rows)
@@ -55,8 +54,7 @@ enum MeetingRecordingAppend {
                 if rows.isEmpty { rows = [TranscriptParagraph(text: output.text)] }
                 for rowIndex in rows.indices {
                     rows[rowIndex].audioFile = files[index]
-                    if let start = rows[rowIndex].start { rows[rowIndex].localStart = start; rows[rowIndex].start = start + offset }
-                    if let end = rows[rowIndex].end { rows[rowIndex].end = end + offset }
+                    rows[rowIndex].applyAudioOffset(offset)
                 }
                 rows[0].separator = prefix + rows[0].separator
                 paragraphs += rows
@@ -88,8 +86,7 @@ enum MeetingRecordingAppend {
         var scoped = rows
         for i in scoped.indices {
             scoped[i].audioFile = file
-            if let start = scoped[i].start { scoped[i].localStart = start; scoped[i].start = start + offset }
-            if let end = scoped[i].end { scoped[i].end = end + offset }
+            scoped[i].applyAudioOffset(offset)
             scoped[i].speakerIDs = scoped[i].speakerIDs.map { file + ":" + $0 }
             for speaker in scoped[i].speakerIDs where record.speakerNames[speaker] == nil {
                 record.speakerNames[speaker] = "发言人 \(record.speakerNames.count + 1)"
