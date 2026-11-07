@@ -52,6 +52,7 @@ final class TranscriptionEngine: @unchecked Sendable {
     }
 
     private func run(_ executable: URL, _ arguments: [String], directory: URL, stage: String) throws {
+        FeedbackDiagnostics.shared.record("transcription-engine", "stage-start", fields: ["stage": stage, "engine": executable.lastPathComponent, "streaming": false])
         let heavy = executable.lastPathComponent == "qwen-asr"
         if heavy { InferenceGate.enter() }; defer { if heavy { InferenceGate.leave() } }
         let logURL = directory.appendingPathComponent(UUID().uuidString + ".log")
@@ -71,9 +72,14 @@ final class TranscriptionEngine: @unchecked Sendable {
         lock.lock()
         if cancelled { lock.unlock(); throw CancellationError() }
         process = child
-        do { try child.run() } catch { process = nil; lock.unlock(); throw error }
+        do { try child.run() } catch {
+            let diagnostic = error as NSError
+            FeedbackDiagnostics.shared.record("transcription-engine", "launch-failed", fields: ["stage": stage, "domain": diagnostic.domain, "code": diagnostic.code])
+            process = nil; lock.unlock(); throw error
+        }
         lock.unlock()
         child.waitUntilExit()
+        FeedbackDiagnostics.shared.record("transcription-engine", "stage-exit", fields: ["stage": stage, "status": child.terminationStatus])
         if child.terminationStatus != 0 { try? captureEvidence(logURL,name:"worker-failure-"+logURL.lastPathComponent) }
         lock.lock()
         process = nil
@@ -91,6 +97,7 @@ final class TranscriptionEngine: @unchecked Sendable {
     /// rather than terminating the app while it is writing audio.
     private func runStreaming(_ executable: URL, _ arguments: [String], directory: URL, stage: String,
                               feed: (FileHandle) throws -> Void) throws {
+        FeedbackDiagnostics.shared.record("transcription-engine", "stage-start", fields: ["stage": stage, "engine": executable.lastPathComponent, "streaming": true])
         InferenceGate.enter(); defer { InferenceGate.leave() }
         let logURL = directory.appendingPathComponent(UUID().uuidString + ".log")
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
@@ -113,12 +120,17 @@ final class TranscriptionEngine: @unchecked Sendable {
         lock.lock()
         if cancelled { lock.unlock(); throw CancellationError() }
         process = child
-        do { try child.run() } catch { process = nil; lock.unlock(); throw error }
+        do { try child.run() } catch {
+            let diagnostic = error as NSError
+            FeedbackDiagnostics.shared.record("transcription-engine", "launch-failed", fields: ["stage": stage, "domain": diagnostic.domain, "code": diagnostic.code])
+            process = nil; lock.unlock(); throw error
+        }
         lock.unlock(); try? input.close()
         var feedError: Error?
         do { try feed(output); try output.close() }
         catch { feedError = error; try? output.close(); if child.isRunning { child.terminate() } }
         child.waitUntilExit()
+        FeedbackDiagnostics.shared.record("transcription-engine", "stage-exit", fields: ["stage": stage, "status": child.terminationStatus])
         if child.terminationStatus != 0 { try? captureEvidence(logURL,name:"worker-failure-"+logURL.lastPathComponent) }
         lock.lock(); process = nil; let wasCancelled = cancelled; lock.unlock()
         if wasCancelled { throw CancellationError() }

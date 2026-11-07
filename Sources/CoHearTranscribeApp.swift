@@ -19,6 +19,7 @@ private let feedbackDiagnosticLog = Logger(subsystem: Bundle.main.bundleIdentifi
         if miniController == nil { miniController = MiniRecordingController(state: state) }
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
+        FeedbackDiagnostics.shared.record("app", "launch")
         attach(ApplicationServices.state)
     }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -279,8 +280,17 @@ struct MainView: View {
                 .onChange(of: geometry.size.width) { _, width in windowWidth = width }
         })
         .onAppear { state.openRecordingWindow = { openWindow(id: "recordings") }; feedbackDiagnosticLog.notice("Main window opened") }
-        .onChange(of: state.recording) { _, recording in feedbackDiagnosticLog.notice("Recording active: \(recording, privacy: .public)") }
-        .onChange(of: state.busy) { _, busy in feedbackDiagnosticLog.notice("Processing active: \(busy, privacy: .public)") }
+        .onChange(of: state.recording) { _, recording in
+            feedbackDiagnosticLog.notice("Recording active: \(recording, privacy: .public)")
+            FeedbackDiagnostics.shared.record("recording", "active-changed", fields: ["active": recording])
+        }
+        .onChange(of: state.busy) { _, busy in
+            feedbackDiagnosticLog.notice("Processing active: \(busy, privacy: .public)")
+            FeedbackDiagnostics.shared.record("processing", "busy-changed", fields: ["busy": busy])
+        }
+        .onChange(of: state.paused) { _, paused in FeedbackDiagnostics.shared.record("recording", "pause-changed", fields: ["paused": paused]) }
+        .onChange(of: state.transcriptPhase) { _, phase in FeedbackDiagnostics.shared.record("transcription", "phase-changed", fields: ["phase": phase.rawValue]) }
+        .onChange(of: state.error != nil) { _, hasError in FeedbackDiagnostics.shared.record("app", "error-state-changed", fields: ["hasError": hasError]) }
         .onChange(of: state.recordingNavigationRevision) { filter = "全部"; batchMode = false }
         .sheet(isPresented: $managingCollections) { CollectionManager(state: state) }
         .onChange(of: state.history.map(\.id)) { batchIDs.formIntersection(Set(state.history.map(\.id))) }
