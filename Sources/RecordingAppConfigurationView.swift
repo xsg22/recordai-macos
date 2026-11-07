@@ -193,7 +193,7 @@ struct RecordingAppConfigurationView: View {
 
     private var talkTuckAccount: some View {
         Group {
-            TalkTuckPageHeader(title: L10n.text("TalkTuck 账号"), subtitle: L10n.text("登录后，按需同步 iPhone 与 Mac 上的文字、分组和原音。")) { EmptyView() }
+            TalkTuckPageHeader(title: L10n.text("TalkTuck 账号"), subtitle: L10n.text("登录后默认同步录音、转录、分组和原音，可随时暂停。")) { EmptyView() }
             TalkTuckAccountPanel(store: state.cloudAccount).disabled(state.locked)
             if state.cloudAccount.isSignedIn, state.cloudAccount.librarySyncAvailable, let engine = state.librarySync {
                 TalkTuckCard { LibrarySyncPanel(engine:engine,groupNames:Dictionary(uniqueKeysWithValues:state.organization.groups.map { ($0.id,$0.name) })) }.disabled(state.locked)

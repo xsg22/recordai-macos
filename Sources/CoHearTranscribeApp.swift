@@ -274,7 +274,15 @@ struct MainView: View {
         .sheet(isPresented: $showingFeedback) { FeedbackMailView() }
         .sheet(isPresented: $showingAccount) {
             VStack(alignment: .trailing, spacing: 0) {
-                Button(L10n.text("完成")) { showingAccount = false }
+                Button { showingAccount = false } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L10n.text("关闭"))
+                    .help(L10n.text("关闭"))
                     .keyboardShortcut(.cancelAction)
                     .padding(.top, 16).padding(.trailing, 20)
                 RecordingAppConfigurationView(state: state, initialSection: "talktuck")

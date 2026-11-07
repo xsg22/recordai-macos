@@ -18,21 +18,28 @@ struct TalkTuckAccountPanel: View {
                 Text(L10n.text("使用与 iPhone 相同的手机号登录。登录后默认同步本机全部录音、转录定稿、分组和原音。"))
                     .font(AppTypography.secondary).foregroundStyle(.secondary)
                 TextField(L10n.text("手机号"), text: $phone).textContentType(.telephoneNumber)
-                HStack {
+                    .frame(maxWidth: 340, alignment: .leading)
+                HStack(spacing: 8) {
                     TextField(L10n.text("6 位验证码"), text: $code).textContentType(.oneTimeCode)
+                        .frame(width: 160)
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         Button(L10n.text(context.date < resendAt ? "稍后重发" : "获取验证码")) {
                             Task { if await store.sendSMS(phone: phone) { resendAt = Date().addingTimeInterval(60) } }
                         }.disabled(store.busy || !agreed || phone.count != 11 || context.date < resendAt)
                     }
                 }
-                Toggle(L10n.text("我已阅读隐私政策并同意发送登录验证码"), isOn: $agreed)
-                HStack {
+                HStack(spacing: 4) {
+                    Toggle(L10n.text("我已阅读隐私政策并同意发送登录验证码"), isOn: $agreed)
+                        .labelsHidden()
+                    Text(L10n.text("我已阅读并同意"))
                     Link(L10n.text("隐私政策"), destination: URL(string: "https://xueshengguo.com/apps/talktuck/privacy/")!)
+                        .buttonStyle(.plain).foregroundStyle(TalkTuckTheme.accent).underline()
+                    Text(L10n.text("，并同意接收登录验证码"))
                 }.font(AppTypography.secondary)
                 Button(L10n.text("登录")) {
                     Task { if await store.signInSMS(phone: phone, code: code) { phone = ""; code = "" } }
-                }.disabled(store.busy || !agreed || phone.count != 11 || code.count != 6)
+                }.buttonStyle(TalkTuckPrimaryButtonStyle())
+                    .disabled(store.busy || !agreed || phone.count != 11 || code.count != 6)
             }
             if store.busy { ProgressView().controlSize(.small) }
             if let message = store.message { Text(L10n.text(message)).font(AppTypography.secondary).foregroundStyle(.secondary) }
