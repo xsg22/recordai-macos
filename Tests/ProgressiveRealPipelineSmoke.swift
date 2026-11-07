@@ -46,12 +46,14 @@ private final class ProgressiveProbe: @unchecked Sendable {
         let session=ProgressiveTranscriptionSession(model:models.appendingPathComponent("Qwen3ASR"),executable:engine.appendingPathComponent("qwen-asr"),language:language,hotwords:[],context:"",baseOffset:0,onUpdate:{probe.update($0)},onFailure:{probe.issue($0)})
         try session.bindCanonicalArchive(capture)
         if resume {
-            let frames=try CanonicalAudioReader(manifestURL:original).durationFrames
+            let available=try CanonicalAudioReader(manifestURL:original).durationFrames
+            let frames=target>0 ? Int64((target*16000).rounded()):available
+            precondition(frames>0 && frames<=available)
             let final:ProgressiveSnapshot
             if args.contains("--snapshot-only") {final=session.currentSnapshot()!}
             else {final=try await session.finish(totalFrames:frames)}
             let paragraphs=try JSONSerialization.jsonObject(with:JSONEncoder().encode(final.paragraphs))
-            let report:[String:Any]=["realInference":!args.contains("--snapshot-only"),"resume":true,"text":final.text,"paragraphs":paragraphs,"coverageFrames":final.completedFrames,"durationSeconds":Double(frames)/16000,"issues":probe.issues,"events":probe.events,"batchCount":final.jobs,"seconds":Date().timeIntervalSince(probe.began)]
+            let report:[String:Any]=["realInference":!args.contains("--snapshot-only") && !args.contains("--cached-only"),"resume":true,"text":final.text,"paragraphs":paragraphs,"coverageFrames":final.completedFrames,"durationSeconds":Double(frames)/16000,"issues":probe.issues,"events":probe.events,"batchCount":final.jobs,"seconds":Date().timeIntervalSince(probe.began)]
             try JSONSerialization.data(withJSONObject:report,options:[.prettyPrinted,.sortedKeys]).write(to:root.appendingPathComponent("result.json"))
             print("PASS: resumed saved capture without re-recording or losing acknowledged prefix");return
         }

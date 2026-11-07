@@ -22,6 +22,7 @@ import wave
 from urllib.parse import urlparse
 
 CORE = [
+    ("seam-recovery", "ProgressiveSeamRecoverySmoke", True),
     ("window-recovery", "ProgressiveWindowRecoverySmoke", False),
     ("progressive", "ProgressiveTranscriptionSmoke", True),
     ("multilingual", "MultilingualSentenceSmoke", False),
@@ -134,6 +135,7 @@ def main():
     for case, _, _ in CORE:
         arguments = [run/"fixtures"/case] if case in {"cold-start","progressive"} else []
         if case=="window-recovery": arguments=[run/"fixtures"/case,source/"Tests/ProgressiveWindowRecoveryWorkerFake.py"]
+        if case=="seam-recovery": arguments=[run/"fixtures"/case,source/"Tests/ProgressiveSeamRecoveryWorkerFake.py"]
         extra = {"TALKTUCK_TEST_AGENT_OUT": str(run/"fixtures/organization-agent")} if case == "organization" else {}
         swift(case, *arguments, **extra)
     for case in canonical_cases:

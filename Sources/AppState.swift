@@ -1076,7 +1076,7 @@ final class AppState: ObservableObject {
             hotwords:hotwords.words,context:record.title,baseOffset:record.duration,baseRecord:record,onUpdate:{ [weak self] snapshot in
                 Task { @MainActor in
                     guard let self,self.progressiveGeneration==generation else { return }
-                    do { try self.applyProgressive(snapshot,complete:false);self.progressiveIssue=nil } catch { self.error=error.localizedDescription }
+                    do { try self.applyProgressive(snapshot,complete:false);if snapshot.pendingSeams==0 { self.progressiveIssue=nil } } catch { self.error=error.localizedDescription }
                 }
             },onFailure:{ [weak self] message in
                 Task { @MainActor in guard let self,self.progressiveGeneration==generation else { return };self.liveStatus="分批定稿稍后重试，原音和实时文字已保留";self.progressiveIssue=message }

@@ -179,16 +179,22 @@ def align_speakers(model_path,manifest_path,turns_path,output):
     pathlib.Path(output).write_text(json.dumps(dict(paragraphs=paragraphs,alignedWords=words,attributionPolicy='sentence-v1'),ensure_ascii=False))
 
 def main():
+    if len(sys.argv)==7 and sys.argv[1]=='--splice-seam':
+        from overlap_words import splice_prefix
+        source,prefix,count,seconds,output=sys.argv[2:]
+        old=json.loads(pathlib.Path(source).read_text());new=json.loads(pathlib.Path(prefix).read_text())
+        words=splice_prefix(old['alignedWords'],new['alignedWords'],int(count),float(seconds))
+        pathlib.Path(output).write_text(json.dumps(dict(alignedWords=words),ensure_ascii=False));return
     if len(sys.argv)==7 and sys.argv[1]=='--crop-speakers':
         from speaker_attribution import normalized
         from sentence_speakers import attribute_sentences
         source,voice,cut,prior,output=sys.argv[2:];cut=float(cut)
         data=json.loads(pathlib.Path(source).read_text());words=data['alignedWords'];hints=json.loads(pathlib.Path(prior).read_text());context=hints['context']
         from overlap_words import crop
-        words,dropped=crop(words,cut,context)
+        proof=[];words,dropped=crop(words,cut,context,proof)
         if words:words[0]['separator']=''
         v=json.loads(pathlib.Path(voice).read_text());rows=attribute_sentences(words,v['turns'],frames=v.get('frames'),protected_words=hints['words'])
-        pathlib.Path(output).write_text(json.dumps(dict(paragraphs=rows,text=''.join(r.get('separator','')+r['text']for r in rows),discardedOverlap=''.join(w['text']for w in dropped)),ensure_ascii=False));return
+        pathlib.Path(output).write_text(json.dumps(dict(paragraphs=rows,text=''.join(r.get('separator','')+r['text']for r in rows),discardedOverlap=''.join(w['text']for w in dropped),seamOwnership=proof),ensure_ascii=False));return
     if len(sys.argv)==5 and sys.argv[1]=='--diarize-stream-checkpoint':
         diarize(sys.argv[2],None,sys.argv[3],streaming=True,checkpoint=sys.argv[4]);return
     if len(sys.argv)==6 and sys.argv[1]=='--diarize-checkpoint':

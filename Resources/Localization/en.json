@@ -1223,5 +1223,10 @@
   "定稿边界数据无效。": "Invalid final-transcript boundary data.",
   "录音中 · 已完成 {0} 批定稿": "Recording · {0} batches finalized",
   "先出实时字幕，再快速修正，分批生成定稿；停止后只补尾段。": "Live captions appear first, followed by quick corrections and finalized batches. Stopping processes only the tail.",
-  "转录未完成。": "Transcription is incomplete."
+  "转录未完成。": "Transcription is incomplete.",
+  "已有定稿候选检查点不一致，原音和候选已保留，未重新识别整批录音。": "The saved candidate checkpoint does not match. Audio and candidates are preserved; the full batch was not transcribed again.",
+  "已有定稿候选检查点不一致，原音和候选已保留，未覆盖检查点。": "The saved candidate checkpoint does not match. Audio and candidates are preserved; the checkpoint was not overwritten.",
+  "接缝归属尚未确认，原音和两侧候选均已保留。": "The seam ownership is not confirmed yet. Original audio and both candidates are preserved.",
+  "重试接缝时间对齐": "Retrying seam alignment",
+  "核对接缝文字保全": "Checking seam text preservation"
 }

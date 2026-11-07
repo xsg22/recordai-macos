@@ -18,7 +18,7 @@ rows=attribute(text,items,[dict(start=0,end=3,speaker='0')],0,3)
 assert ''.join(x['text']for x in rows)==text and len(rows)==1
 print('PASS: Unicode sentence punctuation, closing quotes, abbreviations, decimals, hosts, versions, Latin/CJK/Arabic/Indic exact text')
 
-from overlap_words import crop
+from overlap_words import crop,splice_prefix
 def w(text,start,end):return dict(text=text,start=start,end=end,separator='')
 words=[w('alpha ',0,1),w('beta ',2.9,3.2),w('gamma.',3.2,4)]
 kept,dropped=crop(words,3,'alpha beta')
@@ -30,5 +30,19 @@ assert len(kept)==1 and kept[0]['text']=='alpha.' # a real repetition is new spe
 kept,dropped=crop([w('我',0,0),w('说完。',.2,1)],0,'')
 assert len(kept)==2 and not dropped
 try:crop([w('未知',0,0),w('尾句。',3,4)],3,'别的内容');raise AssertionError('Uncertain overlap silently discarded')
+except ValueError:pass
+try:crop([w('结束。',1,2.8),w('我',3,3),w('继续。',3.2,4)],3,'结束。我');raise AssertionError('Text equality hid a possible new repetition')
+except ValueError:pass
+proof=[]
+source=[w('麻',.48,.48),w('烦',.48,.56),w('点击三连。',.64,1.12),w('我们下期再见。',1.44,2.32),w('Deepseek',8.72,8.96)]
+kept,dropped=crop(source,3,'麻烦点三连。我们下期再见。',proof)
+assert ''.join(x['text']for x in kept)=='Deepseek' and len(proof)==1
+assert source[0]['start']==source[0]['end']==.48 # ownership does not fabricate timing
+try:crop([w('尾句。',1,2.8),w('我',3,3),w('继续。',3.2,4)],3,'尾句。');raise AssertionError('Ambiguous boundary word discarded')
+except ValueError:pass
+old=[w('我',0,0),w('说',1,2),w('完。',4,5)]
+fixed=splice_prefix(old,[w('我',.2,.5),w('说',1,2)],2,2)
+assert fixed[2] is old[2] and ''.join(x['text']for x in fixed)=='我说完。'
+try:splice_prefix(old,[w('你',.2,.5),w('说',1,2)],2,2);raise AssertionError('Repair replaced ASR text')
 except ValueError:pass
 print('PASS: aligned seam cropping, exact straddling-word reuse, true repetitions, zero-time prefix and uncertainty retention')

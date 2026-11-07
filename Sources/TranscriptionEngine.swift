@@ -455,6 +455,37 @@ final class TranscriptionEngine: @unchecked Sendable {
         return TranscriptionOutput(text:text,subtitles:"",paragraphs:try Self.decodeSpeakerParagraphs(data,text:text))
     }
 
+    /// Retry only the left seam's alignment. Recognition, global voice state
+    /// and the remainder of the batch are immutable inputs, not rerun work.
+    func repairProgressiveSeam(audio:URL,model:URL,executable:URL,directory:URL,trimBefore:Double,previousText:String,language:String,hotwords:[String]) throws -> TranscriptionOutput {
+        guard trimBefore>0,let reader=try canonicalReader(for:audio),
+              let source=try JSONSerialization.jsonObject(with:Data(contentsOf:directory.appendingPathComponent("alignment.json")))as? [String:Any],
+              let words=source["alignedWords"]as? [[String:Any]] else { throw BalancedAudioError.invalidManifest }
+        var lastError:Error=TranscriptionError.message("接缝归属尚未确认，原音和两侧候选均已保留。")
+        for seconds in [12.0,24.0] {
+            try checkCancelled()
+            let count=words.prefix{($0["end"]as? Double ?? .infinity)<=seconds}.count
+            guard count>0,count<words.count,let end=words[count-1]["end"]as? Double,end>trimBefore+1,
+                  let next=words[count]["start"]as? Double,next>=end-0.15 else { continue }
+            let attempt=directory.appendingPathComponent("seam-"+UUID().uuidString)
+            try FileManager.default.createDirectory(at:attempt,withIntermediateDirectories:false)
+            try FileManager.default.copyItem(at:directory.appendingPathComponent("diarization.json"),to:attempt.appendingPathComponent("diarization.json"))
+            let prefix=words.prefix(count).map{($0["separator"]as? String ?? "")+($0["text"]as? String ?? "")}.joined()
+            do {
+                let aligned=attempt.appendingPathComponent("prefix.json")
+                try runStreaming(executable,["--align-stream",model.deletingLastPathComponent().appendingPathComponent("QwenAligner").path,attempt.appendingPathComponent("diarization.json").path,aligned.path],directory:attempt,stage:"重试接缝时间对齐") { pipe in
+                    try self.writeClip(reader,start:0,end:end,metadata:["text":prefix,"language":language,"separator":"","hotwords":hotwords],to:pipe)
+                }
+                try run(executable,["--splice-seam",directory.appendingPathComponent("alignment.json").path,aligned.path,String(count),String(end),attempt.appendingPathComponent("alignment.json").path],directory:attempt,stage:"核对接缝文字保全")
+                let result=try cropSpeakerEvidence(at:attempt,trimBefore:trimBefore,previousText:previousText,executable:executable,hotwords:hotwords)
+                try BalancedAudioIO.save(["alignedSeconds":end,"prefixWords":Double(count),"recognitionReruns":0,"diarizationReruns":0],to:attempt.appendingPathComponent("repair.json"))
+                return result
+            } catch is CancellationError { throw CancellationError() }
+            catch { lastError=error }
+        }
+        throw lastError
+    }
+
     private static func decodeSpeakerParagraphs(_ data: Data, text: String) throws -> [TranscriptParagraph] {
         struct Response: Decodable {
             struct Row: Decodable { let text: String; let separator: String; let start: Double; let end: Double; let speakerIDs: [String]; let timingUncertain: Bool?; let alignedStart: Double?; let alignedEnd: Double? }

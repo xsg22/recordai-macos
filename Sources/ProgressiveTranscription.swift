@@ -17,6 +17,7 @@ struct ProgressiveSnapshot: Sendable {
     let text: String
     let subtitles: String
     let paragraphs: [TranscriptParagraph]
+    var pendingSeams:Int = 0
 }
 
 /// Audio remains in the recorder's immutable AAC segments. This object queues
@@ -47,6 +48,7 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
     private var outputs:[UUID:TranscriptionOutput]=[:]
     private var waiters:[CheckedContinuation<ProgressiveSnapshot,Error>]=[]
     private var failures=Set<UUID>()
+    private var analysisReady=Set<UUID>()
     private var voiceFrames:Int64=0
     private var stopWaiters:[CheckedContinuation<Void,Never>]=[]
     private let stateLock=NSLock()
@@ -85,6 +87,13 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
                     if let data=try? Data(contentsOf:resultURL(job)),let result=try? JSONDecoder().decode(TranscriptionOutput.self,from:data) { outputs[job.id]=result }
                 }
                 for i in journal!.jobs.indices { journal!.jobs[i].status=outputs[journal!.jobs[i].id] == nil ? "queued":"completed" }
+                for (i,job) in value.jobs.enumerated() where outputs[job.id]==nil {
+                    if let key=try? ProgressiveAnalysisCache.key(job:job,root:root!,previous:i>0 ? value.jobs[i-1]:nil,model:model,language:language),
+                       ProgressiveAnalysisCache.valid(ProgressiveAnalysisCache.directory(root:root!,job:job),key:key) {
+                        try ProgressiveAnalysisCache.publishVoice(from:ProgressiveAnalysisCache.directory(root:root!,job:job),root:root!,job:job)
+                        analysisReady.insert(job.id)
+                    }
+                }
                 ownedStart=value.jobs.last?.end ?? 0
                 inputStart=ownedStart-(value.jobs.last?.forcedBoundary == true ? 3*16000:0)
             } else { journal=Journal(captureID:id,language:language,baseOffset:baseOffset) }
@@ -202,7 +211,7 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
             completed=job.end
         }
         text=rows.map{$0.separator+$0.text}.joined()
-        return ProgressiveSnapshot(captureID:journal!.captureID,completedFrames:completed,totalFrames:journal!.observed,jobs:outputs.count,text:text,subtitles:subtitles,paragraphs:rows)
+        return ProgressiveSnapshot(captureID:journal!.captureID,completedFrames:completed,totalFrames:journal!.observed,jobs:outputs.count,text:text,subtitles:subtitles,paragraphs:rows,pendingSeams:failures.count)
     }
     /// A transport edge is not a sentence boundary. Join only a confident,
     /// same-speaker unfinished sentence; never join an actual pause or change.
@@ -231,11 +240,23 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
     }
     private func kick() {
         guard !running,!cancelled,let root,let journal else { return }
-        guard let job=journal.jobs.first(where:{outputs[$0.id]==nil}) else { resolve();return }
-        guard !failures.contains(job.id) else { resolve();return }
+        // A failed ownership check does not invalidate the advanced voice
+        // checkpoint. Continue serial analysis of later ranges while keeping
+        // their results private behind the unacknowledged seam.
+        guard let index=journal.jobs.indices.first(where:{ i in
+            let job=journal.jobs[i]
+            return outputs[job.id]==nil && !failures.contains(job.id) &&
+                (processor != nil || i==0 || outputs[journal.jobs[i-1].id] != nil || analysisReady.contains(journal.jobs[i-1].id))
+        }) else { resolve();return }
+        let job=journal.jobs[index]
         running=true
-        let previous=journal.jobs.prefix(while:{$0.id != job.id}).last
-        let priorText=snapshot().text
+        let previous=index>0 ? journal.jobs[index-1]:nil
+        let priorText:String
+        let prefix=snapshot(limit:index)
+        if let previous,prefix.completedFrames<previous.end,let output=outputs[previous.id] { priorText=output.text }
+        else if let previous,outputs[previous.id]==nil,
+           let data=try? Data(contentsOf:root.appendingPathComponent(previous.id.uuidString+"-asr.json")),let raw=try? JSONDecoder().decode(TranscriptionOutput.self,from:data) { priorText=raw.text }
+        else { priorText=prefix.text }
         worker.async { [self] in
             do {
                 let ref=root.appendingPathComponent(job.id.uuidString+".json")
@@ -265,7 +286,14 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
                 }
                 if raw.text.isEmpty && job.hasVoice { throw TranscriptionError.message("这一批有声音但尚未识别出文字，原音和检查点已保留，可重试。") }
                 let state=attempt.appendingPathComponent("speaker.json")
-                if let previous {
+                let key=try ProgressiveAnalysisCache.key(job:job,root:root,previous:previous,model:model,language:language)
+                let analysis=ProgressiveAnalysisCache.directory(root:root,job:job)
+                var cached=ProgressiveAnalysisCache.valid(analysis,key:key)
+                if !cached,FileManager.default.fileExists(atPath:analysis.appendingPathComponent("ready.json").path) {
+                    throw TranscriptionError.message("已有定稿候选检查点不一致，原音和候选已保留，未重新识别整批录音。")
+                }
+                if !cached { cached=try ProgressiveAnalysisCache.importLegacy(root:root,job:job,key:key,raw:raw,priorText:priorText,to:analysis) }
+                if !cached,let previous {
                     for ext in ["json","safetensors"] {
                         let old=root.appendingPathComponent(previous.id.uuidString+"-speaker."+ext)
                         try FileManager.default.copyItem(at:old,to:state.deletingPathExtension().appendingPathExtension(ext))
@@ -276,8 +304,28 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
                 }
                 let result:TranscriptionOutput
                 do {
-                    _ = try engine.analyzeSpeakers(audio:ref,model:model,executable:executable,transcript:raw,language:language,hotwords:hotwords,speakerCheckpoint:state)
-                    result=raw.text.isEmpty ? raw:try engine.cropSpeakerEvidence(at:attempt,trimBefore:Double(job.ownedStart-job.start)/16000,previousText:priorText,executable:executable,hotwords:hotwords)
+                    if !cached {
+                        _ = try engine.analyzeSpeakers(audio:ref,model:model,executable:executable,transcript:raw,language:language,hotwords:hotwords,speakerCheckpoint:state)
+                        if !raw.text.isEmpty {
+                            guard ProgressiveAnalysisCache.matchesText(attempt,raw:raw) else { throw BalancedAudioError.invalidManifest }
+                            try ProgressiveAnalysisCache.save(from:attempt,to:analysis,key:key);cached=true
+                        }
+                    }
+                    if cached {
+                        // Commit continuous voice evidence before trying the
+                        // seam. This enables the following job after a failure.
+                        try ProgressiveAnalysisCache.publishVoice(from:analysis,root:root,job:job)
+                        queue.sync { _ = analysisReady.insert(job.id) }
+                    }
+                    if raw.text.isEmpty { result=raw }
+                    else {
+                        do { result=try engine.cropSpeakerEvidence(at:analysis,trimBefore:Double(job.ownedStart-job.start)/16000,previousText:priorText,executable:executable,hotwords:hotwords) }
+                        catch is CancellationError { throw CancellationError() }
+                        catch {
+                            guard job.ownedStart>job.start,cached else { throw error }
+                            result=try engine.repairProgressiveSeam(audio:ref,model:model,executable:executable,directory:analysis,trimBefore:Double(job.ownedStart-job.start)/16000,previousText:priorText,language:language,hotwords:hotwords)
+                        }
+                    }
                 } catch is CancellationError { throw CancellationError() }
                 catch {
                     // Recognition is authoritative. If voice state advanced
@@ -291,11 +339,7 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
                 }
                 // Commit result last. A crash before this marker reruns only
                 // annotations using cached ASR, never the acknowledged prefix.
-                for ext in ["json","safetensors"] {
-                    let destination=root.appendingPathComponent(job.id.uuidString+"-speaker."+ext)
-                    if FileManager.default.fileExists(atPath:destination.path) { try FileManager.default.removeItem(at:destination) }
-                    try FileManager.default.copyItem(at:state.deletingPathExtension().appendingPathExtension(ext),to:destination)
-                }
+                if !cached { try ProgressiveAnalysisCache.publishVoice(from:attempt,root:root,job:job) }
                 try BalancedAudioIO.save(result,to:resultURL(job))
                 try? FileManager.default.removeItem(at:attempt)
                 completed(job,result:result)
@@ -306,16 +350,17 @@ final class ProgressiveTranscriptionSession: @unchecked Sendable {
                     running=false;failures.insert(job.id)
                     let detail=["jobId":job.id.uuidString,"message":error.localizedDescription]
                     try? BalancedAudioIO.save(detail,to:root.appendingPathComponent("last-failure.json"))
-                    onFailure(error.localizedDescription);resolve()
+                    if let i=self.journal!.jobs.firstIndex(where:{$0.id==job.id}) { self.journal!.jobs[i].status=analysisReady.contains(job.id) ? "seam-pending":"failed" }
+                    try? persist();onFailure(error.localizedDescription);kick();resolve()
                 }
             }
         }
     }
     private func completed(_ job:ProgressiveJob,result:TranscriptionOutput) {
         queue.async { [self] in
-            outputs[job.id]=result;running=false
+            outputs[job.id]=result;failures.remove(job.id);running=false
             if let i=self.journal!.jobs.firstIndex(where:{$0.id==job.id}) { self.journal!.jobs[i].status="completed" }
-            try? persist();if !cancelled { onUpdate(snapshot()) };resolve();kick()
+            try? persist();if !cancelled { onUpdate(snapshot()) };kick();resolve()
         }
     }
     private func resolve() {
